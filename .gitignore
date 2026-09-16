@@ -1,0 +1,17 @@
+# Raw and processed datasets are large and reproducible via scripts in src/data/ —
+# do not commit them. See data/raw/README.md for the catalog and download instructions.
+data/raw/*
+data/processed/*
+!data/raw/README.md
+!data/processed/README.md
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
