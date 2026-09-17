@@ -43,3 +43,9 @@
       do not combine their raw tensors without an agreed shared adapter.
 - [ ] Agree the embedding output format/dimension with Thrishala — already fixed
       at D=64 in both `masked_reconstruction.py` and `docs/architecture/interface_contracts.md`; flag if that turns out to be too small/large once real training starts.
+- [x] Add the SSL-to-TGNN bridge in `src/ssl/tgnn_bridge.py`. It validates the
+      64-dimensional export and reshapes Milan embeddings into `[N, T, 64]`; a
+      real 29-node x 5-timestep Milan window was consumed by `TGNNPredictor`.
+      The B5G orchestrator remains on its explicit placeholder until a
+      B5G/NeversNet5G-compatible embedding export and final node ordering are
+      agreed with Thrishala.

@@ -22,6 +22,10 @@ so Sriranjana's encoder input side is unambiguous too):
 - **NeversNet5G**: `sinr_dl_db`, `sinr_ul_db`, `cqi_dl`, `cqi_ul`, `rlc_pdu_throughput_dl_bps`, `rlc_pdu_throughput_ul_bps`, `x`, `y`, `speed`.
 - **Milan**: `sms_in`, `sms_out`, `call_in`, `call_out`, `internet` (the 5 traffic columns in each aggregated `CellID`/`datetime` row; the current sample source fields are `smsin`, `smsout`, `callin`, `callout`, `internet` in `data/raw/milan_telecom_italia/*.csv`).
 
+The validated export path is `src/ssl/tgnn_bridge.py`, which orders these
+records as `[N, T, 64]` for the TGNN while preserving `node_id`, `timestamp`,
+and `source_dataset` metadata.
+
 ## 2. TGNN → MARL: predicted demand
 
 Thrishala's module emits a predicted-demand vector per (node or slice, future
