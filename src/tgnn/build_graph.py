@@ -70,6 +70,61 @@ def nearest_gnb(lat: float, lon: float, gnb_positions: dict[int, tuple[float, fl
     )
 
 
+# Only the columns actually needed for graph construction — the full schema has
+# 23 columns; reading just these 4 is what makes the full 27GB/716-file run
+# tractable (see build_full_ue_gnb_graph).
+_GRAPH_COLUMNS = ["vehicle_id", "latitude", "longitude", "sinr_dl_db"]
+
+
+def _add_ue_from_file(graph: nx.Graph, ue_file: str, gnb_positions: dict) -> bool:
+    """Reads one per-UE CSV and adds its node + nearest-gNB edge to `graph` in
+    place. Returns False (and adds nothing) if the file has no valid position
+    rows — some NeversNet5G files are position-sparse per DATA_DESCRIPTION.md."""
+    try:
+        df = pd.read_csv(ue_file, usecols=_GRAPH_COLUMNS, low_memory=False)
+    except ValueError:
+        # A handful of files omit a subset of the 23-column canonical schema
+        # (documented in DATA_DESCRIPTION.md §4) — fall back to whatever's present.
+        df = pd.read_csv(ue_file, low_memory=False)
+        for col in _GRAPH_COLUMNS:
+            if col not in df.columns:
+                df[col] = pd.NA
+    except Exception as e:
+        # A few of the larger files (e.g. part2's ~127MB UE traces) have hit the
+        # C parser's tokenizer with an "out of memory" ParserError on this
+        # machine — the underlying file isn't corrupt, the default parser buffer
+        # just chokes on it. Retry once with the slower pure-Python engine before
+        # giving up on this file (skip rather than crash the full-scale run).
+        try:
+            df = pd.read_csv(ue_file, usecols=_GRAPH_COLUMNS, engine="python")
+        except Exception:
+            print(f"  [skip] {os.path.basename(ue_file)}: unreadable even with the "
+                  f"python engine ({e})")
+            return False
+
+    valid_pos = df.dropna(subset=["latitude", "longitude"])
+    if valid_pos.empty:
+        return False
+
+    last = valid_pos.iloc[-1]
+    vehicle_id = last.get("vehicle_id", os.path.basename(ue_file))
+    lat, lon = float(last["latitude"]), float(last["longitude"])
+    serving_gnb = nearest_gnb(lat, lon, gnb_positions)
+    mean_sinr = df["sinr_dl_db"].mean(skipna=True) if "sinr_dl_db" in df else pd.NA
+
+    node_id = f"ue_{vehicle_id}_{os.path.basename(ue_file)}"  # file-qualified: part
+    # folders reuse small UE-id ranges (see DATA_DESCRIPTION.md §2), so the raw
+    # vehicle_id alone is not unique across the full dataset without the
+    # node_mapping_*.txt reconciliation files — qualifying by source file avoids
+    # silently merging distinct vehicles until that reconciliation is done.
+    graph.add_node(node_id, type="ue", lat=lat, lon=lon, vehicle_id=str(vehicle_id))
+    graph.add_edge(
+        node_id, f"gnb_{serving_gnb}",
+        weight=float(mean_sinr) if pd.notna(mean_sinr) else 0.0,
+    )
+    return True
+
+
 def build_ue_gnb_graph(
     part_dir: str, gnb_positions: dict[int, tuple[float, float]], max_ues: int | None = None
 ) -> nx.Graph:
@@ -91,23 +146,38 @@ def build_ue_gnb_graph(
         ue_files = ue_files[:max_ues]
 
     for ue_file in ue_files:
-        df = pd.read_csv(ue_file, low_memory=False)
-        valid_pos = df.dropna(subset=["latitude", "longitude"])
-        if valid_pos.empty:
-            continue
-        last = valid_pos.iloc[-1]
-        vehicle_id = last.get("vehicle_id", os.path.basename(ue_file))
-        lat, lon = float(last["latitude"]), float(last["longitude"])
-        serving_gnb = nearest_gnb(lat, lon, gnb_positions)
-        mean_sinr = df["sinr_dl_db"].mean(skipna=True)
+        _add_ue_from_file(graph, ue_file, gnb_positions)
 
-        node_id = f"ue_{vehicle_id}"
-        graph.add_node(node_id, type="ue", lat=lat, lon=lon)
-        graph.add_edge(
-            node_id, f"gnb_{serving_gnb}",
-            weight=float(mean_sinr) if pd.notna(mean_sinr) else 0.0,
-        )
+    return graph
 
+
+def build_full_ue_gnb_graph(
+    data_root: str, gnb_positions: dict[int, tuple[float, float]], progress_every: int = 100
+) -> nx.Graph:
+    """
+    Same construction as build_ue_gnb_graph, scaled to every part-folder in the
+    full 716-file / 27GB release (Keerthivasan's task: apply Thrishala's
+    sample-validated schema to the full dataset — see
+    docs/team/keerthivasan/tasks.md). Reads only the 4 needed columns per file to
+    keep this tractable at full scale.
+    """
+    graph = nx.Graph()
+    for gnb_id, (lat, lon) in gnb_positions.items():
+        graph.add_node(f"gnb_{gnb_id}", type="gnb", lat=lat, lon=lon)
+
+    ue_files = sorted(glob.glob(os.path.join(data_root, "*", "*_ue_*_metrics.csv")))
+    added, skipped_empty = 0, 0
+    for i, ue_file in enumerate(ue_files):
+        if _add_ue_from_file(graph, ue_file, gnb_positions):
+            added += 1
+        else:
+            skipped_empty += 1
+        if progress_every and (i + 1) % progress_every == 0:
+            print(f"  ...{i + 1}/{len(ue_files)} files processed "
+                  f"({added} UEs added, {skipped_empty} skipped - no valid position)")
+
+    print(f"Full-scale build: {added} UE nodes from {len(ue_files)} files "
+          f"({skipped_empty} skipped - no valid position rows)")
     return graph
 
 

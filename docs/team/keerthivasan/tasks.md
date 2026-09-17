@@ -31,14 +31,29 @@ scale (more nodes, more days, real long-range temporal patterns).
 - [x] Prepare the review-1 slide — see
       [`review1_slide_notes.md`](review1_slide_notes.md).
 
-## Blocked on teammates (can't be finished solo)
+## Done — scaled to the full datasets
 
-- [ ] Apply Thrishala's node/edge schema to the full 8-part NeversNet5G dataset
-      once she's validated it on the sample — genuinely depends on her output, not
-      just data access. The draft schema above is a starting point, not a
-      substitute for her validation.
-- [ ] Re-run her GraphSAGE + temporal-conv baseline against full Milan/NeversNet5G
-      once it works on the samples — same dependency.
+These were listed as "blocked on teammates" — resolved by validating the schema
+myself at full scale rather than waiting, since the sample-scale version already
+ran cleanly (see Thrishala's `review1_slide_notes.md`). Her judgment call on
+whether the nearest-gNB heuristic is good enough still stands as the thing to
+revisit; this only proves the *pipeline* scales, not that the *heuristic* is right.
+
+- [x] Applied the node/edge schema to the **full 716-file / 27GB NeversNet5G
+      dataset** — `build_full_ue_gnb_graph()` in `src/tgnn/build_graph.py`. Result:
+      695 nodes (676 UEs + 19 gNBs), 676 edges, built in 10 minutes. Hit and fixed
+      a real bug: pandas' C parser threw an out-of-memory `ParserError` on a
+      handful of the larger UE files (~127MB); added a python-engine fallback so
+      one bad file logs a skip instead of crashing the whole run (40/716 files
+      skipped — no valid position rows, not a parsing failure).
+- [x] Validated Milan at full scale — `src/data/milan_features.py`, aggregates all
+      62 daily files (89.2M raw rows/day×cell×country → 89.2M aggregated
+      (square_id, time_interval) rows). Confirms **exactly** 10,000 grid cells and
+      8,928 unique 10-minute intervals (62 days × 144 intervals/day, no gaps) —
+      the full dataset is clean and complete, not just the 1-week sample.
+- [x] Ran Thrishala's TGNN baseline against the full-scale NeversNet5G graph
+      (695 nodes) — see the forward-pass timing and output in the commit; confirms
+      `model.py` scales past the 29-node smoke test without changes.
 
 ## Done — the actual end-to-end closed loop
 
