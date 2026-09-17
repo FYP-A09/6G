@@ -14,12 +14,14 @@ before touching the physical network).
 ## Repo layout
 
 ```
-data/raw/         Source datasets (gitignored — see data/raw/README.md for the catalog)
-data/processed/   Cleaned/aligned data derived from raw (gitignored)
-src/data/         Dataset download & preprocessing scripts
-src/              Model code (SSL, TGNN, MARL, Digital Twin) — to be added
-notebooks/        Exploration notebooks
-docs/             Literature review notes and meeting minutes
+data/raw/               Source datasets (small ones committed; large ones gitignored — see data/raw/README.md)
+data/processed/         Cleaned/aligned data derived from raw (gitignored)
+src/data/               Dataset download & preprocessing scripts
+src/digital_twin/       Network Element Layer simulator config (Simu5G scenario)
+docs/architecture/      Module interface contracts, system diagram, graph schema draft
+docs/team/<person>/     Per-person requirements / design / tasks
+notebooks/              Exploration notebooks
+docs/                   Literature review notes and meeting minutes
 ```
 
 ## Getting started
@@ -36,6 +38,8 @@ pipeline stage (SSL / TGNN / MARL) each one is best suited for.
 
 - [`docs/Literature_Review_Notes.md`](docs/Literature_Review_Notes.md) — 16 papers reviewed across Digital Twin, SSL, GNN/TGNN, and MARL/DRL for slicing.
 - [`docs/Progress_Notes.md`](docs/Progress_Notes.md) — running log of meetings and progress against the 11 Jul 2026 kickoff action items.
+- [`docs/Review1_Work_Split.md`](docs/Review1_Work_Split.md) — the 4-person work split for review 1, with per-person `docs/team/<person>/{requirements,design,tasks}.md`.
+- [`docs/architecture/`](docs/architecture/) — module interface contracts, the end-to-end system diagram, and a draft graph schema.
 
 ## Novelty position
 
