@@ -24,8 +24,11 @@
       report the wall-clock number (NFR1 — don't skip the timing). The Phase 4
       replacement is now implemented in `src/ssl/profile_masked_reconstruction.py`;
       the smoke-test report is `data/processed/ssl_nidd_smoke_test_2000_rows/profiling.json`.
-- [ ] Re-run `evaluate_embeddings.py` with the real encoder in place of the
-      placeholder and report the actual Micro-F1 (currently only exercises the
-      scoring pipeline, not real representation quality).
+- [x] Replace the placeholder evaluator with checkpoint-backed NIDD embedding
+      evaluation in `src/ssl/evaluate_embeddings.py`, including Micro-F1,
+      Macro-F1, per-class F1, raw-feature, and random-embedding baselines. The
+      current 2,000-row smoke checkpoint evaluates its held-out sequence split;
+      final metrics require a larger checkpoint with enough benign validation
+      samples.
 - [ ] Agree the embedding output format/dimension with Thrishala — already fixed
       at D=64 in both `masked_reconstruction.py` and `docs/architecture/interface_contracts.md`; flag if that turns out to be too small/large once real training starts.
