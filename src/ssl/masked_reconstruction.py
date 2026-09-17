@@ -8,7 +8,8 @@ protocol/context columns. The encoder's output is the fixed-size embedding hande
 to the TGNN, per docs/architecture/interface_contracts.md §1 (D=64).
 
 The Phase 1 preprocessing contract feeds the PyTorch encoder and decoder here.
-The training loop remains a Phase 3 task.
+Training is implemented in `train_masked_reconstruction.py`; runtime profiling
+is implemented in `profile_masked_reconstruction.py`.
 """
 
 from __future__ import annotations
@@ -145,16 +146,4 @@ class FlowFeatureEncoder(nn.Module):
             raise ValueError("mask must select at least one reconstruction target")
         return selected_errors.mean()
 
-if __name__ == "__main__":
-    import os
-
-    encoder = FlowFeatureEncoder()
-    data_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "data", "raw", "5g_nidd", "Combined.csv"
-    )
-    if os.path.exists(data_path):
-        encoder.evaluate_reconstruction_loss(data_path, n_rows=1000)
-    else:
-        print(f"5G-NIDD not found at {data_path} — "
-              f"run: python src/data/download_datasets.py kaggle")
 

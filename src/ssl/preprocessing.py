@@ -158,6 +158,29 @@ class NIDDPreprocessor:
         }
         Path(path).write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
 
+    @classmethod
+    def from_metadata(cls, metadata: dict) -> "NIDDPreprocessor":
+        """Restore a fitted preprocessor saved in a training checkpoint."""
+        preprocessor = cls(
+            context_columns=metadata["context_columns"],
+            masked_columns=metadata["masked_columns"],
+        )
+        preprocessor._category_to_id = metadata["category_to_id"]
+        preprocessor._numeric_medians = {
+            column: float(value)
+            for column, value in metadata["numeric_medians"].items()
+        }
+        preprocessor._numeric_means = {
+            column: float(value)
+            for column, value in metadata["numeric_means"].items()
+        }
+        preprocessor._numeric_stds = {
+            column: float(value)
+            for column, value in metadata["numeric_stds"].items()
+        }
+        preprocessor._fitted = True
+        return preprocessor
+
     def _validate_columns(self, frame: pd.DataFrame) -> None:
         required = set(self.feature_columns)
         missing = sorted(required.difference(frame.columns))

@@ -20,8 +20,10 @@
 - [ ] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py` (the
       `FlowFeatureEncoder.encode()` method is currently a `NotImplementedError`
       placeholder) — decide categorical-embedding sizes for the `CONTEXT_COLUMNS`.
-- [ ] Run `evaluate_reconstruction_loss` for real once the encoder exists, and
-      report the wall-clock number (NFR1 — don't skip the timing).
+- [x] Run the real reconstruction profiling once the encoder exists, and
+      report the wall-clock number (NFR1 — don't skip the timing). The Phase 4
+      replacement is now implemented in `src/ssl/profile_masked_reconstruction.py`;
+      the smoke-test report is `data/processed/ssl_nidd_smoke_test_2000_rows/profiling.json`.
 - [ ] Re-run `evaluate_embeddings.py` with the real encoder in place of the
       placeholder and report the actual Micro-F1 (currently only exercises the
       scoring pipeline, not real representation quality).
