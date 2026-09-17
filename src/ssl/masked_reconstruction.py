@@ -145,48 +145,6 @@ class FlowFeatureEncoder(nn.Module):
             raise ValueError("mask must select at least one reconstruction target")
         return selected_errors.mean()
 
-    def apply_mask(self, row: dict[str, float]) -> tuple[dict, dict]:
-        """Returns (masked_row, targets) — targets are the true values at masked positions."""
-        import random
-
-        targets = {}
-        masked_row = dict(row)
-        n_to_mask = max(1, int(len(MASKED_COLUMNS) * self.config.mask_ratio))
-        for col in random.sample(MASKED_COLUMNS, n_to_mask):
-            targets[col] = row[col]
-            masked_row[col] = 0.0
-        return masked_row, targets
-
-    def encode(self, row: dict[str, float]):
-        """Forward pass -> embedding. Placeholder until the torch model exists."""
-        raise NotImplementedError("Wire up self.encoder once torch/pandas are installed.")
-
-    def evaluate_reconstruction_loss(self, dataset_path: str, n_rows: int = 10_000) -> float:
-        """
-        Measures reconstruction MSE over a sample of rows, and wall-clock time —
-        addresses NFR1 in requirements.md ("document the computational overhead").
-        """
-        import csv
-        import time
-
-        start = time.time()
-        total_rows = 0
-        with open(dataset_path, encoding="utf-8", errors="ignore") as f:
-            reader = csv.DictReader(f)
-            for i, _row in enumerate(reader):
-                if i >= n_rows:
-                    break
-                total_rows += 1
-                # masked_row, targets = self.apply_mask(_row)
-                # embedding = self.encode(masked_row)
-                # reconstructed = self.decoder(embedding)  # once implemented
-        elapsed = time.time() - start
-        print(f"Profiled {total_rows} rows in {elapsed:.2f}s "
-              f"({elapsed / max(total_rows, 1) * 1000:.3f} ms/row) — "
-              f"model forward pass not yet wired up, this is I/O-only timing.")
-        return elapsed
-
-
 if __name__ == "__main__":
     import os
 
