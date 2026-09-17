@@ -20,6 +20,10 @@
       each `CellID` as a grid-cell node with `datetime` as the timestamp. The
       source-specific adapter is implemented in `src/ssl/milan_adapter.py` and
       aggregates country rows into five normalized traffic features.
+- [x] Implement the Milan masked-reconstruction encoder and trainer in
+      `src/ssl/milan_ssl.py`, including chronological validation, checkpoint
+      saving, and 64-dimensional embedding export. The bounded smoke-test
+      artifacts are under `data/processed/ssl_milan_smoke_test_50000_rows/`.
 - [ ] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py` (the
       `FlowFeatureEncoder.encode()` method is currently a `NotImplementedError`
       placeholder) — decide categorical-embedding sizes for the `CONTEXT_COLUMNS`.
@@ -33,5 +37,9 @@
       current 2,000-row smoke checkpoint evaluates its held-out sequence split;
       final metrics require a larger checkpoint with enough benign validation
       samples.
+- [ ] Run a true NIDD+Milan transfer or joint-pretraining experiment. The two
+      sources currently use source-specific adapters because NIDD is flow-level
+      with categorical protocol fields while Milan is numeric grid-cell traffic;
+      do not combine their raw tensors without an agreed shared adapter.
 - [ ] Agree the embedding output format/dimension with Thrishala — already fixed
       at D=64 in both `masked_reconstruction.py` and `docs/architecture/interface_contracts.md`; flag if that turns out to be too small/large once real training starts.
