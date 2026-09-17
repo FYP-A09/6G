@@ -16,7 +16,10 @@
 
 ## Still yours to do
 
-- [ ] Get a Milan sample from `data/raw/milan_telecom_italia/` (1-week CSVs) and decide the grid-cell = "node" framing (not yet covered by the drafted code above).
+- [x] Get the Milan sample from `data/raw/milan_telecom_italia/` and define
+      each `CellID` as a grid-cell node with `datetime` as the timestamp. The
+      source-specific adapter is implemented in `src/ssl/milan_adapter.py` and
+      aggregates country rows into five normalized traffic features.
 - [ ] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py` (the
       `FlowFeatureEncoder.encode()` method is currently a `NotImplementedError`
       placeholder) — decide categorical-embedding sizes for the `CONTEXT_COLUMNS`.

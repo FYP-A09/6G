@@ -20,7 +20,7 @@ gNB for NeversNet5G-shaped data, or a grid cell for Milan-shaped data.
 Raw fields the SSL encoder consumes before producing the embedding (for reference,
 so Sriranjana's encoder input side is unambiguous too):
 - **NeversNet5G**: `sinr_dl_db`, `sinr_ul_db`, `cqi_dl`, `cqi_ul`, `rlc_pdu_throughput_dl_bps`, `rlc_pdu_throughput_ul_bps`, `x`, `y`, `speed`.
-- **Milan**: `sms_in`, `sms_out`, `call_in`, `call_out`, `internet` (the 5 traffic columns in each `sms-call-internet-mi-*.txt` row).
+- **Milan**: `sms_in`, `sms_out`, `call_in`, `call_out`, `internet` (the 5 traffic columns in each aggregated `CellID`/`datetime` row; the current sample source fields are `smsin`, `smsout`, `callin`, `callout`, `internet` in `data/raw/milan_telecom_italia/*.csv`).
 
 ## 2. TGNN → MARL: predicted demand
 
