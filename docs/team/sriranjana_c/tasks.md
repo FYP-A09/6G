@@ -46,3 +46,8 @@
       The B5G orchestrator remains on its explicit placeholder until a
       B5G/NeversNet5G-compatible embedding export and final node ordering are
       agreed with Thrishala.
+- [x] Add the NeversNet5G telemetry adapter, masked-reconstruction encoder,
+      sequential training, logging, checkpointing, and 64-D export in
+      `src/ssl/neversnet_ssl.py`. It processes one UE CSV at a time and was
+      validated on a real sample file; full-dataset execution requires the
+      teammate's complete part folders.

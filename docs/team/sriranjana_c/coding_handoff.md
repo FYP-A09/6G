@@ -16,6 +16,9 @@ The implementation currently supports two data sources:
 
 Both source-specific pipelines produce 64-dimensional embeddings. Milan embeddings have already been passed through the TGNN interface in a real smoke test.
 
+The NeversNet5G pipeline described below now supports the same contract without
+requiring the full dataset to be present in this repository.
+
 ## Completed Coding Work
 
 ### 1. 5G-NIDD preprocessing
@@ -183,6 +186,40 @@ Implemented:
 [N, T, 64]
 ```
 
+### 9. NeversNet5G telemetry adapter and embedding export
+
+File: `src/ssl/neversnet_ssl.py`
+
+Implemented for the event-driven per-UE files such as:
+
+```text
+data/raw/neversnet5g/data/part1/part1_ue_01_metrics.csv
+```
+
+The runner:
+
+- Accepts one or more `--part-dir` arguments, such as `part1`, `part1_5`, and `part2`.
+- Scans `time_s` in chunks to find each part's time range.
+- Resamples sparse event logs to a fixed time grid using the existing graph-builder logic.
+- Processes one UE CSV at a time; it never loads all 27 GB into memory.
+- Uses the shared numeric telemetry fields from `src/tgnn/build_graph.py`:
+  `sinr_dl_db`, `sinr_ul_db`, `cqi_dl`, `cqi_ul`, `throughput_dl_bps`,
+  `throughput_ul_bps`, `latency_ul_ms`, and `speed`.
+- Fits normalization statistics from training-time bins only.
+- Trains a numeric masked-reconstruction encoder with a 64-D output.
+- Logs time-bound scans, per-file progress, skipped files, epochs, losses, and export totals.
+- Saves a checkpoint containing model configuration and normalization statistics.
+- Exports `node_id`, `timestamp`, `source_dataset`, and `embedding_00` through
+  `embedding_63` one row at a time.
+
+The node ID is namespaced by part to avoid collisions between local UE IDs:
+
+```text
+ue_part1_1
+ue_part1_5_3
+ue_part2_1
+```
+
 ## Important Artifacts
 
 ### NIDD smoke-test artifacts
@@ -329,6 +366,41 @@ python -c "from src.ssl.milan_ssl import export_milan_embeddings; export_milan_e
 python -c "from src.ssl.tgnn_bridge import build_tgnn_window; window=build_tgnn_window('data/processed/ssl_milan_smoke_test_50000_rows/milan_embeddings.csv', node_ids=['1','2','3']); print(window.shape); assert window.shape[2] == 64"
 ```
 
+### Train the NeversNet5G encoder on a sample
+
+Use this on a machine containing the sample folders:
+
+```powershell
+python src/ssl/neversnet_ssl.py train `
+  --part-dir data/raw/neversnet5g/data/part1 `
+  --part-dir data/raw/neversnet5g/data/part1_5 `
+  --output-dir data/processed/ssl_neversnet_training `
+  --epochs 5 `
+  --batch-size 1024 `
+  --bin-size-s 10 `
+  --device auto `
+  --verbose
+```
+
+For the complete dataset, repeat `--part-dir` for `part1`, `part1_5`,
+`part2`, `part2_5`, `part3`, `part3_5`, and `part4`. The command performs
+sequential passes over those folders and logs progress for every UE file.
+
+### Export NeversNet5G embeddings
+
+```powershell
+python src/ssl/neversnet_ssl.py export `
+  --part-dir data/raw/neversnet5g/data/part1 `
+  --part-dir data/raw/neversnet5g/data/part1_5 `
+  --checkpoint data/processed/ssl_neversnet_training/best_neversnet_model.pt `
+  --output data/processed/ssl_neversnet_training/neversnet_embeddings.csv `
+  --device cpu `
+  --verbose
+```
+
+The export can then be loaded by `src/ssl/tgnn_bridge.py` and reshaped into
+`[N, T, 64]`, provided the selected node/timestamp window is complete.
+
 ## Current Integration Contract
 
 The SSL-to-TGNN handoff is:
@@ -353,6 +425,7 @@ These are not part of the completed Review-1 coding handoff, but are the next en
 4. Replace the B5G orchestrator random SSL embedding function only after compatible graph embeddings are available.
 5. Run full-scale experiments and record final metrics separately from smoke-test metrics.
 6. Consider a formal NIDD/Milan transfer or joint-training experiment after agreeing on a shared cross-source architecture.
+7. Use the NeversNet5G export with the final Thrishala graph node ordering before replacing the B5G orchestrator's random SSL placeholder.
 
 ## Git Handoff
 
