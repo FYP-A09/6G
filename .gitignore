@@ -1,9 +1,21 @@
 # Raw and processed datasets are large and reproducible via scripts in src/data/ —
-# do not commit them. See data/raw/README.md for the catalog and download instructions.
+# do not commit them, EXCEPT the small (<20MB) slice-labeled datasets below, which
+# are committed directly so every teammate has them without a separate download step.
+# See data/raw/README.md for the full catalog and download instructions.
 data/raw/*
 data/processed/*
 !data/raw/README.md
 !data/processed/README.md
+!data/raw/robertbotez_6g_slicing/
+!data/raw/robertbotez_6g_slicing/**
+!data/raw/deepslice_secure5g/
+!data/raw/deepslice_secure5g/**
+!data/raw/network_slicing_puspakmeher/
+!data/raw/network_slicing_puspakmeher/**
+!data/raw/network_slicing_5g_amohankumar/
+!data/raw/network_slicing_5g_amohankumar/**
+!data/raw/6g_ran_telemetry_fl/
+!data/raw/6g_ran_telemetry_fl/**
 
 # Python
 __pycache__/
