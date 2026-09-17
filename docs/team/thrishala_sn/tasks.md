@@ -8,18 +8,31 @@ design up to the full data once it's validated. You get:
   construction logic.
 - `Thrishala_S_N_partial.zip` — the Milan 1-week sample (7 daily CSVs, 643MB).
 
-## Tasks
-- [ ] Unzip the NeversNet5G sample and extract the graph structure (gNB locations +
-      UE trajectories) from `part1`. Define the node/edge schema — this schema is
-      what Keerthivasan will apply to the full 8-part dataset later, so make it
-      general, not part1-specific.
-- [ ] Extract the B5G topology files at
-      `data/raw/b5g_slicing/2.2.1-10kprocessed/graphs/*.txt` (GML format, already in
-      the repo via Krish's zip) as a second topology source for the generalization
-      test (FR3).
-- [ ] Prototype a GraphSAGE + temporal-conv baseline using PyTorch Geometric Temporal
-      on the sample data before Keerthivasan scales it to the full 28GB/20GB sets.
-- [ ] Agree the SSL embedding input format with Sriranjana; agree the prediction
-      output format with Krish.
-- [ ] Prepare the review-1 slide: your 3 papers + identified gap (static graphs,
-      over-smoothing, label dependency) + why GraphSAGE + Temporal-Conv addresses it.
+## Done (drafted/prototyped ahead of your validation pass — react to these, don't treat them as final)
+
+- [x] Graph structure extraction — `src/tgnn/build_graph.py`, tested against the
+      real NeversNet5G part1 sample (10 UEs correctly matched to 19 real gNodeBs by
+      nearest-distance, weighted by real SINR) and against B5G's real GML topology
+      (416 nodes). **Validate the nearest-gNB heuristic** — it's a reconstruction
+      (the dataset doesn't label serving cell directly), flagged as an open question
+      in `graph_schema_draft.md` and `review1_slide_notes.md`.
+- [x] GraphSAGE + temporal-conv baseline — `src/tgnn/model.py`, plain torch (no
+      torch_geometric installed yet), runs end-to-end against dummy tensors shaped
+      like the real contract (29 nodes × 5 timesteps × 64-d embeddings in, 3-field
+      prediction out). Needs real training data plumbed through once Sriranjana's
+      encoder produces real embeddings instead of dummy ones.
+- [x] Review-1 slide notes — `review1_slide_notes.md`.
+
+## Still yours to do
+
+- [ ] Decide whether the nearest-gNB heuristic in `build_graph.py` is good enough,
+      or needs replacing with an SINR-based reassignment rule — compare the two on
+      the sample before Keerthivasan scales either approach to the full 28GB.
+- [ ] Extract B5G topology files as a *second* topology source specifically for the
+      generalization test (FR3) — `build_graph.py` loads one B5G graph by default,
+      extend to load several and compare.
+- [ ] Swap PyTorch Geometric Temporal in for the hand-rolled `GraphSAGELayer` in
+      `model.py` once that dependency is installed — same math, less code, worth
+      doing before scaling past the smoke test.
+- [ ] Once Sriranjana's SSL encoder produces real embeddings (not dummy tensors),
+      plug them into `model.py` and train on an actual next-step prediction target.

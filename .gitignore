@@ -16,6 +16,10 @@ data/processed/*
 !data/raw/network_slicing_5g_amohankumar/**
 !data/raw/6g_ran_telemetry_fl/
 !data/raw/6g_ran_telemetry_fl/**
+!data/raw/neversnet5g_metadata/
+!data/raw/neversnet5g_metadata/**
+!data/raw/b5g_slicing_sample/
+!data/raw/b5g_slicing_sample/**
 
 # Python
 __pycache__/
