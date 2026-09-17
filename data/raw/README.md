@@ -25,13 +25,22 @@ for who owns which dataset).
 
 ## Downloaded, but too large for git (gitignored, kept on `E:\FYP DATA\6G\`, shared via Drive as per-person zips)
 
-| Folder | Dataset | Size | Owner | Fetch command |
-|---|---|---|---|---|
-| `5g_nidd/` | 5G-NIDD real-testbed intrusion-detection flow records (UCD NetSlab, 2022) — single 263MB CSV, over GitHub's 100MB/file limit | 263MB | Sriranjana C | `download_datasets.py kaggle` |
-| `b5g_slicing/` | B5G Network Slicing Dataset — topology + eMBB/URLLC/mIoT routing/QoS, over/under-provisioned scenarios (Farreras et al., 2024) | 6.6GB | Krish S | `download_datasets.py b5g` |
-| `milan_telecom_italia/` | Telecom Italia Milan, 1-week Kaggle mirror sample (7 daily CSVs) | 2.5GB | Thrishala S N | `kaggle datasets download -d ocanaydin/italian-telecom-data-2013-1week` |
-| `milan_telecom_italia_full/` | Telecom Italia Milan, full 62-day span — Kaggle mirror of the exact Harvard Dataverse files, **no Guestbook form required** (unlike the original Dataverse page) | ~20GB | Thrishala S N | `kaggle datasets download -d dkgmgo/telecom-italia-milan` |
-| `neversnet5g/` | Full NeversNet5G vehicular 5G NR dataset — 8 part-folders, 242M+ rows of per-UE SINR/CQI/throughput/latency/mobility on a real gNB layout | ~1.1GB zip / **~28GB unpacked** | Thrishala S N | `download_datasets.py neversnet5g_full` |
+Ownership here follows a **full-data vs. sample-data** split: whoever's task needs
+the complete dataset works directly from `E:\FYP DATA\6G\` (Keerthivasan's machine —
+no need to zip/transfer tens of GB), while whoever only needs enough data to
+prototype gets a small zip via Drive instead.
+
+| Folder | Dataset | Full size | Sample given via Drive | Owner (full) | Owner (sample/prototyping) |
+|---|---|---|---|---|---|
+| `5g_nidd/` | 5G-NIDD real-testbed intrusion-detection flow records (UCD NetSlab, 2022) — single 263MB CSV, over GitHub's 100MB/file limit | 263MB | Whole thing (`Sriranjana_C.zip`, 31MB) | — | Sriranjana C |
+| `b5g_slicing/` | B5G Network Slicing Dataset — topology + eMBB/URLLC/mIoT routing/QoS, over/under-provisioned scenarios (Farreras et al., 2024) | 6.6GB | Whole thing (`Krish_S.zip`, 270MB) | — | Krish S |
+| `milan_telecom_italia_full/` | Telecom Italia Milan, full 62-day span — Kaggle mirror of the exact Harvard Dataverse files, **no Guestbook form required** (unlike the original Dataverse page) | ~20GB | 1-week sample, 7 daily CSVs (`Thrishala_S_N_partial.zip`, 643MB) | Keerthivasan | Thrishala S N |
+| `neversnet5g/` | Full NeversNet5G vehicular 5G NR dataset — 8 part-folders, 242M+ rows of per-UE SINR/CQI/throughput/latency/mobility on a real gNB layout | ~28GB unpacked | 1 part-folder (`part1`+`part1_5`, ~6.4GB raw) via `Thrishala_S_N_neversnet5g_sample.zip` | Keerthivasan | Thrishala S N |
+
+Fetch commands: `download_datasets.py kaggle` (5G-NIDD), `download_datasets.py b5g`
+(B5G), `kaggle datasets download -d dkgmgo/telecom-italia-milan` (Milan full),
+`download_datasets.py neversnet5g_full` (NeversNet5G full) — or `neversnet5g_sample`
+for just a part-folder.
 
 ## Recommended use by pipeline stage
 
