@@ -33,7 +33,8 @@ import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "marl"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tgnn"))
-from b5g_env import SLA_DELTA_THRESHOLD, B5GSlicingEnv  # noqa: E402
+from b5g_env import DemandPrediction, B5GSlicingEnv  # noqa: E402
+from maddpg import MADDPGTrainer  # noqa: E402
 from model import SSL_EMBEDDING_DIM, TGNNPredictor  # noqa: E402
 
 
@@ -46,6 +47,9 @@ class CandidateAction:
     predicted_reward: float
     twin_evaluation: str = "pending"  # "pending" | "approved" | "rejected"
     rejection_reason: str | None = None
+    measured_reward: float | None = None
+    prediction_error: float | None = None
+    twin_metrics: dict[str, float | bool] = field(default_factory=dict)
 
 
 def make_placeholder_ssl_embeddings(graph: nx.Graph, timesteps: int = 3) -> torch.Tensor:
@@ -87,26 +91,41 @@ def propose_action_from_prediction(
     return base
 
 
-def evaluate_in_twin(action: CandidateAction, recorded_delta: float, slice_type: str) -> None:
+def evaluate_in_twin(
+    action: CandidateAction,
+    recorded_delta: float,
+    slice_type: str,
+    measured_reward: float,
+    twin_metrics: dict[str, float | bool | None],
+) -> None:
     """
     The Digital Twin's "what-if" gate (FR4 in docs/team/keerthivasan/requirements.md):
     no candidate action reaches the Application Layer without passing this check
     first. Mutates `action` in place, setting twin_evaluation and, if rejected,
     rejection_reason — matching interface_contracts.md §3 exactly.
     """
-    threshold = SLA_DELTA_THRESHOLD.get(slice_type, 0.5)
-    if recorded_delta > threshold:
+    action.measured_reward = measured_reward
+    action.prediction_error = measured_reward - action.predicted_reward
+    action.twin_metrics = twin_metrics
+    if twin_metrics["sla_ok"] is not True:
         action.twin_evaluation = "rejected"
+        availability = "unavailable" if not twin_metrics["sla_available"] else "failed"
         action.rejection_reason = (
-            f"recorded delta {recorded_delta:.3f} exceeds {slice_type} SLA "
-            f"threshold {threshold:.3f} — twin will not approve this allocation "
-            f"until the predicted demand that drove it is re-checked"
+            f"{slice_type} candidate SLA evaluation {availability}; "
+            "delta is a continuous QoS-deviation signal, not an SLA cutoff"
         )
     else:
         action.twin_evaluation = "approved"
 
 
-def run_one_episode(env: B5GSlicingEnv) -> list[CandidateAction]:
+def run_one_episode(
+    env: B5GSlicingEnv,
+    trainer: MADDPGTrainer | None = None,
+    checkpoint: str | None = None,
+) -> list[CandidateAction]:
+    trainer = trainer or MADDPGTrainer()
+    if checkpoint:
+        trainer.load(checkpoint)
     obs = env.reset()
     adjacency, node_order = graph_to_adjacency(env.graph)
     embeddings = make_placeholder_ssl_embeddings(env.graph)
@@ -117,18 +136,40 @@ def run_one_episode(env: B5GSlicingEnv) -> list[CandidateAction]:
 
     node_index = {node_id: i for i, node_id in enumerate(node_order)}
 
-    actions: list[CandidateAction] = []
+    predicted_demand: dict[str, float] = {}
     for agent_id, agent_obs in obs.items():
         row = node_index.get(str(agent_obs.node_id))
-        predicted_load = predictions[row, 2].item() if row is not None else 0.0
+        predicted_load = float(torch.sigmoid(predictions[row, 2]).item()) if row is not None else 0.0
+        predicted_throughput = float(torch.relu(predictions[row, 0]).item()) if row is not None else 0.0
+        predicted_latency = float(torch.relu(predictions[row, 1]).item()) if row is not None else 0.0
+        agent_obs.prediction = DemandPrediction(
+            entity_id=agent_id,
+            slice_type=agent_obs.slice_type,
+            predicted_throughput_bps=predicted_throughput,
+            predicted_latency_ms=predicted_latency,
+            predicted_load=predicted_load,
+            confidence=1.0,
+            horizon_start=0.0,
+            horizon_end=1.0,
+        )
 
-        slice_allocations = propose_action_from_prediction(agent_obs.slice_type, predicted_load)
+    policy_actions = trainer.select_actions(obs)
+    _, rewards, _, infos = env.step(policy_actions)
+    actions: list[CandidateAction] = []
+    for agent_id, agent_obs in obs.items():
+        slice_allocations = policy_actions[agent_id]
         action = CandidateAction(
             agent_id=agent_id,
             slice_allocations=slice_allocations,
-            predicted_reward=0.0,  # filled in once Krish's trained policy exists
+            predicted_reward=trainer.predict_reward(agent_obs, slice_allocations),
         )
-        evaluate_in_twin(action, agent_obs.recorded_delta, agent_obs.slice_type)
+        evaluate_in_twin(
+            action,
+            agent_obs.recorded_delta,
+            agent_obs.slice_type,
+            rewards[agent_id],
+            infos[agent_id]["metrics"],
+        )
         actions.append(action)
 
     return actions
