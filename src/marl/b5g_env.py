@@ -37,7 +37,7 @@ _B5G_FULL = os.path.join(_DATA_RAW, "b5g_slicing", "2.2.1-10kprocessed")
 _B5G_SAMPLE = os.path.join(_DATA_RAW, "b5g_slicing_sample", "2.2.1-10kprocessed")
 _B5G_ROOT = _B5G_FULL if os.path.isdir(_B5G_FULL) else _B5G_SAMPLE
 
-SLICE_TYPES = ("eMBB", "URLLC", "mIoT")
+SLICE_TYPES = ("eMBB", "URLLC", "mMTC")
 
 # Reward weights from docs/team/krish_s/design.md — starting values, not tuned.
 REWARD_WEIGHTS = dict(
@@ -49,7 +49,7 @@ REWARD_WEIGHTS = dict(
 # Rough per-slice-type SLA thresholds on `delta` (treated as a normalized
 # delay/deviation metric) — placeholder values, calibrate against the dataset
 # paper (Farreras et al., 2024) once read in full.
-SLA_DELTA_THRESHOLD = {"eMBB": 0.5, "URLLC": 0.15, "mIoT": 0.8}
+SLA_DELTA_THRESHOLD = {"eMBB": 0.5, "URLLC": 0.15, "mMTC": 0.8}
 
 
 @dataclass
@@ -172,6 +172,6 @@ if __name__ == "__main__":
         print(" ", agent_id, o)
 
     # Smoke-test step() with a trivial equal-split action for each agent.
-    dummy_actions = {aid: {"eMBB": 0.34, "URLLC": 0.33, "mIoT": 0.33} for aid in obs}
+    dummy_actions = {aid: {"eMBB": 0.34, "URLLC": 0.33, "mMTC": 0.33} for aid in obs}
     _, rewards, _, _ = env.step(dummy_actions)
     print("Sample rewards:", dict(list(rewards.items())[:3]))

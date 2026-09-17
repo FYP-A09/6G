@@ -26,7 +26,7 @@ shared index `N`.
 - `routings/routing_N.txt` — a plain `netSize × netSize` CSV matrix; `-1` on the
   diagonal, otherwise the next-hop port from row-node to column-node.
 - `slices/slices_N.json` — a JSON array of slice objects: `type`
-  (`eMBB`/`URLLC`/`mIoT`), `delta` (a per-slice deviation value in observed range
+  (`eMBB`/`URLLC`/`mMTC`), `delta` (a per-slice deviation value in observed range
   ~0.07–0.48 — treated as a normalized QoS-deviation/SLA-margin signal; not yet
   confirmed against the Farreras et al. 2024 paper's exact definition, calibrate
   the `SLA_DELTA_THRESHOLD` values in `b5g_env.py` once confirmed), `number`

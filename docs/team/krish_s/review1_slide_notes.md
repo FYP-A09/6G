@@ -26,7 +26,7 @@ these four papers already validated works for slicing broadly.
 ## What's built so far
 
 - `src/marl/b5g_env.py` — offline-replay PettingZoo-shaped environment over the
-  B5G dataset (real topologies + recorded eMBB/URLLC/mIoT flows + ground-truth
+  B5G dataset (real topologies + recorded eMBB/URLLC/mMTC flows + ground-truth
   performance), using the dataset's own `datanetAPI.py` loader rather than
   hand-parsing the JSON.
 - `docs/team/krish_s/algorithm_decision.md` — MADDPG chosen as the starting

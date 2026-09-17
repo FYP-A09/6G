@@ -35,7 +35,7 @@ two and this file should be updated or retired in favor of hers.
   are GML-format Topology Zoo network files (e.g. `Renater`, France backbone).
 - **Node type**: network element (router/switch, per Topology Zoo convention).
 - **Edge type**: physical link, direction and multigraph flags set in the GML header (`directed 1`, `multigraph 1`).
-- Pairs with `2.2.1-10kprocessed/routings/` and `.../slices/` (per-flow eMBB/URLLC/mIoT
+- Pairs with `2.2.1-10kprocessed/routings/` and `.../slices/` (per-flow eMBB/URLLC/mMTC
   QoS) for the MARL side — Krish's dataset, same topology files Thrishala needs for
   her generalization test (FR3 in her requirements).
 

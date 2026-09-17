@@ -40,11 +40,31 @@ scale (more nodes, more days, real long-range temporal patterns).
 - [ ] Re-run her GraphSAGE + temporal-conv baseline against full Milan/NeversNet5G
       once it works on the samples — same dependency.
 
+## Done — the actual end-to-end closed loop
+
+- [x] `src/digital_twin/orchestrator.py` — the first real, runnable closed loop:
+      loads a real B5G sample (via Krish's `b5g_env.py`) → placeholder SSL
+      embeddings shaped exactly like Sriranjana's real contract → Thrishala's
+      `TGNNPredictor` → a heuristic stand-in for Krish's MADDPG action → the
+      Digital Twin's approve/reject gate (`evaluate_in_twin`, FR4). Tested end to
+      end against the real 416-node B5G graph: 389 real agents processed, 274
+      approved, 115 rejected on SLA grounds. Every placeholder is explicitly
+      marked and matches `interface_contracts.md` exactly, so swapping in each
+      teammate's trained module later is a drop-in replacement, not a rewrite.
+- [x] Found and fixed a real bug during integration: B5G's actual slice-type
+      label is `mMTC`, not `mIoT` as every doc (including the literature review's
+      dataset notes) assumed — corrected across `b5g_env.py`, `orchestrator.py`,
+      and the affected docs. This is exactly the kind of mismatch integration
+      testing is supposed to catch before review 1.
+
 ## Next (not yet started)
 
 - [ ] Install OMNeT++ + Simu5G + SUMO integration so the scenario skeleton in
-      `src/digital_twin/simu5g_scenario/` actually runs.
-- [ ] Wire up telemetry replay from the existing NeversNet5G CSVs as the first
-      "Network Element Layer" data source (faster than a live simulator — see the
-      scenario README's option (a)) so the NDT loop has something to synchronize
-      against for a first end-to-end demo.
+      `src/digital_twin/simu5g_scenario/` actually runs, replacing the offline
+      B5G replay with a live network as the Network Element Layer.
+- [ ] Wire up telemetry replay from the existing NeversNet5G CSVs as an
+      alternative "Network Element Layer" data source (faster than a live
+      simulator) once Thrishala's graph-construction work is validated.
+- [ ] Replace the three placeholders in `orchestrator.py` (SSL embeddings, TGNN
+      is real but untrained, MARL heuristic) with each teammate's trained module
+      as they land — track this as the concrete "integration debt" list.
