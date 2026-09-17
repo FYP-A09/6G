@@ -20,10 +20,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
 
+from networkx import config
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
+from torch import minimum, nn
 
 try:
     from ..tgnn.build_graph import NODE_FEATURE_COLUMNS, discover_ue_files, resample_ue_to_bins
@@ -120,10 +121,20 @@ def _set_seed(seed: int) -> None:
 
 def _resolve_device(requested: str) -> torch.device:
     if requested == "auto":
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
     device = torch.device(requested)
+
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is not available")
+
+    if device.type == "mps" and not torch.backends.mps.is_available():
+        raise RuntimeError("MPS was requested but is not available")
+
     return device
 
 
@@ -165,9 +176,9 @@ def _make_part_info(part_dir: str | Path, config: NeversNetConfig, max_files: in
     if minimum == math.inf:
         raise ValueError(f"No usable time_s values found under {directory}")
 
-    bin_count = max(1, math.ceil((maximum - minimum) / config.bin_size_s))
+    bin_count = max(2, math.ceil((maximum - minimum) / config.bin_size_s) + 1)
     bins = [minimum + index * config.bin_size_s for index in range(bin_count)]
-    cutoff_index = max(1, min(len(bins) - 1, int(len(bins) * (1 - config.validation_fraction))))
+    cutoff_index = max(1,min(len(bins) - 1,int((len(bins) - 1) * (1 - config.validation_fraction))))
     return PartInfo(directory, _part_label(directory), files, bins, bins[cutoff_index])
 
 

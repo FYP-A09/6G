@@ -1,10 +1,9 @@
 """
 GraphSAGE + temporal-conv TGNN (Thrishala S N's task — see design.md).
 
-Written in plain torch (no torch_geometric — not installed on this machine yet;
-`pip install torch-geometric` would let GraphSAGEConv below be replaced with
-`torch_geometric.nn.SAGEConv` directly, same math, less code). Runnable today
-against dummy tensors shaped like the real interface contract
+Uses the official PyTorch Geometric `SAGEConv` for spatial aggregation and
+PyTorch Geometric Temporal's `GConvGRU` for recurrent graph-temporal propagation.
+Runnable against the real interface contract
 (docs/architecture/interface_contracts.md): input is Sriranjana's D=64 SSL
 embedding per node per timestep, output is Krish's predicted-demand vector.
 """
@@ -14,23 +13,22 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.nn import SAGEConv
+from torch_geometric_temporal.nn.recurrent import GConvGRU
 
 SSL_EMBEDDING_DIM = 64  # matches interface_contracts.md §1
 
 
 class GraphSAGELayer(nn.Module):
     """
-    Mean-aggregation GraphSAGE layer (Hamilton et al.), hand-rolled since
-    torch_geometric isn't installed. Given node features and a dense adjacency
-    matrix, aggregates each node's neighbor features (mean) and concatenates with
-    the node's own features before a linear projection — this is exactly
-    GraphSAGE's "mean aggregator" variant, the one used in the GraphSAGE-DT paper
-    reviewed in the literature survey.
+    Official PyTorch Geometric mean-aggregation GraphSAGE layer. The public
+    model API remains dense-adjacency based, so this wrapper converts each
+    timestep's dense structural adjacency to PyG's ``edge_index`` format.
     """
 
     def __init__(self, in_dim: int, out_dim: int):
         super().__init__()
-        self.linear = nn.Linear(in_dim * 2, out_dim)
+        self.conv = SAGEConv(in_dim, out_dim, aggr="mean")
 
     def forward(self, x: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
         """
@@ -38,34 +36,15 @@ class GraphSAGELayer(nn.Module):
         adj: [N, N]          binary/weighted adjacency (adj[i, j] = edge i->j)
         returns: [N, out_dim]
         """
-        degree = adj.sum(dim=1, keepdim=True).clamp(min=1.0)
-        neighbor_mean = (adj @ x) / degree
-        combined = torch.cat([x, neighbor_mean], dim=-1)
-        return F.relu(self.linear(combined))
-
-
-class TemporalConvBlock(nn.Module):
-    """1D causal convolution over the time axis, per node — the SSGNN-style
-    temporal component paired with GraphSAGE's spatial aggregation."""
-
-    def __init__(self, channels: int, kernel_size: int = 3):
-        super().__init__()
-        self.conv = nn.Conv1d(
-            channels, channels, kernel_size, padding=kernel_size - 1
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x: [N, T, C] -> [N, T, C] (causal: trims the right-padding)"""
-        x = x.transpose(1, 2)  # [N, C, T]
-        out = self.conv(x)[:, :, : x.shape[-1]]  # causal trim
-        return F.relu(out).transpose(1, 2)  # back to [N, T, C]
+        edge_index = adj.nonzero(as_tuple=False).transpose(0, 1).contiguous()
+        return F.relu(self.conv(x, edge_index))
 
 
 class TGNNPredictor(nn.Module):
     """
     Full model: SSL embeddings [N, T, D] + adjacency [N, N]
              -> spatial GraphSAGE aggregation per timestep
-             -> temporal conv over the resulting sequence
+             -> recurrent graph-temporal propagation over the resulting sequence
              -> per-node predicted-demand vector (throughput, latency, load)
 
     Output fields map to docs/architecture/interface_contracts.md §2
@@ -85,26 +64,48 @@ class TGNNPredictor(nn.Module):
         self.sage_layers = nn.ModuleList(
             [GraphSAGELayer(dims[i], dims[i + 1]) for i in range(num_sage_layers)]
         )
-        self.temporal_conv = TemporalConvBlock(hidden_dim)
+        self.temporal_graph = GConvGRU(hidden_dim, hidden_dim, K=2)
         self.output_head = nn.Linear(hidden_dim, len(self.OUTPUT_FIELDS))
 
     def forward(self, embeddings: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
         """
         embeddings: [N, T, D]  SSL embeddings per node per timestep
-        adj:        [N, N]     graph adjacency (static within the window)
+        adj:        [N, N] or [T, N, N] graph adjacency. A 2-D adjacency is
+                reused at every timestep; a 3-D adjacency captures handovers.
         returns:    [N, len(OUTPUT_FIELDS)]  prediction for the next timestep
         """
         n, t, d = embeddings.shape
+        if adj.ndim == 2:
+            if adj.shape != (n, n):
+                raise ValueError(f"static adj must have shape [{n}, {n}]")
+            adjacency_per_step = [adj] * t
+        elif adj.ndim == 3:
+            if adj.shape != (t, n, n):
+                raise ValueError(f"dynamic adj must have shape [{t}, {n}, {n}]")
+            adjacency_per_step = list(adj.unbind(dim=0))
+        else:
+            raise ValueError("adj must have shape [N, N] or [T, N, N]")
+
         spatial_out = embeddings
         for layer in self.sage_layers:
             # Apply the same spatial layer independently at each timestep.
             spatial_out = torch.stack(
-                [layer(spatial_out[:, ts, :], adj) for ts in range(t)], dim=1
+                [layer(spatial_out[:, ts, :], adjacency_per_step[ts]) for ts in range(t)], dim=1
             )  # [N, T, hidden_dim]
 
-        temporal_out = self.temporal_conv(spatial_out)  # [N, T, hidden_dim]
-        last_step = temporal_out[:, -1, :]  # use the most recent step to predict next
-        return self.output_head(last_step)  # [N, len(OUTPUT_FIELDS)]
+        temporal_states = []
+        hidden_state = None
+        for ts in range(t):
+            edge_index = adjacency_per_step[ts].nonzero(as_tuple=False).transpose(0, 1).contiguous()
+            hidden_state = self.temporal_graph(
+                spatial_out[:, ts, :], edge_index, H=hidden_state
+            )
+            temporal_states.append(F.relu(hidden_state))
+        last_step = temporal_states[-1]  # use the most recent state to predict next
+        raw_prediction = self.output_head(last_step)
+        nonnegative = F.softplus(raw_prediction[:, :2])
+        normalized_load = torch.sigmoid(raw_prediction[:, 2:3])
+        return torch.cat([nonnegative, normalized_load], dim=-1)
 
 
 if __name__ == "__main__":

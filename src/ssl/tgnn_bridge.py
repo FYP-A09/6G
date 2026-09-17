@@ -17,7 +17,7 @@ class TGNNSslWindow:
 
     embeddings: torch.Tensor
     node_ids: list[str]
-    timestamps: list[int]
+    timestamps: list[float]
     source_dataset: str
 
     @property
@@ -50,12 +50,12 @@ def load_embedding_export(path: str | Path) -> pd.DataFrame:
 def build_tgnn_window(
     path: str | Path,
     node_ids: list[str] | None = None,
-    timestamps: list[int] | None = None,
+    timestamps: list[float] | None = None,
 ) -> TGNNSslWindow:
     """Return embeddings ordered as [nodes, timestamps, 64]."""
     frame = load_embedding_export(path)
     frame["node_id"] = frame["node_id"].astype(str)
-    frame["timestamp"] = pd.to_numeric(frame["timestamp"], errors="raise").astype("int64")
+    frame["timestamp"] = pd.to_numeric(frame["timestamp"], errors="raise").astype("float64")
     ordered_nodes = node_ids or sorted(frame["node_id"].unique().tolist())
     ordered_timestamps = timestamps or sorted(frame["timestamp"].unique().tolist())
     selected = frame[

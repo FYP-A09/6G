@@ -70,6 +70,13 @@ NODE_FEATURE_COLUMNS = [
     "throughput_dl_bps", "throughput_ul_bps", "latency_ul_ms", "speed",
 ]
 
+# Targets are kept separate from SSL inputs because this sample has sparse
+# application throughput fields. The RLC UL fields are the populated proxy
+# used by the NeversNet5G TGNN trainer when the advertised DL fields are empty.
+TARGET_FEATURE_COLUMNS = [
+    "rlc_pdu_throughput_ul_bps", "rlc_pdu_delay_ul_ms",
+]
+
 _UE_FILENAME_RE = re.compile(
     r"(?P<part>part\d+(?:[._]5)?)_ue_(?P<ue_id>\d+)_metrics\.csv$"
 )
@@ -301,7 +308,7 @@ def build_temporal_graph_sequence(
             node_id = f"ue_{part_label}_{ue_id}"
             features = {
                 col: float(row[col])
-                for col in NODE_FEATURE_COLUMNS
+                for col in [*NODE_FEATURE_COLUMNS, *TARGET_FEATURE_COLUMNS]
                 if col in row and pd.notna(row[col])
             }  # unknown-at-this-bin features are OMITTED, not written as None/NaN —
                # GML has no native null, so a stored None/NaN would round-trip as the
