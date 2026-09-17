@@ -35,17 +35,17 @@ discarded (see `design.md`).
 
 - `docs/team/sriranjana_c/dataset_notes.md` — full 5G-NIDD column profile (50
   columns, 1.2M rows), with columns grouped into context vs. masking-target sets.
-- `src/ssl/masked_reconstruction.py` — the pretext-task skeleton (flow-level
-  encoder variant, since 5G-NIDD has no inherent graph), including a runnable
-  profiling hook for NFR1 (measuring compute overhead — the SSL survey paper's
-  own flagged gap).
-- `src/ssl/evaluate_embeddings.py` — the Micro-F1 evaluation proxy against the
-  slice-labeled Kaggle datasets already in the repo, runnable end-to-end today
-  with a placeholder embedding function (swap in the real encoder once trained).
+- `src/ssl/masked_reconstruction.py` — the flow-level PyTorch encoder/decoder
+  for 5G-NIDD, with categorical context embeddings, masked reconstruction loss,
+  and the fixed D=64 output.
+- `src/ssl/profile_masked_reconstruction.py` — real preprocessing and model
+  overhead profiling for NFR1.
+- `src/ssl/evaluate_embeddings.py` — leakage-free Micro-F1, Macro-F1, and
+  per-class evaluation of frozen NIDD embeddings against raw/random baselines.
 
 ## Slide checklist
 
-- [ ] 3 papers + gap (above)
-- [ ] Pretext task choice + why (above)
-- [ ] Column profile summary from `dataset_notes.md`
-- [ ] NFR1 compute-overhead measurement, once the real encoder is trained
+- [x] 3 papers + gap (above)
+- [x] Pretext task choice + why (above)
+- [x] Column profile summary from `dataset_notes.md`
+- [x] NFR1 compute-overhead measurement using the trained encoder

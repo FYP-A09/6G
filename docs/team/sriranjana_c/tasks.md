@@ -4,14 +4,11 @@
 
 - [x] 5G-NIDD feature profile (50 columns, 1.2M rows, grouped into context vs.
       masking-target sets) — `dataset_notes.md`.
-- [x] Masked-reconstruction pretext task skeleton — `src/ssl/masked_reconstruction.py`,
-      flow-level encoder variant (5G-NIDD has no inherent graph), fixed at the
-      agreed D=64 output. The profiling hook (`evaluate_reconstruction_loss`) runs
-      today and measures I/O timing; the actual encoder forward pass is a `TODO`
-      pending a decision on categorical-column embedding sizes.
-- [x] Slice-type classification evaluation proxy — `src/ssl/evaluate_embeddings.py`,
-      runs end-to-end today (sklearn Logistic Regression + Micro-F1) against a
-      placeholder embedding function — swap in the real encoder once trained.
+- [x] Masked-reconstruction encoder and decoder — `src/ssl/masked_reconstruction.py`,
+      with categorical context embeddings, masked-only reconstruction loss, and
+      the agreed D=64 output.
+- [x] NIDD embedding evaluation — `src/ssl/evaluate_embeddings.py`, with
+      leakage-free classifier scoring and raw/random baselines.
 - [x] Review-1 slide notes — `review1_slide_notes.md`.
 
 ## Still yours to do
@@ -24,9 +21,9 @@
       `src/ssl/milan_ssl.py`, including chronological validation, checkpoint
       saving, and 64-dimensional embedding export. The bounded smoke-test
       artifacts are under `data/processed/ssl_milan_smoke_test_50000_rows/`.
-- [ ] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py` (the
-      `FlowFeatureEncoder.encode()` method is currently a `NotImplementedError`
-      placeholder) — decide categorical-embedding sizes for the `CONTEXT_COLUMNS`.
+- [x] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py`,
+      including categorical embeddings for the `CONTEXT_COLUMNS` and the fixed
+      64-dimensional output.
 - [x] Run the real reconstruction profiling once the encoder exists, and
       report the wall-clock number (NFR1 — don't skip the timing). The Phase 4
       replacement is now implemented in `src/ssl/profile_masked_reconstruction.py`;
