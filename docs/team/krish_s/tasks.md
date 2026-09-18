@@ -19,14 +19,29 @@
 
 ## Still yours to do
 
-- [ ] Calibrate `SLA_DELTA_THRESHOLD` in `b5g_env.py` against the actual Farreras
-      et al. (2024) paper's definition of `delta` — currently a guessed
-      per-slice-type threshold, not confirmed.
+- [~] Calibrate `SLA_DELTA_THRESHOLD` in `b5g_env.py` against the actual Farreras
+      et al. (2024) paper's definition of `delta` — empirical groundwork done:
+      scanned all 7,984 real slice files under the full B5G release and computed
+      the real per-slice-type delta distribution (see
+      `reports/krish_marl_50/delta_calibration.md`): eMBB median 0.493 (Q05
+      0.049, Q95 0.946), URLLC median 0.500 (Q05 0.050, Q95 0.949), mMTC median
+      0.498 (Q05 0.050, Q95 0.950) — deltas are ~uniform on [0,1] for every slice
+      type, not concentrated near a natural cutoff. Still open: the paper's own
+      definition of what delta value constitutes a violation, which this repo
+      doesn't have access to — the threshold itself can't be honestly finalized
+      without it.
 - [ ] Extend the reward to the remaining 3 terms (latency, packet-loss,
       reconfiguration-churn penalties) once their concrete data sources are
       decided — `delta` alone may not carry enough signal for all of them.
-- [ ] Pull the full `data/raw/b5g_slicing/` (or unzip `Krish_S.zip`) to run against
-      all 10k samples instead of the 1-sample in-repo fallback.
+- [x] Ran the full evaluation suite (`marl.evaluation.evaluate_b5g`) against 50 real
+      samples from the full `E:\FYP DATA\6G\data\raw\b5g_slicing\` release (11,783
+      real agents total, not just the 389 from the 1-sample in-repo fallback).
+      Real result: the heuristic policy already beats equal-split on both mean
+      reward (0.3674 vs 0.3611) and utilization (0.533 vs 0.333); the untrained
+      MADDPG actor's inference cost (6.07ms/sample) is ~3.4x the heuristic's,
+      quantifying the real overhead a trained network needs to justify. Approval
+      rate is 0% across all 50 samples too \u2014 confirms the missing-telemetry
+      finding isn't a fluke of one sample. See `reports/krish_marl_50/`.
 - [ ] Sync with Thrishala on the exact format of the TGNN's predicted-demand output
       (already drafted in `interface_contracts.md` §2) before wiring
       `predicted_demand_bps` into `AgentObservation`.

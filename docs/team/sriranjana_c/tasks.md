@@ -38,8 +38,12 @@
       sources currently use source-specific adapters because NIDD is flow-level
       with categorical protocol fields while Milan is numeric grid-cell traffic;
       do not combine their raw tensors without an agreed shared adapter.
-- [ ] Agree the embedding output format/dimension with Thrishala — already fixed
-      at D=64 in both `masked_reconstruction.py` and `docs/architecture/interface_contracts.md`; flag if that turns out to be too small/large once real training starts.
+- [x] Agree the embedding output format/dimension with Thrishala — D=64, fixed
+      and consistent across `masked_reconstruction.py`, `milan_ssl.py`,
+      `neversnet_ssl.py`, `tgnn_bridge.py`, `model.py`'s `SSL_EMBEDDING_DIM`, and
+      `docs/architecture/interface_contracts.md` §1. Confirmed no mismatch across
+      any of these files as of this review; revisit only if a future ablation
+      argues for a different D.
 - [x] Add the SSL-to-TGNN bridge in `src/ssl/tgnn_bridge.py`. It validates the
       64-dimensional export and reshapes Milan embeddings into `[N, T, 64]`; a
       real 29-node x 5-timestep Milan window was consumed by `TGNNPredictor`.

@@ -1,0 +1,4 @@
+policy,samples,agents,mean_reward,qos_satisfaction_rate,sla_violation_rate,mean_utilization,mean_reconfiguration_churn,mean_latency_ms,mean_packet_loss_rate,approval_rate,mean_inference_ms_per_sample
+equal_split,50,11783,0.3610689128405247,0.0,0.0,0.33333333333339005,0.25,0.0,0.0,0.0,1.7525820001173997
+heuristic,50,11783,0.3674340151065134,0.0,0.0,0.5333333333334649,0.25,0.0,0.0,0.0,1.8240000000514556
+untrained_actor_baseline,50,11783,0.3552128030186864,0.0,0.0,0.32444553931732895,0.24999999623266067,0.0,0.0,0.0,6.070346000014979
