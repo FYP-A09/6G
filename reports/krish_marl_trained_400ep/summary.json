@@ -1,0 +1,44 @@
+[
+  {
+    "policy": "equal_split",
+    "samples": 50,
+    "agents": 10807,
+    "mean_reward": 0.389299713148893,
+    "qos_satisfaction_rate": 0.0,
+    "sla_violation_rate": 0.0,
+    "mean_utilization": 0.3333333333333815,
+    "mean_reconfiguration_churn": 0.25,
+    "mean_latency_ms": 0.0,
+    "mean_packet_loss_rate": 0.0,
+    "approval_rate": 0.0,
+    "mean_inference_ms_per_sample": 2.603118000042741
+  },
+  {
+    "policy": "heuristic",
+    "samples": 50,
+    "agents": 10807,
+    "mean_reward": 0.38960507078745715,
+    "qos_satisfaction_rate": 0.0,
+    "sla_violation_rate": 0.0,
+    "mean_utilization": 0.5333333333334384,
+    "mean_reconfiguration_churn": 0.25,
+    "mean_latency_ms": 0.0,
+    "mean_packet_loss_rate": 0.0,
+    "approval_rate": 0.0,
+    "mean_inference_ms_per_sample": 2.9270220000034897
+  },
+  {
+    "policy": "trained_actor",
+    "samples": 50,
+    "agents": 10807,
+    "mean_reward": 0.34000214250659144,
+    "qos_satisfaction_rate": 0.0,
+    "sla_violation_rate": 0.0,
+    "mean_utilization": 0.24698962060319427,
+    "mean_reconfiguration_churn": 0.2499999964170753,
+    "mean_latency_ms": 0.0,
+    "mean_packet_loss_rate": 0.0,
+    "approval_rate": 0.0,
+    "mean_inference_ms_per_sample": 10.57232799987105
+  }
+]

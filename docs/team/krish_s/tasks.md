@@ -42,9 +42,39 @@
       quantifying the real overhead a trained network needs to justify. Approval
       rate is 0% across all 50 samples too \u2014 confirms the missing-telemetry
       finding isn't a fluke of one sample. See `reports/krish_marl_50/`.
-- [ ] Sync with Thrishala on the exact format of the TGNN's predicted-demand output
-      (already drafted in `interface_contracts.md` §2) before wiring
-      `predicted_demand_bps` into `AgentObservation`.
-- [ ] Actually implement MADDPG (or an RLlib equivalent) training against
-      `B5GSlicingEnv` — the environment exists and runs, the learning algorithm
-      doesn't yet.
+- [x] Sync with Thrishala on the exact format of the TGNN's predicted-demand output
+      — confirmed settled, not just drafted: `interface_contracts.md` §2's
+      `DemandPrediction` fields (`entity_id`, `slice_type`, `predicted_throughput_bps`,
+      `predicted_latency_ms`, `predicted_load`, `confidence`, `horizon_start`/`horizon_end`)
+      match `b5g_env.py`'s dataclass exactly, and `orchestrator.py` already
+      constructs a real `DemandPrediction` per agent and assigns it to
+      `AgentObservation.prediction` in the live closed loop — this is wired in,
+      not still pending.
+- [~] Actually implement MADDPG training against `B5GSlicingEnv` with real gradient
+      updates, not just the architecture. `MADDPGTrainer` (`src/marl/maddpg.py`) has
+      a real actor/centralized-critic pair trained via `_update()` (MSE critic loss,
+      deterministic policy-gradient actor loss, both with real `.backward()` +
+      `optimizer.step()` calls) — this part is done. Ran a genuine 400-episode
+      training pass against the full 7,984-sample B5G release (episodes 0–399,
+      ~281ms/episode, dominated by real GML graph I/O) and evaluated on a held-out
+      block of 50 samples never seen during training (indices 400–449, 10,807 real
+      agents). **Honest result: the trained actor did not beat the baselines** —
+      mean reward 0.3400 vs. equal-split 0.3893 and heuristic 0.3896 (see
+      `reports/krish_marl_trained_400ep/README.md`). Utilization also dropped
+      (0.247 vs. heuristic's 0.533): the actor hasn't yet learned the heuristic's
+      implicit strategy of over-allocating to the agent's own observed slice type.
+      This is a real, unfavorable-but-honest finding, not a bug to paper over —
+      400 episodes with untuned hyperparameters (`actor_lr=1e-3`, `critic_lr=2e-3`,
+      `exploration_noise=0.05`) is a small training budget for MADDPG; more
+      episodes, reward-shaping, and hyperparameter tuning are still needed before
+      the trained policy is competitive. Still genuinely open, now with real
+      evidence instead of an untested architecture. Re-ran training capturing the
+      full per-episode curve (`reports/krish_marl_trained_400ep/train_reward_history.json`,
+      plotted at `docs/figures/maddpg_training_curve.png`): training-time reward
+      (noisy, high per-episode variance — min -0.174, max 0.856) does show a real
+      upward drift, from a 0.305 mean over episodes 1–50 to 0.414 over episodes
+      350–400, approaching the heuristic's 0.390 level on the *training* samples.
+      But the held-out evaluation above (0.340 on unseen samples 400–449) still
+      trails baselines — consistent with the actor partly fitting the specific
+      training samples rather than learning a policy that generalizes yet. Reporting
+      both honestly rather than only the flattering training curve.

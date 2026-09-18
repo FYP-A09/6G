@@ -1,7 +1,10 @@
 """Bounded-memory NeversNet5G telemetry replay for the Digital Twin NEL.
 
-The real simulator configuration is kept in ``simu5g_scenario``.  Until its
-external OMNeT++/Simu5G/SUMO toolchain is installed, this module replays the
+The real simulator configuration is kept in ``simu5g_scenario``.  The external
+OMNeT++/Simu5G toolchain is now installed and validated (see
+``docs/team/keerthivasan/tasks.md``), but the project's own 19-gNodeB
+``simu5g_scenario`` config still needs SUMO/veins mobility wired in before it can
+replace this replay with a live rollout.  Until then, this module replays the
 same event records that the scenario emitted.  It deliberately streams CSV
 chunks so the 27-GB source does not need to be materialized in RAM.
 """

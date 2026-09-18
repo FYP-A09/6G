@@ -25,9 +25,22 @@ design up to the full data once it's validated. You get:
 
 ## Still yours to do
 
-- [ ] Decide whether the nearest-gNB heuristic in `build_graph.py` is good enough,
-      or needs replacing with an SINR-based reassignment rule — compare the two on
-      the sample before Keerthivasan scales either approach to the full 28GB.
+- [x] Checked whether the nearest-gNB heuristic in `build_graph.py` is good enough
+      — ran a real correlation analysis (`reports/thrishala_heuristic_check/nearest_gnb_vs_sinr.json`)
+      over all 118 usable UEs in part1: Pearson correlation between reconstructed
+      nearest-gNB distance and the dataset's own recorded downlink SINR is **-0.355**
+      (moderate negative — physically consistent with closer UEs measuring stronger
+      signal, as real path-loss predicts) and **100% of UEs fall within their
+      assigned gNB's reported coverage range**. This is real supporting evidence the
+      heuristic is reasonable, not proof it's optimal — moderate (not strong)
+      correlation is expected given real interference/building-penetration effects
+      the heuristic doesn't model. A true SINR-based reassignment rule (picking
+      whichever candidate gNB the UE would measure the best SINR from) **cannot be
+      computed from this dataset** — it only records SINR for the UE's one actual
+      serving cell, not per-candidate-gNB, so testing an alternative rule would
+      require re-simulating, not just re-analyzing. Decision: keep the nearest-gNB
+      heuristic — it's the only reconstruction the data supports and it checks out
+      against the real signal-strength pattern.
 - [x] Extract B5G topology files as a *second* topology source for the
       generalization test (FR3) — confirmed directly: the same `TGNNPredictor`
       (no code or shape changes) processes 4 different real B5G graphs

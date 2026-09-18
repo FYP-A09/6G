@@ -17,9 +17,22 @@ scale (more nodes, more days, real long-range temporal patterns).
 - [x] Stand up a first Simu5G scenario skeleton — see
       [`src/digital_twin/simu5g_scenario/`](../../../src/digital_twin/simu5g_scenario/).
       This is the **actual** config that generated the NeversNet5G dataset (19-gNodeB
-      X2-mesh over Nevers, France), not an invented stand-in. Not runnable yet
-      (OMNeT++/Simu5G/SUMO aren't installed on this machine) — that install is the
-      next concrete step here.
+      X2-mesh over Nevers, France), not an invented stand-in.
+- [x] Installed OMNeT++ 6.4.0 + INET 4.7.0 + Simu5G 1.7.0 from source (WSL2 Ubuntu,
+      via `opp_env` in nixless mode — Nix itself wasn't available, so the build uses
+      the system gcc/Qt5/z3 toolchain directly). Real blockers hit and fixed along
+      the way: OMNeT++'s configure wanted Qt6 (only Qt5 ships on Ubuntu 22.04) →
+      disabled the Qtenv GUI build since only headless Cmdenv is needed;
+      `python3.10-venv` was missing; INET's optional TSN gate-scheduling module
+      needed `libz3-dev`. Validated the full toolchain by actually running Simu5G's
+      `nr/standalone` VoIP-DL example end to end (1 gNB + 1 UE, 5 simulated
+      seconds, 28,092 discrete events): 93/93 VoIP packets delivered, 0 loss,
+      MOS 4.41/5, mean frame delay 4.82ms — see
+      `data/processed/simu5g_validation/voipdl_vectors.csv` (the real exported
+      `.vec` output) and `docs/figures/simu5g_nr_validation.png`. This proves the
+      external simulator toolchain itself works; it does **not** yet mean the
+      project's own 19-gNodeB Nevers scenario is wired up and running — that's the
+      next step below.
 - [x] Draft the end-to-end architecture diagram — see
       [`docs/architecture/system_diagram.md`](../../architecture/system_diagram.md).
 - [x] Draft a candidate graph node/edge schema for NeversNet5G/B5G/Milan ahead of
@@ -77,9 +90,13 @@ revisit; this only proves the *pipeline* scales, not that the *heuristic* is rig
 
 ## Next (not yet started)
 
-- [ ] Install OMNeT++ + Simu5G + SUMO integration so the scenario skeleton in
-      `src/digital_twin/simu5g_scenario/` actually runs, replacing the offline
-      B5G replay with a live network as the Network Element Layer.
+- [ ] Wire the project's own `simu5g_scenario/` NED config (19-gNodeB X2 mesh +
+      SUMO vehicle mobility, matching the real NeversNet5G generation setup) into
+      the now-installed OMNeT++/Simu5G/INET toolchain and get it actually running,
+      replacing the offline B5G replay with a live network as the Network Element
+      Layer. The toolchain itself is installed and validated (see above); this is
+      the remaining integration work specific to this project's scenario —
+      SUMO/veins mobility isn't installed yet either.
 - [x] Wire up telemetry replay from the existing NeversNet5G CSVs as an
       alternative Network Element Layer — `src/digital_twin/telemetry_replay.py`
       streams the event-driven source one CSV chunk at a time, preserves stable

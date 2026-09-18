@@ -19,9 +19,17 @@ telemetry for, instead of an invented topology.
 
 ## Requirements to actually run this
 
-Needs a local install of **OMNeT++ + Simu5G + veins/SUMO integration** — none of
-which are installed on this machine yet. This folder is the *starting point* for
-that setup, not a runnable pipeline today. `**.numUe` in each config block (e.g.
+Needs a local install of **OMNeT++ + Simu5G + veins/SUMO integration**. OMNeT++
+6.4.0 + INET 4.7.0 + Simu5G 1.7.0 are now installed and validated on this machine
+(WSL2 Ubuntu, via `opp_env` in nixless mode — see
+`docs/team/keerthivasan/tasks.md` for the exact build steps and fixes, and
+`docs/figures/simu5g_nr_validation.png` for a real simulation run through the
+installed toolchain: 1 gNB + 1 UE, 5s, 28,092 events, MOS 4.41/5, 0 packet loss).
+**veins/SUMO is not installed yet** — this specific `MultiCell_X2Mesh_19gNodeB_NR.ned`
+scenario (19 gNodeBs + SUMO-driven vehicle mobility over Nevers, France) still
+needs that integration wired in and its own scenario-specific debugging before it
+runs end to end; the toolchain being installed removes the *simulator* blocker but
+not this remaining scenario-integration work. `**.numUe` in each config block (e.g.
 119 for part_1) shows the original UE count per scenario window; scale this down
 for a faster local smoke test before attempting a full 1,470s replay.
 

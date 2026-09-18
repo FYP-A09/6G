@@ -1,0 +1,10 @@
+{
+  "part": "part1",
+  "n_ues": 118,
+  "skipped_no_lat_lon_or_sinr": 1,
+  "mean_distance_m": 470.0475129573916,
+  "mean_sinr_db": 4.2449087033898305,
+  "pearson_distance_vs_sinr": -0.35507227833968774,
+  "fraction_in_range": 1.0,
+  "interpretation": "Negative correlation between reconstructed nearest-gNB distance and the dataset's own recorded downlink SINR would support the nearest-gNB-by-distance heuristic as a reasonable serving-cell reconstruction (closer -> stronger signal, matching real path-loss physics). The dataset only records SINR for the UE's one actual serving cell, not per-candidate-gNB, so a true SINR-based reassignment rule (picking the gNB with the best SINR among all candidates) cannot be computed from this data \u2014 that would require re-simulating with per-candidate-cell measurements."
+}
