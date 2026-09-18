@@ -7,6 +7,7 @@ ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from digital_twin.orchestrator import run_one_episode
+from digital_twin.telemetry_replay import NeversNetTelemetryReplay
 from marl.b5g_env import B5GSlicingEnv
 from marl.maddpg import MADDPGTrainer, TrainingConfig
 from marl.telemetry import TelemetryRewardDataset
@@ -97,3 +98,17 @@ def test_b5g_evaluation_writes_evidence(tmp_path: Path) -> None:
     assert {result.policy for result in results} == {"equal_split", "heuristic", "untrained_actor_baseline"}
     assert (tmp_path / "summary.json").exists()
     assert (tmp_path / "summary.csv").exists()
+
+
+def test_neversnet_telemetry_replay_streams_real_schema(tmp_path: Path) -> None:
+    part = tmp_path / "part1"
+    part.mkdir()
+    (part / "part1_ue_0_metrics.csv").write_text(
+        "time_s,sinr_dl_db,throughput_dl_bps\n0.0,4.0,\n1.0,5.0,2000\n",
+        encoding="utf-8",
+    )
+    replay = NeversNetTelemetryReplay([part], chunksize=1)
+    events = list(replay.iter_events())
+    assert [event.node_id for event in events] == ["ue_part1_0", "ue_part1_0"]
+    assert events[-1].metrics["throughput_dl_bps"] == 2000.0
+    assert replay.latest_state()["ue_part1_0"].timestamp_s == 1.0

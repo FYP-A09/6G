@@ -3,6 +3,7 @@ node_mapping file) to validate build_graph.py's windowing/stitching logic
 end-to-end, since the real 6.4GB sample isn't available in this sandbox."""
 import csv
 import random
+from pathlib import Path
 
 random.seed(0)
 
@@ -74,6 +75,11 @@ HEADER = [
 if __name__ == "__main__":
     # original_ids present in node_mapping_366_370.txt sample (subset)
     original_ids = [3, 4, 5, 6, 7]
+    # The fixture is intended to run from a clean checkout, where the large
+    # NeversNet5G dataset folders are intentionally absent (and gitignored).
+    # Create only the small synthetic directories it owns before writing CSVs.
+    Path("data/raw/neversnet5g/data/part1").mkdir(parents=True, exist_ok=True)
+    Path("data/raw/neversnet5g/data/part1_5").mkdir(parents=True, exist_ok=True)
     last_positions = {}
     for oid in original_ids:
         path = f"data/raw/neversnet5g/data/part1/part1_ue_{oid}_metrics.csv"

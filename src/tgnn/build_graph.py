@@ -431,6 +431,48 @@ def summarize_sequence(bin_starts: list[float], snapshots: dict[float, nx.Graph]
     }
 
 
+def build_full_ue_gnb_graph(
+    part_dirs: list[str],
+    gnbs: dict[int, GnbInfo] | None = None,
+) -> nx.Graph:
+    """Build the static full-dataset UE-to-gNB topology without retaining traces.
+
+    This is the scale-validation topology: one node for every UE file across
+    the supplied scenario parts and one edge to its last observed nearest gNB.
+    The event-driven CSVs are processed one file at a time, which keeps memory
+    bounded when the complete NeversNet5G release is used.
+    """
+    gnbs = gnbs or load_gnb_metadata()
+    graph = nx.Graph()
+    for gid, gnb in gnbs.items():
+        graph.add_node(
+            f"gnb_{gid}", type="gnb", lat=gnb.lat, lon=gnb.lon,
+            tx_power_dbm=gnb.tx_power_dbm, antenna_height_m=gnb.antenna_height_m,
+            bs_id=gnb.bs_id,
+        )
+
+    for part_dir in part_dirs:
+        files = discover_ue_files(part_dir)
+        if not files:
+            raise FileNotFoundError(f"No *_ue_*_metrics.csv files found under {part_dir}")
+        match = _UE_FILENAME_RE.search(os.path.basename(files[0][1]))
+        part_label = match.group("part") if match else os.path.basename(part_dir)
+        for index, (ue_id, path) in enumerate(files, start=1):
+            events = _load_and_coalesce_events(path)
+            positions = events.dropna(subset=["latitude", "longitude"])
+            if positions.empty:
+                continue
+            row = positions.iloc[-1]
+            lat, lon = float(row["latitude"]), float(row["longitude"])
+            gnb_id, distance_m, in_range = nearest_gnb(lat, lon, gnbs)
+            node_id = f"ue_{part_label}_{ue_id}"
+            graph.add_node(node_id, type="ue", lat=lat, lon=lon, vehicle_id=row.get("vehicle_id"))
+            graph.add_edge(node_id, f"gnb_{gnb_id}", distance_m=distance_m, in_range=int(in_range))
+            if index == 1 or index % 25 == 0 or index == len(files):
+                print(f"Full graph: {part_label} file {index}/{len(files)}")
+    return graph
+
+
 # =====================================================================
 # B5G — static, real topologies (no reconstruction needed)
 # =====================================================================
@@ -525,6 +567,14 @@ def _build_arg_parser():
     p.add_argument("--max-ues", type=int, default=None)
     p.add_argument("--out-dir", default=os.path.join(_DATA_PROCESSED, "neversnet5g_graphs", "part1"))
     p.add_argument("--b5g-max-graphs", type=int, default=5)
+    p.add_argument(
+        "--full-part-dir", action="append", default=None,
+        help="Repeat for each full NeversNet5G part to build one bounded-memory static UE-to-gNB graph.",
+    )
+    p.add_argument(
+        "--full-graph-out", default=None,
+        help="GML destination for --full-part-dir output (required with that option).",
+    )
     return p
 
 
@@ -533,6 +583,18 @@ def main():
 
     gnbs = load_gnb_metadata(args.gnb_metadata)
     print(f"Loaded {len(gnbs)} gNB positions from {args.gnb_metadata}")
+
+    if args.full_part_dir:
+        if not args.full_graph_out:
+            raise ValueError("--full-graph-out is required when --full-part-dir is supplied")
+        full_graph = build_full_ue_gnb_graph(args.full_part_dir, gnbs)
+        os.makedirs(os.path.dirname(os.path.abspath(args.full_graph_out)), exist_ok=True)
+        nx.write_gml(full_graph, args.full_graph_out, stringizer=str)
+        print(
+            f"Wrote full graph: nodes={full_graph.number_of_nodes()} "
+            f"edges={full_graph.number_of_edges()} path={args.full_graph_out}"
+        )
+        return
 
     if not os.path.isdir(args.part_dir):
         print(f"Part folder not found at {args.part_dir} — set --part-dir or "

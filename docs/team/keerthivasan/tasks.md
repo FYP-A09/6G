@@ -80,9 +80,22 @@ revisit; this only proves the *pipeline* scales, not that the *heuristic* is rig
 - [ ] Install OMNeT++ + Simu5G + SUMO integration so the scenario skeleton in
       `src/digital_twin/simu5g_scenario/` actually runs, replacing the offline
       B5G replay with a live network as the Network Element Layer.
-- [ ] Wire up telemetry replay from the existing NeversNet5G CSVs as an
-      alternative "Network Element Layer" data source (faster than a live
-      simulator) once Thrishala's graph-construction work is validated.
+- [x] Wire up telemetry replay from the existing NeversNet5G CSVs as an
+      alternative Network Element Layer — `src/digital_twin/telemetry_replay.py`
+      streams the event-driven source one CSV chunk at a time, preserves stable
+      graph node IDs, and exposes latest per-UE telemetry without loading the
+      27GB dataset into memory. Validated against the full part-1 source.
 - [ ] Replace the three placeholders in `orchestrator.py` (SSL embeddings, TGNN
       is real but untrained, MARL heuristic) with each teammate's trained module
-      as they land — track this as the concrete "integration debt" list.
+      as they land — this requires trained B5G-compatible SSL/TGNN artifacts;
+      the available full raw data contains no such checkpoint yet.
+- [x] `src/tgnn/build_graph.py:build_full_ue_gnb_graph` + the
+      `--full-part-dir`/`--full-graph-out` CLI flags: a reusable, documented way
+      to build the full-dataset UE-gNB topology (bounded memory, one file read
+      at a time) instead of an ad-hoc script. Re-run against the real
+      `E:\FYP DATA\6G` release end to end via this CLI.
+- [x] `src/tgnn/make_fixture.py` now creates its own `data/raw/neversnet5g/data/`
+      directories, so the synthetic-fixture path works from a clean checkout
+      where the real (gitignored) dataset folders don't exist yet.
+- [x] Automated test suite: 10/10 passing (9 from the earlier bug-fix pass plus
+      the new telemetry-replay test).
