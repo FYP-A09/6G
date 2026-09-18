@@ -149,6 +149,36 @@ def discover_ue_files(part_dir: str) -> list[tuple[int, str]]:
     return sorted(files)
 
 
+def _read_ue_csv(csv_path: str, usecols: list[str]) -> pd.DataFrame | None:
+    """Reads one UE CSV, tolerating the failure modes actually seen across the
+    full 716-file/27GB release. Returns None (caller treats as empty) rather
+    than raising, so one bad file doesn't abort a full-scale build.
+
+    A handful of the larger files (~127MB) have hit the C parser's tokenizer
+    with an "out of memory" ParserError on this machine — the file itself
+    isn't corrupt, the default parser buffer just chokes on it. Retry with
+    the slower pure-Python engine before giving up on the file.
+    """
+    try:
+        return pd.read_csv(csv_path, usecols=lambda c: c in usecols, low_memory=False)
+    except ValueError:
+        # A subset of files omit part of the canonical schema (DATA_DESCRIPTION.md
+        # §4) in a way the usecols callable rejects — fall back to reading
+        # whatever columns are actually present.
+        try:
+            return pd.read_csv(csv_path, low_memory=False)
+        except Exception as exc:
+            print(f"  [skip] {os.path.basename(csv_path)}: unreadable ({exc})")
+            return None
+    except Exception as exc:
+        try:
+            return pd.read_csv(csv_path, usecols=lambda c: c in usecols, engine="python")
+        except Exception:
+            print(f"  [skip] {os.path.basename(csv_path)}: unreadable even with the "
+                  f"python engine ({exc})")
+            return None
+
+
 def _load_and_coalesce_events(csv_path: str) -> pd.DataFrame:
     """Loads one UE's event log and coalesces rows that share a timestamp.
 
@@ -156,17 +186,27 @@ def _load_and_coalesce_events(csv_path: str) -> pd.DataFrame:
     families are emitted independently, so two rows can carry the same
     `time_s` with disjoint sets of populated columns (e.g. one mobility event,
     one radio event, logged at the same instant). Coalescing keeps one row per
-    timestamp, taking the last non-null value per column at that timestamp,
-    so a later merge_asof sees one coherent observation per time point.
+    timestamp, taking the last non-null value per column at that timestamp.
+
+    That alone only merges rows that share the *exact* timestamp, though — a
+    column populated by an earlier event and left untouched by a later,
+    different-column event would otherwise still read back as NaN at the
+    later timestamp. The trailing `.ffill()` carries each column's last known
+    value forward across *all* prior timestamps (true last-observation-
+    carried-forward), so a subsequent merge_asof sees one coherent, fully
+    forward-filled observation per time point rather than a sparse one.
     """
     usecols = ["time_s", "vehicle_id"] + UE_METRIC_COLUMNS
-    df = pd.read_csv(csv_path, usecols=lambda c: c in usecols, low_memory=False)
-    if "time_s" not in df.columns or df.empty:
-        return df.iloc[0:0]
+    df = _read_ue_csv(csv_path, usecols)
+    if df is None or "time_s" not in df.columns or df.empty:
+        return pd.DataFrame(columns=usecols).iloc[0:0]
     df = df.sort_values("time_s")
     # last non-null per column, per timestamp
     coalesced = df.groupby("time_s", as_index=False).last()
-    return coalesced.sort_values("time_s").reset_index(drop=True)
+    coalesced = coalesced.sort_values("time_s").reset_index(drop=True)
+    fill_columns = [c for c in UE_METRIC_COLUMNS if c in coalesced.columns]
+    coalesced[fill_columns] = coalesced[fill_columns].ffill()
+    return coalesced
 
 
 def resample_ue_to_bins(

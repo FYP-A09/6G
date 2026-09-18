@@ -288,11 +288,13 @@ class B5GSlicingEnv:
             slice_num = int(agent_id.rsplit("_", 1)[1])
             slc = next(s for s in self.slices if s["number"] == slice_num)
             self._validate_action(action)
-            breakdown = self._compute_reward(action, slc, self._observation_for(agent_id))
+            observation = self._observation_for(agent_id)
+            metrics = self._action_metrics(action, observation)
+            breakdown = self._compute_reward(action, slc, observation, sla_ok=metrics["sla_ok"])
             rewards[agent_id] = breakdown.total
             infos[agent_id] = {
                 "reward_breakdown": breakdown,
-                "metrics": self._action_metrics(action, self._observation_for(agent_id)),
+                "metrics": metrics,
             }
 
         dones = {agent_id: True for agent_id in self.agents}  # one-shot per sample
@@ -352,8 +354,17 @@ class B5GSlicingEnv:
         action: Mapping[str, float],
         slc: dict,
         observation: AgentObservation | None = None,
+        sla_ok: bool | None = None,
     ) -> RewardBreakdown:
-        """Compute the six-term reward without treating missing metrics as passing SLA."""
+        """Compute the six-term reward without treating missing metrics as passing SLA.
+
+        `sla_ok` comes from `_action_metrics` (QOS_TARGETS-based latency/jitter/
+        throughput/reliability checks) — delta has no paper-defined SLA cutoff
+        (see SLA_DELTA_THRESHOLD's docstring above) so it is not used for the SLA
+        term. `sla_ok is None` means the metric was unavailable (missing jitter/
+        packet-loss data, etc.) and is treated as neutral, not a violation — only
+        a confirmed `sla_ok is False` incurs the penalty.
+        """
         w = REWARD_WEIGHTS
         slice_type = slc["type"]
         delta = slc["delta"]
@@ -368,9 +379,7 @@ class B5GSlicingEnv:
             -w["w4_packet_loss"] * min(1.0, observation.packet_loss_rate)
             if observation.packet_loss_rate is not None else 0.0
         )
-        # Delta has no paper-defined SLA cutoff. Keep it in qos_term above;
-        # the SLA term is reserved for explicit metric-based checks.
-        sla_term = 0.0
+        sla_term = -w["w5_sla_violation"] if sla_ok is False else 0.0
         previous = observation.previous_allocation
         churn = sum(abs(action.get(kind, 0.0) - previous.get(kind, 0.0)) for kind in SLICE_TYPES)
         reconfiguration_term = -w["w6_reconfiguration"] * min(1.0, churn)

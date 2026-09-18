@@ -1,8 +1,18 @@
 """
-GraphSAGE + temporal-conv TGNN (Thrishala S N's task — see design.md).
+GraphSAGE + temporal-GRU TGNN (Thrishala S N's task — see design.md).
 
-Uses the official PyTorch Geometric `SAGEConv` for spatial aggregation and
-PyTorch Geometric Temporal's `GConvGRU` for recurrent graph-temporal propagation.
+Uses the official PyTorch Geometric `SAGEConv` for spatial aggregation. Temporal
+propagation uses a plain `nn.GRUCell` applied per-node over the sequence of
+spatially-aggregated states, rather than PyTorch Geometric Temporal's `GConvGRU`:
+that package's top-level `__init__.py` unconditionally imports every recurrent
+model it ships (including unrelated ones like EvolveGCNH), and that import chain
+hard-requires `torch_sparse`, which fails to compile on this project's Windows
+dev machine (MSVC/PyTorch C++ ABI mismatch — confirmed, not a version/flag issue).
+A GRUCell over SAGEConv's per-timestep output plays the same architectural role
+(temporal state carried alongside spatially-aggregated features) without that
+dependency. Revisit GConvGRU if the team moves to a Linux/CUDA environment where
+torch_sparse installs cleanly.
+
 Runnable against the real interface contract
 (docs/architecture/interface_contracts.md): input is Sriranjana's D=64 SSL
 embedding per node per timestep, output is Krish's predicted-demand vector.
@@ -14,7 +24,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import SAGEConv
-from torch_geometric_temporal.nn.recurrent import GConvGRU
 
 SSL_EMBEDDING_DIM = 64  # matches interface_contracts.md §1
 
@@ -30,13 +39,14 @@ class GraphSAGELayer(nn.Module):
         super().__init__()
         self.conv = SAGEConv(in_dim, out_dim, aggr="mean")
 
-    def forward(self, x: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         """
-        x:   [N, in_dim]     node features
-        adj: [N, N]          binary/weighted adjacency (adj[i, j] = edge i->j)
+        x:          [N, in_dim]  node features
+        edge_index: [2, E]       PyG edge index (already converted from adjacency
+                    by the caller — see TGNNPredictor.forward, which converts
+                    once per distinct adjacency instead of once per layer)
         returns: [N, out_dim]
         """
-        edge_index = adj.nonzero(as_tuple=False).transpose(0, 1).contiguous()
         return F.relu(self.conv(x, edge_index))
 
 
@@ -44,7 +54,7 @@ class TGNNPredictor(nn.Module):
     """
     Full model: SSL embeddings [N, T, D] + adjacency [N, N]
              -> spatial GraphSAGE aggregation per timestep
-             -> recurrent graph-temporal propagation over the resulting sequence
+             -> per-node GRU propagation over the resulting sequence
              -> per-node predicted-demand vector (throughput, latency, load)
 
     Output fields map to docs/architecture/interface_contracts.md §2
@@ -64,8 +74,12 @@ class TGNNPredictor(nn.Module):
         self.sage_layers = nn.ModuleList(
             [GraphSAGELayer(dims[i], dims[i + 1]) for i in range(num_sage_layers)]
         )
-        self.temporal_graph = GConvGRU(hidden_dim, hidden_dim, K=2)
+        self.temporal_cell = nn.GRUCell(hidden_dim, hidden_dim)
         self.output_head = nn.Linear(hidden_dim, len(self.OUTPUT_FIELDS))
+
+    @staticmethod
+    def _to_edge_index(adj: torch.Tensor) -> torch.Tensor:
+        return adj.nonzero(as_tuple=False).transpose(0, 1).contiguous()
 
     def forward(self, embeddings: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
         """
@@ -78,11 +92,15 @@ class TGNNPredictor(nn.Module):
         if adj.ndim == 2:
             if adj.shape != (n, n):
                 raise ValueError(f"static adj must have shape [{n}, {n}]")
-            adjacency_per_step = [adj] * t
+            # Static adjacency: convert to edge_index once, reuse at every
+            # timestep and every sage layer instead of recomputing an O(N^2)
+            # nonzero() scan (num_sage_layers + 1) * T times.
+            static_edge_index = self._to_edge_index(adj)
+            edge_index_per_step = [static_edge_index] * t
         elif adj.ndim == 3:
             if adj.shape != (t, n, n):
                 raise ValueError(f"dynamic adj must have shape [{t}, {n}, {n}]")
-            adjacency_per_step = list(adj.unbind(dim=0))
+            edge_index_per_step = [self._to_edge_index(adj[ts]) for ts in range(t)]
         else:
             raise ValueError("adj must have shape [N, N] or [T, N, N]")
 
@@ -90,18 +108,13 @@ class TGNNPredictor(nn.Module):
         for layer in self.sage_layers:
             # Apply the same spatial layer independently at each timestep.
             spatial_out = torch.stack(
-                [layer(spatial_out[:, ts, :], adjacency_per_step[ts]) for ts in range(t)], dim=1
+                [layer(spatial_out[:, ts, :], edge_index_per_step[ts]) for ts in range(t)], dim=1
             )  # [N, T, hidden_dim]
 
-        temporal_states = []
-        hidden_state = None
+        hidden_state = torch.zeros(n, spatial_out.shape[-1], device=embeddings.device)
         for ts in range(t):
-            edge_index = adjacency_per_step[ts].nonzero(as_tuple=False).transpose(0, 1).contiguous()
-            hidden_state = self.temporal_graph(
-                spatial_out[:, ts, :], edge_index, H=hidden_state
-            )
-            temporal_states.append(F.relu(hidden_state))
-        last_step = temporal_states[-1]  # use the most recent state to predict next
+            hidden_state = self.temporal_cell(spatial_out[:, ts, :], hidden_state)
+        last_step = hidden_state  # most recent GRU state, used to predict next
         raw_prediction = self.output_head(last_step)
         nonnegative = F.softplus(raw_prediction[:, :2])
         normalized_load = torch.sigmoid(raw_prediction[:, 2:3])
@@ -121,3 +134,8 @@ if __name__ == "__main__":
     print(f"Input:  embeddings {tuple(dummy_embeddings.shape)}, adj {tuple(dummy_adj.shape)}")
     print(f"Output: {tuple(prediction.shape)} -> fields {TGNNPredictor.OUTPUT_FIELDS}")
     print("Sample prediction (node 0):", dict(zip(TGNNPredictor.OUTPUT_FIELDS, prediction[0].tolist())))
+
+    # Also confirm the dynamic (per-timestep) adjacency path still works.
+    dummy_dynamic_adj = (torch.rand(n_timesteps, n_nodes, n_nodes) > 0.9).float()
+    dynamic_prediction = model(dummy_embeddings, dummy_dynamic_adj)
+    print(f"Dynamic-adjacency output: {tuple(dynamic_prediction.shape)}")

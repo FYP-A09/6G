@@ -142,6 +142,11 @@ def split_milan_by_time(
         raise ValueError("Cannot split an empty Milan frame")
     ordered = frame.sort_values(["datetime", "CellID"], kind="stable")
     timestamps = ordered["datetime"].drop_duplicates().tolist()
+    if len(timestamps) < 2:
+        raise ValueError(
+            "Cannot split a Milan frame with fewer than 2 distinct timestamps "
+            f"(got {len(timestamps)}) into train/validation"
+        )
     split_index = max(1, min(len(timestamps) - 1, int(len(timestamps) * (1 - validation_fraction))))
     cutoff = timestamps[split_index]
     train = ordered[ordered["datetime"] < cutoff].copy()

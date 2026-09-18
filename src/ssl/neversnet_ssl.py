@@ -20,17 +20,26 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterator, Sequence
 
-from networkx import config
 import numpy as np
 import pandas as pd
 import torch
-from torch import minimum, nn
+from torch import nn
 
 try:
-    from ..tgnn.build_graph import NODE_FEATURE_COLUMNS, discover_ue_files, resample_ue_to_bins
+    from ..tgnn.build_graph import (
+        NODE_FEATURE_COLUMNS,
+        discover_ue_files,
+        load_node_mapping,
+        resample_ue_to_bins,
+    )
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tgnn"))
-    from build_graph import NODE_FEATURE_COLUMNS, discover_ue_files, resample_ue_to_bins
+    from build_graph import (
+        NODE_FEATURE_COLUMNS,
+        discover_ue_files,
+        load_node_mapping,
+        resample_ue_to_bins,
+    )
 
 LOGGER = logging.getLogger("neversnet_ssl")
 SOURCE_DATASET = "neversnet5g"
@@ -186,12 +195,29 @@ def _iter_file_frames(
     part: PartInfo,
     config: NeversNetConfig,
     include_validation: bool | None = None,
+    cache: dict[str, pd.DataFrame] | None = None,
 ) -> Iterator[tuple[int, str, pd.DataFrame]]:
-    """Yield one resampled UE frame at a time, never the whole part."""
+    """Yield one resampled UE frame at a time.
+
+    `train_neversnet5g` calls this once per part per epoch per pass (stats +
+    train + validation), which — without caching — means every one of the
+    716 UE CSVs (27GB) is re-read and re-resampled from raw disk on every
+    single call: 1 (stats) + epochs*2 (train+validation) full passes over the
+    whole dataset. Pass a shared `cache` dict (keyed by file path, holding the
+    *unfiltered* resampled frame) from the caller to fetch each file's
+    resampled data from disk exactly once regardless of how many passes are
+    made over it; the cheap train/validation boundary filter below is still
+    applied fresh each call since it depends on `include_validation`.
+    """
     for index, (ue_id, path) in enumerate(part.files, start=1):
         started = time.perf_counter()
         try:
-            frame = resample_ue_to_bins(path, part.bin_starts)
+            if cache is not None and path in cache:
+                frame = cache[path]
+            else:
+                frame = resample_ue_to_bins(path, part.bin_starts)
+                if cache is not None:
+                    cache[path] = frame
             if frame.empty:
                 LOGGER.warning("Skipping empty telemetry file: %s", path)
                 continue
@@ -223,13 +249,16 @@ def _feature_frame(frame: pd.DataFrame, means: np.ndarray | None = None, stds: n
     return (array - means) / stds
 
 
-def _fit_statistics(parts: Sequence[PartInfo], config: NeversNetConfig) -> tuple[np.ndarray, np.ndarray, int]:
+def _fit_statistics(
+    parts: Sequence[PartInfo], config: NeversNetConfig,
+    cache: dict[str, pd.DataFrame] | None = None,
+) -> tuple[np.ndarray, np.ndarray, int]:
     sums = np.zeros(len(NODE_FEATURE_COLUMNS), dtype=np.float64)
     squares = np.zeros(len(NODE_FEATURE_COLUMNS), dtype=np.float64)
     counts = np.zeros(len(NODE_FEATURE_COLUMNS), dtype=np.int64)
     LOGGER.info("Pass 1/3: fitting telemetry normalization statistics")
     for part in parts:
-        for _, _, frame in _iter_file_frames(part, config, include_validation=False):
+        for _, _, frame in _iter_file_frames(part, config, include_validation=False, cache=cache):
             values = _feature_frame(frame)
             valid = np.isfinite(values)
             sums += np.where(valid, values, 0.0).sum(axis=0)
@@ -296,10 +325,13 @@ def _run_pass(
     parts: Sequence[PartInfo], config: NeversNetConfig, means: np.ndarray, stds: np.ndarray,
     model: NeversNetMaskedAutoencoder, device: torch.device,
     optimizer: torch.optim.Optimizer | None, include_validation: bool, seed: int,
+    cache: dict[str, pd.DataFrame] | None = None,
 ) -> tuple[float, int, int]:
     loss, targets, rows = 0.0, 0, 0
     for part in parts:
-        for file_index, (_, _, frame) in enumerate(_iter_file_frames(part, config, include_validation=include_validation)):
+        for file_index, (_, _, frame) in enumerate(
+            _iter_file_frames(part, config, include_validation=include_validation, cache=cache)
+        ):
             current_loss, current_targets, current_rows = _run_frame(
                 model, frame, means, stds, config, device, optimizer,
                 seed + file_index,
@@ -341,7 +373,12 @@ def train_neversnet5g(
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     parts = [_make_part_info(path, config, max_files) for path in part_dirs]
-    means, stds, _ = _fit_statistics(parts, config)
+    # Shared across _fit_statistics and every epoch's train/validation _run_pass
+    # call: each file's resample_ue_to_bins() result is computed from raw CSV
+    # exactly once and reused for the rest of training, instead of re-reading
+    # the full 27GB dataset from disk on every one of the 1 + epochs*2 passes.
+    frame_cache: dict[str, pd.DataFrame] = {}
+    means, stds, _ = _fit_statistics(parts, config, cache=frame_cache)
     model = NeversNetMaskedAutoencoder(config).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     best_loss = float("inf")
@@ -350,12 +387,14 @@ def train_neversnet5g(
         started = time.perf_counter()
         LOGGER.info("Pass 2/3: training epoch %d/%d", epoch, config.epochs)
         train_loss, _, train_rows = _run_pass(
-            parts, config, means, stds, model, device, optimizer, False, config.seed + epoch
+            parts, config, means, stds, model, device, optimizer, False, config.seed + epoch,
+            cache=frame_cache,
         )
         with torch.no_grad():
             LOGGER.info("Validation pass: epoch %d/%d", epoch, config.epochs)
             validation_loss, _, validation_rows = _run_pass(
-                parts, config, means, stds, model, device, None, True, config.seed + 10_000 + epoch
+                parts, config, means, stds, model, device, None, True, config.seed + 10_000 + epoch,
+                cache=frame_cache,
             )
         record = {
             "epoch": epoch, "train_loss": train_loss,
@@ -385,8 +424,25 @@ def train_neversnet5g(
 def export_neversnet5g_embeddings(
     part_dirs: Sequence[str | Path], checkpoint_path: str | Path,
     output_path: str | Path, max_files: int | None = None, device_name: str = "cpu",
+    node_mappings: dict[str, tuple[str, str]] | None = None,
 ) -> int:
-    """Load a trained checkpoint and append embeddings one UE file at a time."""
+    """Load a trained checkpoint and append embeddings one UE file at a time.
+
+    `node_mappings` — {transition_part_label: (main_part_label, mapping_txt_path)}
+    — relabels a transition-window UE's exported node_id the same way
+    `build_graph.stitch_part_and_transition` relabels it on the graph side
+    (via the same node_mapping_*.txt files), so a UE's embedding rows and its
+    graph-snapshot node id agree for that UE. Without this, `neversnet_pipeline.
+    load_embedding_rows`'s exact (node_id, timestamp) join silently drops every
+    transition-window UE that build_graph.py relabeled, since this function
+    previously always emitted raw `ue_{part_label}_{ue_id}` ids regardless of
+    whether that UE's identity was reassigned to a main part.
+    """
+    reverse_maps: dict[str, tuple[str, dict[int, int]]] = {}
+    for trans_label, (main_label, mapping_path) in (node_mappings or {}).items():
+        mapping = load_node_mapping(mapping_path)
+        reverse_maps[trans_label] = (main_label, {seq_id: orig_id for orig_id, seq_id in mapping.items()})
+
     device = _resolve_device(device_name)
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     config = NeversNetConfig(**checkpoint["model_config"])
@@ -417,7 +473,14 @@ def export_neversnet5g_embeddings(
                 with torch.no_grad():
                     embedding = model(torch.from_numpy(features[valid_rows]).to(device)).embedding.cpu().numpy()
                 valid_frame = frame.loc[valid_rows].reset_index(drop=True)
-                node_id = f"ue_{part.part_label}_{ue_id}"
+                if part.part_label in reverse_maps:
+                    main_label, reverse_map = reverse_maps[part.part_label]
+                    node_id = (
+                        f"ue_{main_label}_{reverse_map[ue_id]}" if ue_id in reverse_map
+                        else f"ue_{part.part_label}_{ue_id}"
+                    )
+                else:
+                    node_id = f"ue_{part.part_label}_{ue_id}"
                 for row_index, values in enumerate(embedding):
                     record = {
                         "node_id": node_id,

@@ -139,9 +139,13 @@ def run_one_episode(
     predicted_demand: dict[str, float] = {}
     for agent_id, agent_obs in obs.items():
         row = node_index.get(str(agent_obs.node_id))
-        predicted_load = float(torch.sigmoid(predictions[row, 2]).item()) if row is not None else 0.0
-        predicted_throughput = float(torch.relu(predictions[row, 0]).item()) if row is not None else 0.0
-        predicted_latency = float(torch.relu(predictions[row, 1]).item()) if row is not None else 0.0
+        # TGNNPredictor.forward() already applies softplus to throughput/latency
+        # and sigmoid to load (see model.py) — read its output directly instead
+        # of re-activating an already-activated value (double-sigmoid squashes
+        # predicted_load toward 0.5, corrupting the SLA gate downstream).
+        predicted_throughput = float(predictions[row, 0].item()) if row is not None else 0.0
+        predicted_latency = float(predictions[row, 1].item()) if row is not None else 0.0
+        predicted_load = float(predictions[row, 2].item()) if row is not None else 0.0
         agent_obs.prediction = DemandPrediction(
             entity_id=agent_id,
             slice_type=agent_obs.slice_type,

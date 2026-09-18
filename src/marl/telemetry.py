@@ -23,6 +23,7 @@ class TelemetryRewardSample:
     sla_ok_next: bool
     slice_imbalance: float
     latency_p95_ms: float
+    regime: str
 
 
 class TelemetryRewardDataset:
@@ -43,6 +44,7 @@ class TelemetryRewardDataset:
                     sla_ok_next=bool(int(row["sla_ok_next"])),
                     slice_imbalance=float(row["slice_imbalance"]),
                     latency_p95_ms=float(row["lat_p95_ms"]),
+                    regime=row["regime"],
                 )
 
     def summary(self, limit: int | None = None) -> dict[str, float]:
@@ -88,12 +90,14 @@ class TelemetryWindowEnv:
 
     @staticmethod
     def _slice_type(sample: TelemetryRewardSample) -> str:
+        # "impaired" clients fall back to URLLC — the strictest target — since a
+        # struggling connection is exactly the case we don't want to under-serve.
         return {"heavy": "eMBB", "medium": "URLLC", "light": "mMTC"}.get(
-            getattr(sample, "regime", "medium"), "URLLC"
+            sample.regime, "URLLC"
         )
 
     def _observation(self, client_id: str, sample: TelemetryRewardSample) -> AgentObservation:
-        slice_type = "URLLC"
+        slice_type = self._slice_type(sample)
         return AgentObservation(
             node_id=hash(client_id) % 1_000_000,
             slice_type=slice_type,
@@ -102,7 +106,7 @@ class TelemetryWindowEnv:
             current_prb_utilization=sample.slice_imbalance,
             latency_ms=sample.latency_p95_ms,
             packet_loss_rate=0.0 if sample.sla_ok_current else 0.05,
-            previous_allocation={"URLLC": 1.0 if sample.sla_ok_current else 0.0},
+            previous_allocation={slice_type: 1.0 if sample.sla_ok_current else 0.0},
         )
 
     def reset(self) -> dict[str, AgentObservation]:
@@ -123,7 +127,7 @@ class TelemetryWindowEnv:
             client_id = agent_id.removeprefix("client_")
             rows = self.windows[client_id]
             current = rows[min(self._window_index, len(rows) - 1)]
-            allocation = action.get("URLLC", 0.0)
+            allocation = action.get(self._slice_type(current), 0.0)
             rewards[agent_id] = current.reward - abs(allocation - (1.0 if current.sla_ok_next else 0.0)) * 0.1
             infos[agent_id] = {"telemetry_window": current.window_idx, "measured_reward": current.reward}
             if next_index < len(rows) and (self.max_windows is None or next_index < self.max_windows):
