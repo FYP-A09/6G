@@ -20,6 +20,11 @@ try:
 except ImportError:
     from milan_adapter import MilanPreprocessor, aggregate_milan_csv, split_milan_by_time
 
+import sys as _sys
+
+_sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "data"))
+from milan_features import aggregate_one_day as _aggregate_full_scale_day  # noqa: E402
+
 MILAN_FEATURE_COUNT = 5
 MILAN_EMBEDDING_DIM = 64
 
@@ -150,14 +155,39 @@ def _run_epoch(
     return total_loss / target_count
 
 
+def _load_full_scale_frames(directory: Path, max_files: int | None) -> list[pd.DataFrame]:
+    """Real full-scale Milan release: tab-separated, no header, different column
+    names (square_id/time_interval_ms/internet_traffic) than the small pre-header'd
+    sample this module was originally validated against. Reuses the already-proven
+    full-scale parser from src/data/milan_features.py instead of duplicating it."""
+    files = sorted(directory.glob("sms-call-internet-mi-*.txt"))
+    if max_files is not None:
+        files = files[:max_files]
+    frames = []
+    for path in files:
+        day = _aggregate_full_scale_day(str(path))
+        frames.append(
+            day.rename(columns={
+                "square_id": "CellID",
+                "time_interval_ms": "datetime",
+                "internet_traffic": "internet",
+            })
+        )
+        frames[-1]["CellID"] = frames[-1]["CellID"].astype(str)
+    return frames
+
+
 def _load_frames(data_dir: str | Path, max_files: int | None, max_rows: int | None) -> pd.DataFrame:
     directory = Path(data_dir)
     files = sorted(directory.glob("sms-call-internet-mi-*.csv"))
     if max_files is not None:
         files = files[:max_files]
-    if not files:
-        raise FileNotFoundError(f"No Milan CSV files found under {directory}")
-    frames = [aggregate_milan_csv(path) for path in files]
+    if files:
+        frames = [aggregate_milan_csv(path) for path in files]
+    else:
+        frames = _load_full_scale_frames(directory, max_files)
+        if not frames:
+            raise FileNotFoundError(f"No Milan .csv or .txt files found under {directory}")
     combined = pd.concat(frames, ignore_index=True).sort_values(
         ["datetime", "CellID"], kind="stable"
     ).reset_index(drop=True)

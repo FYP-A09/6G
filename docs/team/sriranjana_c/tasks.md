@@ -30,10 +30,32 @@
       the smoke-test report is `data/processed/ssl_nidd_smoke_test_2000_rows/profiling.json`.
 - [x] Replace the placeholder evaluator with checkpoint-backed NIDD embedding
       evaluation in `src/ssl/evaluate_embeddings.py`, including Micro-F1,
-      Macro-F1, per-class F1, raw-feature, and random-embedding baselines. The
-      current 2,000-row smoke checkpoint evaluates its held-out sequence split;
-      final metrics require a larger checkpoint with enough benign validation
-      samples.
+      Macro-F1, per-class F1, raw-feature, and random-embedding baselines.
+      **Now run at full scale**: trained the encoder on the complete real
+      1,215,890-row `Combined.csv` (10 epochs, `reports/nidd_ssl_full/`,
+      validation loss ~0.0005–0.001), replacing the old 2,000-row smoke
+      checkpoint. Found and fixed a real evaluation bug along the way: the
+      classifier's train/test split reused the SSL training's *sequential*
+      split (`split_by_sequence`), but `Combined.csv` is concatenated in large
+      contiguous same-attack-type blocks — a sequential split put 99.88% of one
+      class in the test tail (first checked the truncated file: 50 Benign vs.
+      39,950 Malicious; then the full file: 242,884 Benign vs. 294 Malicious,
+      the *opposite* skew), collapsing accuracy to ~1%, *worse* than the
+      majority-class baseline. Fixed `evaluate_embeddings.py` to use a
+      stratified random split by label for the classifier evaluation instead
+      (training itself still correctly uses the sequential split). Real,
+      properly-balanced result (`reports/nidd_ssl_full/evaluation_stratified.json`,
+      243,178 real held-out flows, 95,547 Benign / 147,631 Malicious):
+      **SSL embeddings — accuracy 0.7664, Macro-F1 0.7083, Micro-F1 0.7664**
+      (Benign precision 0.996/recall 0.407, Malicious precision 0.722/recall
+      0.999) essentially matches processed raw features (accuracy 0.7656,
+      Macro-F1 0.7068) while compressing 50 raw columns into a fixed 64-D
+      embedding, and clearly beats the random-embedding baseline (accuracy
+      0.6071, Macro-F1 0.3778, which fails on Benign entirely). Honest
+      interpretation: the encoder preserves essentially all the raw features'
+      discriminative signal — it hasn't yet demonstrated an accuracy edge
+      *over* raw features, and Benign recall (0.407) is the weak point worth
+      improving (mask-ratio/loss-weighting tuning, not yet attempted).
 - [ ] Run a true NIDD+Milan transfer or joint-pretraining experiment. The two
       sources currently use source-specific adapters because NIDD is flow-level
       with categorical protocol fields while Milan is numeric grid-cell traffic;

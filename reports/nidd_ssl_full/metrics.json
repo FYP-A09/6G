@@ -1,0 +1,84 @@
+{
+  "dataset_path": "E:\\FYP DATA\\6G\\data\\raw\\5g_nidd\\Combined.csv",
+  "device": "cpu",
+  "n_rows_loaded": 1215890,
+  "n_train_rows": 972712,
+  "n_validation_rows": 243178,
+  "elapsed_seconds": 392.8938089000003,
+  "best_validation_loss": 0.000494493494033226,
+  "epochs": [
+    {
+      "epoch": 1,
+      "train_loss": 0.37533281951637737,
+      "validation_loss": 0.000631162632030325,
+      "seconds": 35.62649280000187
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.1318966764830838,
+      "validation_loss": 0.0007557959424756144,
+      "seconds": 40.78408279999712
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.14769810228964014,
+      "validation_loss": 0.0006630257323727176,
+      "seconds": 38.728226999999606
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.10442249662844835,
+      "validation_loss": 0.0005604054624257165,
+      "seconds": 37.767386100000294
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.11707270883819569,
+      "validation_loss": 0.0011114246583761131,
+      "seconds": 38.10403879999649
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.12939731695886333,
+      "validation_loss": 0.0005877187723946504,
+      "seconds": 40.101083599998674
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.11789558553268006,
+      "validation_loss": 0.0006881896090716952,
+      "seconds": 41.84259729999758
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.12751527119197498,
+      "validation_loss": 0.0009835167935425145,
+      "seconds": 38.54212259999622
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.1675462903784509,
+      "validation_loss": 0.000494493494033226,
+      "seconds": 36.81833159999951
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.11144231408718318,
+      "validation_loss": 0.0006528139869577538,
+      "seconds": 44.54931490000308
+    }
+  ],
+  "training_config": {
+    "epochs": 10,
+    "batch_size": 512,
+    "validation_fraction": 0.2,
+    "mask_ratio": 0.3,
+    "learning_rate": 0.001,
+    "hidden_dim": 128,
+    "categorical_embedding_dim": 8,
+    "embedding_dim": 64,
+    "seed": 0,
+    "num_workers": 0,
+    "device": "auto"
+  }
+}

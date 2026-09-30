@@ -1,0 +1,42 @@
+{
+  "data_root": "E:\\FYP DATA\\6G\\data\\raw\\b5g_slicing\\2.2.1-10kprocessed",
+  "sample_files": 7984,
+  "slice_distributions": {
+    "eMBB": {
+      "count": 39657,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.4955344579771541,
+      "q05": 0.049,
+      "q50": 0.493,
+      "q95": 0.946199999999997,
+      "within_unit_interval": true
+    },
+    "URLLC": {
+      "count": 69382,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.49914121818339047,
+      "q05": 0.05,
+      "q50": 0.5,
+      "q95": 0.949,
+      "within_unit_interval": true
+    },
+    "mMTC": {
+      "count": 75546,
+      "min": 0.0,
+      "max": 1.0,
+      "mean": 0.49954521748338754,
+      "q05": 0.05,
+      "q50": 0.498,
+      "q95": 0.95,
+      "within_unit_interval": true
+    }
+  },
+  "interpretation": "Empirical distribution only; final SLA thresholds require the source paper delta definition.",
+  "current_thresholds": {
+    "eMBB": 0.5,
+    "URLLC": 0.15,
+    "mMTC": 0.8
+  }
+}

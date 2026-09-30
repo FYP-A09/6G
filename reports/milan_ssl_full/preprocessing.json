@@ -1,0 +1,24 @@
+{
+  "traffic_columns": [
+    "sms_in",
+    "sms_out",
+    "call_in",
+    "call_out",
+    "internet"
+  ],
+  "means": {
+    "sms_in": 0.9374858260350106,
+    "sms_out": 0.9227331200776953,
+    "call_in": 0.3297898254422121,
+    "call_out": 0.4417884218108516,
+    "internet": 43.231604015720514
+  },
+  "stds": {
+    "sms_in": 3.721520461143427,
+    "sms_out": 3.7637038372101888,
+    "call_in": 1.6729572028949393,
+    "call_out": 2.034686224094709,
+    "internet": 78.61726833148074
+  },
+  "source_dataset": "milan"
+}

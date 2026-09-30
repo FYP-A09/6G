@@ -33,6 +33,13 @@
 - [ ] Extend the reward to the remaining 3 terms (latency, packet-loss,
       reconfiguration-churn penalties) once their concrete data sources are
       decided — `delta` alone may not carry enough signal for all of them.
+      **Confirmed at scale**: scanned 200 real slice files (4,350 real slice
+      records) from the full B5G release — `latency_ms`, `jitter_ms`, and
+      `packet_loss_rate` are **null in every single one**. This isn't a partial
+      gap to wire around; the dataset genuinely never populates these fields, so
+      the reward can't be extended with real B5G data alone. Would need either a
+      different data source or a live simulator (Simu5G, once wired in) to supply
+      these terms.
 - [x] Ran the full evaluation suite (`marl.evaluation.evaluate_b5g`) against 50 real
       samples from the full `E:\FYP DATA\6G\data\raw\b5g_slicing\` release (11,783
       real agents total, not just the 389 from the 1-sample in-repo fallback).
@@ -78,3 +85,18 @@
       trails baselines — consistent with the actor partly fitting the specific
       training samples rather than learning a policy that generalizes yet. Reporting
       both honestly rather than only the flattering training curve.
+
+      **Tested the obvious next hypothesis — "just needs more episodes" — and it
+      didn't hold.** Ran a fresh 2,000-episode pass (5x the training budget,
+      samples 0–1999) evaluated on a completely new held-out block never touched
+      by any prior run (indices 2000–2049, 15,160 real agents):
+      `reports/krish_marl_trained_2000ep/summary.json`. Result: mean reward
+      **0.3087** — *worse* than both the 400-episode attempt (0.3400) and the
+      baselines (equal-split 0.3560, heuristic 0.3602) on this fresh split.
+      More raw episodes alone made held-out generalization slightly worse, not
+      better. Real, useful diagnostic conclusion: the gap isn't primarily a
+      data-volume problem — it's more likely the static hyperparameters
+      (`actor_lr=1e-3`, `critic_lr=2e-3`, fixed `exploration_noise=0.05` with no
+      decay) or the reward signal itself (recall `delta` is the only real QoS
+      term available — see the confirmed-null latency/jitter/packet-loss finding
+      above). Next attempt should tune those, not just extend training length.

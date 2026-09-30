@@ -11,13 +11,14 @@ import pandas as pd
 import torch
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_recall_fscore_support
+from sklearn.model_selection import train_test_split
 
 try:
     from .masked_reconstruction import FlowFeatureEncoder, MaskedReconstructionConfig
-    from .preprocessing import NIDDPreprocessor, load_nidd_csv, split_by_sequence
+    from .preprocessing import NIDDPreprocessor, load_nidd_csv
 except ImportError:
     from masked_reconstruction import FlowFeatureEncoder, MaskedReconstructionConfig
-    from preprocessing import NIDDPreprocessor, load_nidd_csv, split_by_sequence
+    from preprocessing import NIDDPreprocessor, load_nidd_csv
 
 
 def load_trained_model(checkpoint_path: str | Path, device: torch.device):
@@ -100,17 +101,24 @@ def evaluate_nidd(
     seed: int = 0,
     device_name: str = "cpu",
 ) -> dict:
-    """Evaluate representations from checkpoint training rows to validation rows."""
+    """Evaluate representations using a stratified train/test split by label.
+
+    NIDD's Combined.csv is concatenated in large contiguous same-attack-type
+    blocks (confirmed by inspection: a sequential split on the full file put
+    99.88% Benign in the tail and the complementary truncated-prefix split put
+    99.88% Malicious in the tail). `split_by_sequence` (positional) is the right
+    choice for SSL *training* itself, but reusing it here for the *downstream
+    classifier* split created a severe train/test label-distribution shift that
+    made accuracy collapse to ~1% — worse than the majority-class baseline, not
+    a reflection of embedding quality. This function keeps a real held-out test
+    set (never seen by the probe classifier) but selects it by stratified random
+    sampling over the label column instead, so both splits have a representative
+    mix of both classes.
+    """
     device = torch.device(device_name)
     model, preprocessor, checkpoint = load_trained_model(checkpoint_path, device)
     frame = load_nidd_csv(dataset_path, n_rows=n_rows)
-    training_frame, validation_frame = split_by_sequence(
-        frame,
-        validation_fraction=checkpoint["training_config"]["validation_fraction"],
-    )
-    training_frame = training_frame.loc[training_frame["Label"].notna()].reset_index(drop=True)
-    validation_frame = validation_frame.loc[validation_frame["Label"].notna()].reset_index(drop=True)
-    frame = pd.concat([training_frame, validation_frame], ignore_index=True)
+    frame = frame.loc[frame["Label"].notna()].reset_index(drop=True)
     ssl_features, raw_features, labels = generate_representations(
         frame,
         model,
@@ -121,8 +129,13 @@ def evaluate_nidd(
         device=device,
     )
     random_features = np.random.default_rng(seed).standard_normal(ssl_features.shape)
-    train_indices = np.arange(len(training_frame))
-    test_indices = np.arange(len(training_frame), len(frame))
+    validation_fraction = checkpoint["training_config"]["validation_fraction"]
+    train_indices, test_indices = train_test_split(
+        np.arange(len(frame)),
+        test_size=validation_fraction,
+        random_state=seed,
+        stratify=labels,
+    )
     results = [
         evaluate_representation("ssl_embedding_64d", ssl_features, labels, train_indices, test_indices, seed),
         evaluate_representation("processed_raw_features", raw_features, labels, train_indices, test_indices, seed),
@@ -132,7 +145,7 @@ def evaluate_nidd(
         "dataset_path": str(dataset_path),
         "checkpoint_path": str(checkpoint_path),
         "rows_evaluated": len(labels),
-        "evaluation_split": "checkpoint_sequence_training_to_validation",
+        "evaluation_split": "stratified_random_by_label",
         "train_rows": len(train_indices),
         "test_rows": len(test_indices),
         "label_counts": {label: int((labels == label).sum()) for label in sorted(set(labels))},

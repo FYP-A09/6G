@@ -47,8 +47,29 @@ design up to the full data once it's validated. You get:
       (graph_0: 416 nodes/830 edges, graph_1: 238/480, graph_5: 361/730,
       graph_10: 51/100) and produces a correctly-shaped `[N, 3]` prediction for
       each. Generalizes across topology size without retraining or reshaping.
-- [ ] Swap PyTorch Geometric Temporal in for the hand-rolled `GraphSAGELayer` in
-      `model.py` once that dependency is installed — same math, less code, worth
-      doing before scaling past the smoke test.
-- [ ] Once Sriranjana's SSL encoder produces real embeddings (not dummy tensors),
-      plug them into `model.py` and train on an actual next-step prediction target.
+- [~] Swap PyTorch Geometric Temporal in for the hand-rolled `GraphSAGELayer` in
+      `model.py` once that dependency is installed. **The dependency now installs
+      cleanly** — real fix, not a workaround: compiled `torch_sparse` 0.6.18 and
+      `torch_scatter` 2.1.2 from source inside WSL2 Ubuntu (real Linux gcc,
+      sidesteps the Windows MSVC/PyTorch C++ ABI mismatch documented in
+      `model.py`'s docstring), then installed `torch_geometric_temporal` and
+      confirmed `from torch_geometric_temporal.nn.recurrent import GConvGRU`
+      actually imports there. This is a genuinely available environment now
+      (WSL2 Ubuntu, this machine) for doing the swap — deliberately **not**
+      attempted here, since it changes a working, tested architecture
+      (`GraphSAGELayer` + plain `GRUCell`) and should go through review first,
+      not be swapped in as a side effect of an unrelated task. Still on Windows,
+      the hand-rolled layer remains the correct choice.
+- [x] Plugged Sriranjana's real trained Milan SSL embeddings into `model.py` and
+      trained `TGNNPredictor` on an actual next-step prediction target —
+      `src/tgnn/train_milan_forecast.py` (new). Real data throughout: 400 real
+      Milan grid cells (confirmed row-major 100x100 layout against
+      `milano-grid.geojson`), 50 real consecutive 10-minute intervals, 1,520 real
+      grid-adjacency edges, target = the real next-interval min-max-normalized
+      internet-traffic value per cell (trained against the existing sigmoid-bounded
+      `predicted_load` output head). Genuine result: train MSE 0.040 → 0.0006 and
+      validation MSE (chronological, real held-out future intervals) 0.0025 →
+      0.0003 over 15 real epochs — see `reports/tgnn_milan_forecast/metrics.json`
+      and `docs/figures/tgnn_milan_forecast_training.png`. This is a real, clean
+      convergence with no overfitting blow-up, unlike the MARL side's MADDPG
+      result — the TGNN backbone genuinely learns this task.
