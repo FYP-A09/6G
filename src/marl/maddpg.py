@@ -68,6 +68,7 @@ class TrainingConfig:
     critic_learning_rate: float = 2e-3
     discount: float = 0.99
     exploration_noise: float = 0.05
+    target_tau: float = 1.0  # 1.0 = hard copy every update (original behaviour); ~0.01 = soft update
     seed: int = 7
     checkpoint_path: str | None = None
 
@@ -189,8 +190,11 @@ class MADDPGTrainer:
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        self.target_actor.load_state_dict(self.actor.state_dict())
-        self.target_critic.load_state_dict(self.critic.state_dict())
+        tau = self.config.target_tau
+        with torch.no_grad():
+            for target, source in ((self.target_actor, self.actor), (self.target_critic, self.critic)):
+                for target_param, param in zip(target.parameters(), source.parameters()):
+                    target_param.mul_(1.0 - tau).add_(param, alpha=tau)
 
     def train_episode(self, env: B5GSlicingEnv) -> float:
         observations = env.reset()

@@ -112,3 +112,66 @@ def test_neversnet_telemetry_replay_streams_real_schema(tmp_path: Path) -> None:
     assert [event.node_id for event in events] == ["ue_part1_0", "ue_part1_0"]
     assert events[-1].metrics["throughput_dl_bps"] == 2000.0
     assert replay.latest_state()["ue_part1_0"].timestamp_s == 1.0
+
+
+def test_duplicate_slice_numbers_across_types_stay_separate_agents(tmp_path) -> None:
+    """B5G slice numbers restart per type; agents/rewards must not merge across types."""
+    import json
+
+    (tmp_path / "graphs").mkdir()
+    (tmp_path / "slices").mkdir()
+    (tmp_path / "graphs" / "graph_0.txt").write_text("")
+    flow = {"origin_node": 7, "destination": 1, "bandwidth": 1_000_000}
+    slices = [
+        {"number": 0, "type": "eMBB", "delta": 0.2, "flows": [flow]},
+        {"number": 0, "type": "URLLC", "delta": 0.9, "flows": [flow]},
+    ]
+    (tmp_path / "slices" / "slices_0.json").write_text(json.dumps(slices))
+
+    env = B5GSlicingEnv(data_root=str(tmp_path), load_topology=False)
+    observations = env.reset()
+    assert len(observations) == 2
+    assert {o.slice_type for o in observations.values()} == {"eMBB", "URLLC"}
+
+    actions = {
+        agent_id: {"eMBB": 1.0} if obs.slice_type == "eMBB" else {"URLLC": 1.0}
+        for agent_id, obs in observations.items()
+    }
+    _, _, _, infos = env.step(actions)
+    for agent_id, obs in observations.items():
+        assert infos[agent_id]["metrics"]["allocation_share"] == 1.0
+        expected_qos = 1.0 - obs.recorded_delta
+        assert infos[agent_id]["reward_breakdown"].qos_satisfaction == pytest.approx(expected_qos)
+
+
+def test_agents_with_reused_slice_numbers_are_scored_against_their_own_slice(tmp_path: Path) -> None:
+    # The real B5G release restarts slice "number" per slice type, so two slices of
+    # different types can share number 0 and an origin node. They must stay separate
+    # agents and be scored against their own type/delta.
+    import json
+
+    (tmp_path / "graphs").mkdir()
+    (tmp_path / "graphs" / "graph_0.txt").write_text("")
+    (tmp_path / "slices").mkdir()
+    flow = {"origin_node": 7, "destination": 1, "bandwidth": 1_000_000}
+    slices = [
+        {"number": 0, "type": "eMBB", "delta": 0.2, "flows": [dict(flow)]},
+        {"number": 0, "type": "mMTC", "delta": 0.9, "flows": [dict(flow)]},
+    ]
+    (tmp_path / "slices" / "slices_0.json").write_text(json.dumps(slices))
+
+    env = B5GSlicingEnv(data_root=str(tmp_path), load_topology=False)
+    observations = env.reset()
+    assert len(observations) == 2
+    assert sorted(o.slice_type for o in observations.values()) == ["eMBB", "mMTC"]
+
+    actions = {
+        agent_id: {"eMBB": 0.0, "URLLC": 0.0, "mMTC": 1.0}
+        for agent_id in observations
+    }
+    _, _, _, infos = env.step(actions)
+    for agent_id, observation in observations.items():
+        expected_share = 1.0 if observation.slice_type == "mMTC" else 0.0
+        assert infos[agent_id]["metrics"]["allocation_share"] == expected_share
+        expected_qos = 1.0 - observation.recorded_delta
+        assert infos[agent_id]["reward_breakdown"].qos_satisfaction == pytest.approx(expected_qos)

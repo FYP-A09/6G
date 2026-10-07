@@ -1,0 +1,5 @@
+{
+  "tgnn_validation_mse": 0.00030069177187720523,
+  "persistence_validation_mse": 0.0002649969796443151,
+  "train_mean_predictor_validation_mse": 0.001976136920145816
+}

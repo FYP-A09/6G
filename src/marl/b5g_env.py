@@ -191,6 +191,7 @@ class B5GSlicingEnv:
         self.graph: nx.MultiDiGraph | None = None
         self.routing: list[list[int]] | None = None
         self.slices: list[dict] | None = None
+        self._agent_slices: dict[str, dict] = {}
         self.agents: list[str] = []
         self._observations: dict[str, AgentObservation] = {}
         self._previous_allocations: dict[str, dict[str, float]] = {}
@@ -213,13 +214,19 @@ class B5GSlicingEnv:
             self.slices = json.load(f)
 
         obs: dict[str, AgentObservation] = {}
+        self._agent_slices = {}
         predicted_demand = predicted_demand or {}
         previous_allocations = previous_allocations or {}
-        for slc in self.slices:
+        # The dataset's slice "number" restarts per slice type (298/300 sampled files
+        # reuse numbers), so it cannot key agents: keying on it silently merged
+        # agents across types and made step() score against the wrong slice. The
+        # position in the slice list is unique, so "slice_N" here means list index.
+        for slice_index, slc in enumerate(self.slices):
             slice_type = slc["type"]
             delta = slc["delta"]
             for flow in slc["flows"]:
-                agent_id = f"node_{flow['origin_node']}_slice_{slc['number']}"
+                agent_id = f"node_{flow['origin_node']}_slice_{slice_index}"
+                self._agent_slices[agent_id] = slc
                 metrics = slc.get("metrics", {})
                 obs[agent_id] = AgentObservation(
                     node_id=flow["origin_node"],
@@ -284,9 +291,7 @@ class B5GSlicingEnv:
         rewards = {}
         infos: dict[str, dict] = {}
         for agent_id, action in actions.items():
-            # agent_id was constructed as f"node_{id}_slice_{n}" in reset()
-            slice_num = int(agent_id.rsplit("_", 1)[1])
-            slc = next(s for s in self.slices if s["number"] == slice_num)
+            slc = self._agent_slices[agent_id]
             self._validate_action(action)
             observation = self._observation_for(agent_id)
             metrics = self._action_metrics(action, observation)

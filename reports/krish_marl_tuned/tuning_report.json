@@ -1,0 +1,121 @@
+{
+  "protocol": "train samples [0,1000), validate [1000,1050), test [3000,3050)",
+  "configs": [
+    {
+      "exploration_noise": 0.05,
+      "actor_lr": 0.001,
+      "target_tau": 1.0,
+      "validation_mean_reward": 0.45826069696866345,
+      "validation_utilization": 0.7466061081015195,
+      "seconds": 68.07303719999982
+    },
+    {
+      "exploration_noise": 0.05,
+      "actor_lr": 0.001,
+      "target_tau": 0.01,
+      "validation_mean_reward": 0.45826069696866345,
+      "validation_utilization": 0.7466061081015195,
+      "seconds": 29.315657599999668
+    },
+    {
+      "exploration_noise": 0.05,
+      "actor_lr": 0.0001,
+      "target_tau": 1.0,
+      "validation_mean_reward": 0.4578295614152014,
+      "validation_utilization": 0.7451689792316599,
+      "seconds": 29.39364450000039
+    },
+    {
+      "exploration_noise": 0.05,
+      "actor_lr": 0.0001,
+      "target_tau": 0.01,
+      "validation_mean_reward": 0.4578295614152014,
+      "validation_utilization": 0.7451689792316599,
+      "seconds": 29.009394299999713
+    },
+    {
+      "exploration_noise": 0.2,
+      "actor_lr": 0.001,
+      "target_tau": 1.0,
+      "validation_mean_reward": 0.4582571562319796,
+      "validation_utilization": 0.7465943027187446,
+      "seconds": 29.312656699999934
+    },
+    {
+      "exploration_noise": 0.2,
+      "actor_lr": 0.001,
+      "target_tau": 0.01,
+      "validation_mean_reward": 0.4582571562319796,
+      "validation_utilization": 0.7465943027187446,
+      "seconds": 29.26176630000009
+    },
+    {
+      "exploration_noise": 0.2,
+      "actor_lr": 0.0001,
+      "target_tau": 1.0,
+      "validation_mean_reward": 0.4575880270390924,
+      "validation_utilization": 0.7443638715103585,
+      "seconds": 29.316133699999682
+    },
+    {
+      "exploration_noise": 0.2,
+      "actor_lr": 0.0001,
+      "target_tau": 0.01,
+      "validation_mean_reward": 0.4575880270390924,
+      "validation_utilization": 0.7443638715103585,
+      "seconds": 30.337599700000283
+    }
+  ],
+  "selected": {
+    "exploration_noise": 0.05,
+    "actor_lr": 0.001,
+    "target_tau": 1.0,
+    "validation_mean_reward": 0.45826069696866345,
+    "validation_utilization": 0.7466061081015195,
+    "seconds": 68.07303719999982
+  },
+  "test_trained_actor": {
+    "policy": "trained_actor",
+    "samples": 50,
+    "agents": 12619,
+    "mean_reward": 0.44738889508998614,
+    "qos_satisfaction_rate": 0.0,
+    "sla_violation_rate": 0.0,
+    "mean_utilization": 0.783975336699563,
+    "mean_reconfiguration_churn": 0.2499999972266453,
+    "mean_latency_ms": 0.0,
+    "mean_packet_loss_rate": 0.0,
+    "approval_rate": 0.0,
+    "mean_inference_ms_per_sample": 4.732341999961136
+  },
+  "test_baselines": [
+    {
+      "policy": "equal_split",
+      "samples": 50,
+      "agents": 12619,
+      "mean_reward": 0.3121962913067694,
+      "qos_satisfaction_rate": 0.0,
+      "sla_violation_rate": 0.0,
+      "mean_utilization": 0.3333333333333844,
+      "mean_reconfiguration_churn": 0.25,
+      "mean_latency_ms": 0.0,
+      "mean_packet_loss_rate": 0.0,
+      "approval_rate": 0.0,
+      "mean_inference_ms_per_sample": 1.4920400000028167
+    },
+    {
+      "policy": "heuristic",
+      "samples": 50,
+      "agents": 12619,
+      "mean_reward": 0.37219629130675885,
+      "qos_satisfaction_rate": 0.0,
+      "sla_violation_rate": 0.0,
+      "mean_utilization": 0.5333333333334842,
+      "mean_reconfiguration_churn": 0.25,
+      "mean_latency_ms": 0.0,
+      "mean_packet_loss_rate": 0.0,
+      "approval_rate": 0.0,
+      "mean_inference_ms_per_sample": 1.6229000000112137
+    }
+  ]
+}

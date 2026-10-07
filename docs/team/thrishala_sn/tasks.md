@@ -71,5 +71,12 @@ design up to the full data once it's validated. You get:
       validation MSE (chronological, real held-out future intervals) 0.0025 →
       0.0003 over 15 real epochs — see `reports/tgnn_milan_forecast/metrics.json`
       and `docs/figures/tgnn_milan_forecast_training.png`. This is a real, clean
-      convergence with no overfitting blow-up, unlike the MARL side's MADDPG
-      result — the TGNN backbone genuinely learns this task.
+      convergence with no overfitting blow-up — the TGNN backbone genuinely learns
+      this task. **But it does not beat a trivial baseline**: on the same 9 validation
+      windows (`reports/tgnn_milan_forecast/baselines.json`) the TGNN's MSE is 0.000301,
+      versus 0.000265 for "predict the last observed value" (persistence, ~13% better
+      than the TGNN) and 0.001976 for predicting the training mean (the TGNN is ~6.6x
+      better than that). So it learns real temporal structure but has not yet added value
+      over persistence at 10-minute resolution. Scope caveat: 400 cells x 50 intervals
+      (one partial day), 9 validation windows, one output head. Worth trying: longer
+      history, multi-day data, and multi-step horizons where persistence degrades.
