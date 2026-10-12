@@ -72,11 +72,21 @@ design up to the full data once it's validated. You get:
       0.0003 over 15 real epochs — see `reports/tgnn_milan_forecast/metrics.json`
       and `docs/figures/tgnn_milan_forecast_training.png`. This is a real, clean
       convergence with no overfitting blow-up — the TGNN backbone genuinely learns
-      this task. **But it does not beat a trivial baseline**: on the same 9 validation
-      windows (`reports/tgnn_milan_forecast/baselines.json`) the TGNN's MSE is 0.000301,
-      versus 0.000265 for "predict the last observed value" (persistence, ~13% better
-      than the TGNN) and 0.001976 for predicting the training mean (the TGNN is ~6.6x
-      better than that). So it learns real temporal structure but has not yet added value
-      over persistence at 10-minute resolution. Scope caveat: 400 cells x 50 intervals
-      (one partial day), 9 validation windows, one output head. Worth trying: longer
-      history, multi-day data, and multi-step horizons where persistence degrades.
+      this task. **Against trivial baselines** (the trainer now reports them in every
+      run): on the first run's 9 validation windows
+      (`reports/tgnn_milan_forecast/baselines.json`) the TGNN did *not* beat "predict the
+      last observed value" (MSE 0.000301 vs 0.000265). Rerun on a **full real day**
+      (400 cells x 144 intervals, 111 train / 28 validation windows,
+      `reports/tgnn_milan_forecast_fullday/metrics.json`): TGNN **0.000616** vs
+      persistence 0.000720 (about 14% better) vs training-mean 0.006395 (about 10x
+      better) — so with enough validation data it does beat persistence. Caveats: one
+      day, one seed, and the best epoch is chosen on the same validation windows (the
+      curve is flat by epoch ~15, so the selection effect should be small).
+      **SSL ablation** (`--input-features raw`, same model/data/split, the five z-scored
+      traffic features as input instead of the 64-D SSL embedding;
+      `reports/tgnn_milan_forecast_fullday_raw/metrics.json`): MSE 0.000612 vs 0.000616
+      with SSL, i.e. no measurable difference (raw is 0.6% lower). On this task the SSL
+      stage adds nothing over the raw features it was trained on; both beat persistence.
+      That is a result to state plainly in the review, not hide: the project's SSL-helps
+      claim is not supported by the Milan forecast. Worth trying: multi-step horizons,
+      multiple days/seeds, and SSL inputs with more structure than five scalars.

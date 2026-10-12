@@ -58,6 +58,7 @@ class ForecastConfig:
     learning_rate: float = 5e-4
     validation_fraction: float = 0.2
     seed: int = 0
+    input_features: str = "ssl"  # "ssl" = 64-D SSL embeddings, "raw" = the 5 z-scored traffic features (ablation)
 
 
 def _sub_grid_cell_ids(origin: int, size: int) -> list[int]:
@@ -127,7 +128,10 @@ def build_dataset(
     ssl_model, ssl_preprocessor = _load_milan_checkpoint(ssl_checkpoint_path)
     batch = ssl_preprocessor.transform(frame)
     with torch.no_grad():
-        embeddings = ssl_model(batch.features).embedding  # [rows, 64], real trained SSL output
+        if config.input_features == "raw":
+            embeddings = batch.features  # [rows, 5], ablation: no SSL
+        else:
+            embeddings = ssl_model(batch.features).embedding  # [rows, 64], real trained SSL output
 
     frame = frame.reset_index(drop=True)
     frame["_row"] = range(len(frame))
@@ -198,7 +202,19 @@ def train(config: ForecastConfig, milan_data_dir: str, ssl_checkpoint: str,
     def normalize(target: torch.Tensor) -> torch.Tensor:
         return ((target - target_min) / target_range).clamp(0.0, 1.0)
 
-    model = TGNNPredictor()
+    # Trivial baselines on the same validation windows: "next value = last observed
+    # value" (persistence) and "next value = training mean". A forecaster only adds
+    # value if it beats persistence.
+    train_mean = float(normalize(train_targets).mean())
+    persistence_errors, mean_errors = [], []
+    for offset, (_, raw_target) in enumerate(validation_windows):
+        last_observed = internet_raw[:, split + offset + config.window_length - 1]
+        persistence_errors.append(((normalize(last_observed) - normalize(raw_target)) ** 2).mean().item())
+        mean_errors.append(((train_mean - normalize(raw_target)) ** 2).mean().item())
+    persistence_mse = sum(persistence_errors) / len(persistence_errors)
+    mean_predictor_mse = sum(mean_errors) / len(mean_errors)
+
+    model = TGNNPredictor(embedding_dim=embed_grid.shape[-1])
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
     def run_epoch(window_set, training: bool) -> float:
@@ -246,6 +262,9 @@ def train(config: ForecastConfig, milan_data_dir: str, ssl_checkpoint: str,
         "n_cells": len(cell_ids), "n_timesteps": len(timestamps),
         "n_train_windows": len(train_windows), "n_validation_windows": len(validation_windows),
         "best_validation_mse": best_validation, "elapsed_seconds": elapsed,
+        "persistence_validation_mse": persistence_mse,
+        "train_mean_validation_mse": mean_predictor_mse,
+        "beats_persistence": best_validation < persistence_mse,
         "config": asdict(config), "epochs": history,
     }
     (output_path / "metrics.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
@@ -261,10 +280,12 @@ def train(config: ForecastConfig, milan_data_dir: str, ssl_checkpoint: str,
     fig.tight_layout()
     figures_dir = Path(__file__).resolve().parent.parent.parent / "docs" / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(figures_dir / "tgnn_milan_forecast_training.png", dpi=200)
+    fig.savefig(figures_dir / f"{Path(output_dir).name}_training.png", dpi=200)
     plt.close(fig)
-    print(f"\nSaved checkpoint, metrics, and training-curve figure under {output_path} "
-          f"and docs/figures/tgnn_milan_forecast_training.png")
+    print(f"\nbest TGNN validation MSE {best_validation:.6f} | persistence {persistence_mse:.6f} | "
+          f"train-mean {mean_predictor_mse:.6f} | beats persistence: {best_validation < persistence_mse}")
+    print(f"Saved checkpoint, metrics, and training-curve figure under {output_path} "
+          f"and docs/figures/{output_path.name}_training.png")
     return summary
 
 
@@ -279,11 +300,13 @@ if __name__ == "__main__":
     parser.add_argument("--grid-size", type=int, default=20)
     parser.add_argument("--grid-origin", type=int, default=4040)
     parser.add_argument("--window-length", type=int, default=5)
+    parser.add_argument("--input-features", choices=("ssl", "raw"), default="ssl")
     args = parser.parse_args()
     train(
         ForecastConfig(
             grid_size=args.grid_size, grid_origin=args.grid_origin,
             window_length=args.window_length, epochs=args.epochs,
+            input_features=args.input_features,
         ),
         args.milan_data_dir, args.ssl_checkpoint, args.output_dir,
         args.max_files, args.max_rows,

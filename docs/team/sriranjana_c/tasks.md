@@ -21,6 +21,14 @@
       `src/ssl/milan_ssl.py`, including chronological validation, checkpoint
       saving, and 64-dimensional embedding export. The bounded smoke-test
       artifacts are under `data/processed/ssl_milan_smoke_test_50000_rows/`.
+      **Full-scale result and an honest ablation**: retrained on 500,000 real rows of the
+      full-scale release (`reports/milan_ssl_full/`; reconstruction validation loss
+      plateaus around 0.33). Used as TGNN input on the Milan forecast, the 64-D embeddings
+      give no measurable gain over feeding the five raw z-scored traffic features directly
+      (TGNN validation MSE 0.000616 with SSL vs 0.000612 with raw,
+      `reports/tgnn_milan_forecast_fullday*/`). The encoder is a small MLP over just five
+      scalars, so there is little for it to add; a Milan SSL that uses temporal or spatial
+      context (neighbouring cells, previous intervals) is the obvious next experiment.
 - [x] Fill in the actual `nn.Module` encoder in `masked_reconstruction.py`,
       including categorical embeddings for the `CONTEXT_COLUMNS` and the fixed
       64-dimensional output.
