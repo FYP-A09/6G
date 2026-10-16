@@ -1,0 +1,129 @@
+{
+  "embb_sla_vs_utilisation": [
+    {
+      "utilisation": 0.275,
+      "generated_sla_ok": 1.0,
+      "reference_sla_ok": 1.0,
+      "n": 8688
+    },
+    {
+      "utilisation": 0.325,
+      "generated_sla_ok": 1.0,
+      "reference_sla_ok": 1.0,
+      "n": 7528
+    },
+    {
+      "utilisation": 0.375,
+      "generated_sla_ok": 1.0,
+      "reference_sla_ok": 1.0,
+      "n": 6688
+    },
+    {
+      "utilisation": 0.425,
+      "generated_sla_ok": 1.0,
+      "reference_sla_ok": 1.0,
+      "n": 5650
+    },
+    {
+      "utilisation": 0.475,
+      "generated_sla_ok": 1.0,
+      "reference_sla_ok": 0.996,
+      "n": 4944
+    },
+    {
+      "utilisation": 0.525,
+      "generated_sla_ok": 0.989,
+      "reference_sla_ok": 0.974,
+      "n": 4404
+    },
+    {
+      "utilisation": 0.575,
+      "generated_sla_ok": 0.934,
+      "reference_sla_ok": 0.919,
+      "n": 3984
+    },
+    {
+      "utilisation": 0.625,
+      "generated_sla_ok": 0.781,
+      "reference_sla_ok": 0.799,
+      "n": 3519
+    },
+    {
+      "utilisation": 0.675,
+      "generated_sla_ok": 0.552,
+      "reference_sla_ok": 0.634,
+      "n": 3167
+    },
+    {
+      "utilisation": 0.725,
+      "generated_sla_ok": 0.329,
+      "reference_sla_ok": 0.431,
+      "n": 2947
+    },
+    {
+      "utilisation": 0.775,
+      "generated_sla_ok": 0.231,
+      "reference_sla_ok": 0.264,
+      "n": 2617
+    },
+    {
+      "utilisation": 0.825,
+      "generated_sla_ok": 0.104,
+      "reference_sla_ok": 0.117,
+      "n": 2203
+    },
+    {
+      "utilisation": 0.875,
+      "generated_sla_ok": 0.054,
+      "reference_sla_ok": 0.05,
+      "n": 2028
+    },
+    {
+      "utilisation": 0.925,
+      "generated_sla_ok": 0.023,
+      "reference_sla_ok": 0.01,
+      "n": 1594
+    },
+    {
+      "utilisation": 0.975,
+      "generated_sla_ok": 0.01,
+      "reference_sla_ok": 0.0,
+      "n": 1470
+    }
+  ],
+  "mean_abs_gap": 0.021,
+  "hourly_mean_embb_demand_mbps": [
+    34.78,
+    28.4,
+    23.62,
+    20.92,
+    19.4,
+    18.64,
+    19.76,
+    26.95,
+    36.33,
+    41.55,
+    46.45,
+    47.59,
+    48.51,
+    50.67,
+    50.69,
+    48.86,
+    48.84,
+    48.89,
+    49.77,
+    47.92,
+    46.81,
+    47.19,
+    46.49,
+    41.51
+  ],
+  "rows": 100700,
+  "cells": 100,
+  "intervals": 1007,
+  "sla_ok_rate": {
+    "eMBB": 0.729,
+    "URLLC": 0.6655,
+    "mMTC": 0.5246
+  }
+}

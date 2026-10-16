@@ -1,0 +1,70 @@
+{
+  "forecast_mse_city": {
+    "tgnn": [
+      48.0978,
+      0.2861,
+      0.1419
+    ],
+    "persistence": [
+      6.8526,
+      0.1537,
+      0.083
+    ],
+    "tgnn_better_by": [
+      -6.019,
+      -0.8617,
+      -0.7101
+    ]
+  },
+  "static": {
+    "sla_ok": {
+      "eMBB": 0.9189,
+      "URLLC": 0.9969,
+      "mMTC": 0.9998
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.6148,
+      "URLLC": 0.9222,
+      "mMTC": 0.9593
+    },
+    "cell_intervals_all_ok": 0.9189,
+    "mean_reward": 0.9743,
+    "served_fraction": 0.8399,
+    "block_mean_reward": 0.7091,
+    "outer_mean_reward": 0.9769
+  },
+  "reactive": {
+    "sla_ok": {
+      "eMBB": 0.9752,
+      "URLLC": 0.7114,
+      "mMTC": 0.5679
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.7139,
+      "URLLC": 0.7074,
+      "mMTC": 0.5417
+    },
+    "cell_intervals_all_ok": 0.4089,
+    "mean_reward": 0.8389,
+    "served_fraction": 0.9165,
+    "block_mean_reward": 0.7352,
+    "outer_mean_reward": 0.8399
+  },
+  "predictive": {
+    "sla_ok": {
+      "eMBB": 0.9753,
+      "URLLC": 0.8657,
+      "mMTC": 0.9001
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.7167,
+      "URLLC": 0.7343,
+      "mMTC": 0.762
+    },
+    "cell_intervals_all_ok": 0.7953,
+    "mean_reward": 0.9353,
+    "served_fraction": 0.9204,
+    "block_mean_reward": 0.7781,
+    "outer_mean_reward": 0.9369
+  }
+}

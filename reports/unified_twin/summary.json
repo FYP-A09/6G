@@ -1,0 +1,446 @@
+{
+  "days": 364,
+  "real_days": 62,
+  "cells": 400,
+  "intervals": 52416,
+  "demand_scale": [
+    0.09317559748888016,
+    0.09419237822294235,
+    0.04711889103055
+  ],
+  "scenarios": {
+    "baseline": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.7037,
+        "URLLC": 0.7305,
+        "mMTC": 0.6509
+      },
+      "mean_reward": 0.7634,
+      "energy_mwh": 3472.84,
+      "served_tb": 51795.78,
+      "sleeping_cell_intervals": 0,
+      "seconds": 270.1,
+      "by_event_type": {
+        "none": {
+          "rows": 20966000,
+          "sla_ok_rate": {
+            "eMBB": 0.7037,
+            "URLLC": 0.7305,
+            "mMTC": 0.6509
+          },
+          "mean_reward": 0.7634
+        }
+      }
+    },
+    "events": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.7032,
+        "URLLC": 0.7304,
+        "mMTC": 0.6508
+      },
+      "mean_reward": 0.7632,
+      "energy_mwh": 3473.18,
+      "served_tb": 51817.71,
+      "sleeping_cell_intervals": 0,
+      "seconds": 306.6,
+      "by_event_type": {
+        "none": {
+          "rows": 20932659,
+          "sla_ok_rate": {
+            "eMBB": 0.7037,
+            "URLLC": 0.7304,
+            "mMTC": 0.6509
+          },
+          "mean_reward": 0.7635
+        },
+        "flash_crowd": {
+          "rows": 19740,
+          "sla_ok_rate": {
+            "eMBB": 0.2167,
+            "URLLC": 0.6826,
+            "mMTC": 0.5984
+          },
+          "mean_reward": 0.5316
+        },
+        "cell_outage": {
+          "rows": 985,
+          "sla_ok_rate": {
+            "eMBB": 0.0,
+            "URLLC": 0.0954,
+            "mMTC": 0.0193
+          },
+          "mean_reward": 0.0192
+        },
+        "interference_spike": {
+          "rows": 8883,
+          "sla_ok_rate": {
+            "eMBB": 0.5774,
+            "URLLC": 0.6972,
+            "mMTC": 0.6291
+          },
+          "mean_reward": 0.704
+        },
+        "urllc_burst": {
+          "rows": 814,
+          "sla_ok_rate": {
+            "eMBB": 0.6081,
+            "URLLC": 0.5098,
+            "mMTC": 0.5749
+          },
+          "mean_reward": 0.6307
+        },
+        "mmtc_storm": {
+          "rows": 1966,
+          "sla_ok_rate": {
+            "eMBB": 0.6577,
+            "URLLC": 0.7304,
+            "mMTC": 0.3438
+          },
+          "mean_reward": 0.6787
+        },
+        "capacity_degradation": {
+          "rows": 953,
+          "sla_ok_rate": {
+            "eMBB": 0.3232,
+            "URLLC": 0.7104,
+            "mMTC": 0.6474
+          },
+          "mean_reward": 0.5784
+        }
+      }
+    },
+    "growth_6g": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.5526,
+        "URLLC": 0.6961,
+        "mMTC": 0.6101
+      },
+      "mean_reward": 0.6883,
+      "energy_mwh": 3648.48,
+      "served_tb": 62829.91,
+      "sleeping_cell_intervals": 0,
+      "seconds": 306.4,
+      "by_event_type": {
+        "none": {
+          "rows": 20932659,
+          "sla_ok_rate": {
+            "eMBB": 0.5531,
+            "URLLC": 0.6963,
+            "mMTC": 0.6103
+          },
+          "mean_reward": 0.6887
+        },
+        "flash_crowd": {
+          "rows": 19740,
+          "sla_ok_rate": {
+            "eMBB": 0.1488,
+            "URLLC": 0.6285,
+            "mMTC": 0.5408
+          },
+          "mean_reward": 0.4507
+        },
+        "cell_outage": {
+          "rows": 985,
+          "sla_ok_rate": {
+            "eMBB": 0.0,
+            "URLLC": 0.0954,
+            "mMTC": 0.0193
+          },
+          "mean_reward": 0.0189
+        },
+        "interference_spike": {
+          "rows": 8883,
+          "sla_ok_rate": {
+            "eMBB": 0.4032,
+            "URLLC": 0.638,
+            "mMTC": 0.549
+          },
+          "mean_reward": 0.5964
+        },
+        "urllc_burst": {
+          "rows": 814,
+          "sla_ok_rate": {
+            "eMBB": 0.4287,
+            "URLLC": 0.3993,
+            "mMTC": 0.4521
+          },
+          "mean_reward": 0.4984
+        },
+        "mmtc_storm": {
+          "rows": 1966,
+          "sla_ok_rate": {
+            "eMBB": 0.4613,
+            "URLLC": 0.6882,
+            "mMTC": 0.2131
+          },
+          "mean_reward": 0.5474
+        },
+        "capacity_degradation": {
+          "rows": 953,
+          "sla_ok_rate": {
+            "eMBB": 0.2099,
+            "URLLC": 0.5624,
+            "mMTC": 0.468
+          },
+          "mean_reward": 0.4544
+        }
+      }
+    },
+    "energy_saving": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.7027,
+        "URLLC": 0.7367,
+        "mMTC": 0.6588
+      },
+      "mean_reward": 0.7662,
+      "energy_mwh": 3435.01,
+      "served_tb": 51811.18,
+      "sleeping_cell_intervals": 688742,
+      "seconds": 307.7,
+      "by_event_type": {
+        "none": {
+          "rows": 20243917,
+          "sla_ok_rate": {
+            "eMBB": 0.6932,
+            "URLLC": 0.7279,
+            "mMTC": 0.6473
+          },
+          "mean_reward": 0.7588
+        },
+        "flash_crowd": {
+          "rows": 19740,
+          "sla_ok_rate": {
+            "eMBB": 0.2157,
+            "URLLC": 0.6817,
+            "mMTC": 0.5968
+          },
+          "mean_reward": 0.5307
+        },
+        "cell_outage": {
+          "rows": 985,
+          "sla_ok_rate": {
+            "eMBB": 0.0,
+            "URLLC": 0.0751,
+            "mMTC": 0.0183
+          },
+          "mean_reward": 0.0135
+        },
+        "interference_spike": {
+          "rows": 8883,
+          "sla_ok_rate": {
+            "eMBB": 0.5751,
+            "URLLC": 0.6886,
+            "mMTC": 0.6294
+          },
+          "mean_reward": 0.7007
+        },
+        "urllc_burst": {
+          "rows": 814,
+          "sla_ok_rate": {
+            "eMBB": 0.6155,
+            "URLLC": 0.5147,
+            "mMTC": 0.5639
+          },
+          "mean_reward": 0.634
+        },
+        "mmtc_storm": {
+          "rows": 1966,
+          "sla_ok_rate": {
+            "eMBB": 0.6592,
+            "URLLC": 0.7258,
+            "mMTC": 0.3479
+          },
+          "mean_reward": 0.6777
+        },
+        "capacity_degradation": {
+          "rows": 953,
+          "sla_ok_rate": {
+            "eMBB": 0.32,
+            "URLLC": 0.7114,
+            "mMTC": 0.6317
+          },
+          "mean_reward": 0.5737
+        },
+        "cell_sleep": {
+          "rows": 688742,
+          "sla_ok_rate": {
+            "eMBB": 1.0,
+            "URLLC": 1.0,
+            "mMTC": 1.0
+          },
+          "mean_reward": 0.9944
+        }
+      }
+    },
+    "industrial_urllc": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.6933,
+        "URLLC": 0.7225,
+        "mMTC": 0.6461
+      },
+      "mean_reward": 0.7561,
+      "energy_mwh": 3481.22,
+      "served_tb": 52336.18,
+      "sleeping_cell_intervals": 0,
+      "seconds": 296.8,
+      "by_event_type": {
+        "none": {
+          "rows": 20932659,
+          "sla_ok_rate": {
+            "eMBB": 0.6939,
+            "URLLC": 0.7227,
+            "mMTC": 0.6462
+          },
+          "mean_reward": 0.7565
+        },
+        "flash_crowd": {
+          "rows": 19740,
+          "sla_ok_rate": {
+            "eMBB": 0.2092,
+            "URLLC": 0.6602,
+            "mMTC": 0.5865
+          },
+          "mean_reward": 0.5188
+        },
+        "cell_outage": {
+          "rows": 985,
+          "sla_ok_rate": {
+            "eMBB": 0.0,
+            "URLLC": 0.0954,
+            "mMTC": 0.0193
+          },
+          "mean_reward": 0.0191
+        },
+        "interference_spike": {
+          "rows": 8883,
+          "sla_ok_rate": {
+            "eMBB": 0.5678,
+            "URLLC": 0.6793,
+            "mMTC": 0.6192
+          },
+          "mean_reward": 0.6904
+        },
+        "urllc_burst": {
+          "rows": 814,
+          "sla_ok_rate": {
+            "eMBB": 0.57,
+            "URLLC": 0.4779,
+            "mMTC": 0.5479
+          },
+          "mean_reward": 0.6015
+        },
+        "mmtc_storm": {
+          "rows": 1966,
+          "sla_ok_rate": {
+            "eMBB": 0.6465,
+            "URLLC": 0.7238,
+            "mMTC": 0.3449
+          },
+          "mean_reward": 0.6722
+        },
+        "capacity_degradation": {
+          "rows": 953,
+          "sla_ok_rate": {
+            "eMBB": 0.3274,
+            "URLLC": 0.7041,
+            "mMTC": 0.638
+          },
+          "mean_reward": 0.5764
+        }
+      }
+    },
+    "massive_iot": {
+      "rows": 20966000,
+      "sla_ok_rate": {
+        "eMBB": 0.5536,
+        "URLLC": 0.7096,
+        "mMTC": 0.5237
+      },
+      "mean_reward": 0.6596,
+      "energy_mwh": 3628.18,
+      "served_tb": 61544.99,
+      "sleeping_cell_intervals": 0,
+      "seconds": 312.1,
+      "by_event_type": {
+        "none": {
+          "rows": 20932659,
+          "sla_ok_rate": {
+            "eMBB": 0.5541,
+            "URLLC": 0.7097,
+            "mMTC": 0.5239
+          },
+          "mean_reward": 0.6599
+        },
+        "flash_crowd": {
+          "rows": 19740,
+          "sla_ok_rate": {
+            "eMBB": 0.1645,
+            "URLLC": 0.6754,
+            "mMTC": 0.4197
+          },
+          "mean_reward": 0.4493
+        },
+        "cell_outage": {
+          "rows": 985,
+          "sla_ok_rate": {
+            "eMBB": 0.0,
+            "URLLC": 0.0954,
+            "mMTC": 0.0193
+          },
+          "mean_reward": 0.0172
+        },
+        "interference_spike": {
+          "rows": 8883,
+          "sla_ok_rate": {
+            "eMBB": 0.4098,
+            "URLLC": 0.6628,
+            "mMTC": 0.4316
+          },
+          "mean_reward": 0.5711
+        },
+        "urllc_burst": {
+          "rows": 814,
+          "sla_ok_rate": {
+            "eMBB": 0.4595,
+            "URLLC": 0.5025,
+            "mMTC": 0.4398
+          },
+          "mean_reward": 0.5357
+        },
+        "mmtc_storm": {
+          "rows": 1966,
+          "sla_ok_rate": {
+            "eMBB": 0.4084,
+            "URLLC": 0.706,
+            "mMTC": 0.1277
+          },
+          "mean_reward": 0.4603
+        },
+        "capacity_degradation": {
+          "rows": 953,
+          "sla_ok_rate": {
+            "eMBB": 0.2434,
+            "URLLC": 0.7156,
+            "mMTC": 0.2823
+          },
+          "mean_reward": 0.477
+        }
+      }
+    }
+  },
+  "region": "core20",
+  "events_per_scenario": {
+    "flash_crowd": 180,
+    "urllc_burst": 113,
+    "interference_spike": 94,
+    "mmtc_storm": 88,
+    "cell_outage": 71,
+    "capacity_degradation": 23
+  },
+  "output": "E:\\FYP DATA\\6G\\data\\processed\\unified_twin"
+}

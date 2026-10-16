@@ -1,0 +1,62 @@
+{
+  "static": {
+    "sla_ok": {
+      "eMBB": 0.1316,
+      "URLLC": 0.9844,
+      "mMTC": 0.9994
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.0,
+      "URLLC": 0.8436,
+      "mMTC": 0.9739
+    },
+    "mean_reward": 0.7089,
+    "served_fraction": 0.6318,
+    "cell_intervals_all_slices_ok": 0.1316
+  },
+  "reactive": {
+    "sla_ok": {
+      "eMBB": 0.5922,
+      "URLLC": 0.741,
+      "mMTC": 0.5713
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.1107,
+      "URLLC": 0.7329,
+      "mMTC": 0.5277
+    },
+    "mean_reward": 0.7346,
+    "served_fraction": 0.8471,
+    "cell_intervals_all_slices_ok": 0.2295
+  },
+  "predictive": {
+    "sla_ok": {
+      "eMBB": 0.5886,
+      "URLLC": 0.8656,
+      "mMTC": 0.6806
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.1238,
+      "URLLC": 0.6906,
+      "mMTC": 0.7459
+    },
+    "mean_reward": 0.7903,
+    "served_fraction": 0.8489,
+    "cell_intervals_all_slices_ok": 0.351
+  },
+  "oracle": {
+    "sla_ok": {
+      "eMBB": 0.5904,
+      "URLLC": 0.999,
+      "mMTC": 0.999
+    },
+    "sla_ok_during_events": {
+      "eMBB": 0.101,
+      "URLLC": 0.9544,
+      "mMTC": 0.9544
+    },
+    "mean_reward": 0.876,
+    "served_fraction": 0.8485,
+    "cell_intervals_all_slices_ok": 0.5903
+  }
+}

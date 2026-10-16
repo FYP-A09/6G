@@ -1,0 +1,47 @@
+{
+  "default": {
+    "actor_lr": 0.0003,
+    "critic_lr": 0.001,
+    "tau": 0.01,
+    "batch": 128,
+    "hidden": 256,
+    "val_reward": 0.4253,
+    "val_served": 0.472
+  },
+  "slow_actor": {
+    "actor_lr": 0.0001,
+    "critic_lr": 0.001,
+    "tau": 0.01,
+    "batch": 128,
+    "hidden": 256,
+    "val_reward": 0.4705,
+    "val_served": 0.63
+  },
+  "slow_both_bigbatch": {
+    "actor_lr": 0.0001,
+    "critic_lr": 0.0003,
+    "tau": 0.005,
+    "batch": 256,
+    "hidden": 256,
+    "val_reward": 0.3985,
+    "val_served": 0.582
+  },
+  "very_slow_actor": {
+    "actor_lr": 3e-05,
+    "critic_lr": 0.0003,
+    "tau": 0.005,
+    "batch": 256,
+    "hidden": 256,
+    "val_reward": 0.3104,
+    "val_served": 0.376
+  },
+  "wide": {
+    "actor_lr": 0.0001,
+    "critic_lr": 0.0003,
+    "tau": 0.005,
+    "batch": 256,
+    "hidden": 512,
+    "val_reward": 0.4133,
+    "val_served": 0.478
+  }
+}
