@@ -1,0 +1,1193 @@
+<meta charset="utf-8">
+<title>Slice Twin</title>
+<style>
+/* Layout: full-bleed live map of the real Milan cells; glass panels float over it
+   (toolbar capsule, network sidebar, cell inspector, transport bar). Below 1100px
+   the panels stack under the map. */
+:root {
+  --bg: #eef0f4;
+  --map: #f7f8fa;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.9);
+  --glass-edge: rgba(255, 255, 255, 0.85);
+  --hair: rgba(15, 20, 30, 0.08);
+  --hair-strong: rgba(15, 20, 30, 0.16);
+  --ink: #1d1d1f;
+  --ink2: #5f6068;
+  --ink3: #8a8b93;
+  --shadow: 0 10px 40px rgba(20, 30, 60, 0.12), 0 1px 3px rgba(20, 30, 60, 0.08);
+  --accent: #0071e3;
+  --embb: #0071e3;
+  --urllc: #f56300;
+  --mmtc: #00a3a3;
+  --idle: #c7c9d1;
+  --ok: #248a3d;
+  --warn: #b25000;
+  --bad: #d70015;
+  --gain: #2a78d6;
+  --loss: #e34948;
+  --mid: #e4e5e9;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-lg: 22px;
+  --r-md: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #050506; --map: #0b0c0e; --glass: rgba(28, 28, 32, 0.66); --glass-strong: rgba(36, 36, 40, 0.92);
+    --glass-edge: rgba(255, 255, 255, 0.10); --hair: rgba(255, 255, 255, 0.08); --hair-strong: rgba(255, 255, 255, 0.16);
+    --ink: #f5f5f7; --ink2: #a1a1a8; --ink3: #77777f; --shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --accent: #0a84ff; --embb: #0a84ff; --urllc: #e56a12; --mmtc: #15a0a0; --idle: #3a3b41;
+    --ok: #30d158; --warn: #ffd60a; --bad: #ff453a; --gain: #3987e5; --loss: #e66767; --mid: #2a2b30;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #050506; --map: #0b0c0e; --glass: rgba(28, 28, 32, 0.66); --glass-strong: rgba(36, 36, 40, 0.92);
+  --glass-edge: rgba(255, 255, 255, 0.10); --hair: rgba(255, 255, 255, 0.08); --hair-strong: rgba(255, 255, 255, 0.16);
+  --ink: #f5f5f7; --ink2: #a1a1a8; --ink3: #77777f; --shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --accent: #0a84ff; --embb: #0a84ff; --urllc: #e56a12; --mmtc: #15a0a0; --idle: #3a3b41;
+  --ok: #30d158; --warn: #ffd60a; --bad: #ff453a; --gain: #3987e5; --loss: #e66767; --mid: #2a2b30;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 13px; line-height: 1.4;
+  -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; color: inherit; }
+.glass { background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(28px); backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid var(--glass-edge); box-shadow: var(--shadow); }
+@media (prefers-reduced-transparency: reduce) { .glass { background: var(--glass-strong); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+.app { position: relative; height: 100%; }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--map); display: block; touch-action: none; }
+
+/* toolbar capsule */
+.toolbar { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px; padding: 7px 8px 7px 16px; border-radius: 999px; z-index: 5; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.brand svg { width: 22px; height: 22px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--hair); position: relative; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 999px; cursor: pointer; font-size: 12.5px;
+  font-weight: 500; color: var(--ink2); transition: color .2s, background .25s, box-shadow .25s; }
+.seg button[aria-pressed="true"] { background: var(--glass-strong); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
+.seg button:focus-visible, .iconbtn:focus-visible, .chip:focus-visible, .evrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sep { width: 1px; height: 22px; background: var(--hair-strong); }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink2); cursor: pointer; user-select: none; }
+.switch input { appearance: none; width: 34px; height: 20px; border-radius: 999px; background: var(--hair-strong); position: relative;
+  transition: background .25s; cursor: pointer; margin: 0; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .25s cubic-bezier(.3,1.4,.6,1); }
+.switch input:checked { background: var(--ok); }
+.switch input:checked::after { transform: translateX(14px); }
+.switch input:disabled { opacity: .4; cursor: default; }
+
+/* floating panels */
+.panel { position: absolute; z-index: 4; border-radius: var(--r-lg); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar { top: 78px; left: 14px; bottom: 132px; width: 324px; }
+.inspector { top: 78px; right: 14px; bottom: 132px; width: 352px; }
+.panel-head { padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--hair); }
+.panel-body { padding: 14px 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); }
+h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.015em; }
+h3 { margin: 0 0 6px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.muted { color: var(--ink2); }
+.small { font-size: 11.5px; color: var(--ink2); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* clock & live chips over the map */
+.hud { position: absolute; z-index: 3; left: 354px; top: 82px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.clock { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.clock small { font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--ink2); margin-left: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; pointer-events: auto; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px 6px 9px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+.chip[aria-pressed="false"] { opacity: .45; }
+.chip b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-events { display: flex; flex-direction: column; gap: 6px; }
+.now-ev { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 12px; font-size: 12px; width: fit-content;
+  background: var(--glass); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.now-ev i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 25%, transparent); animation: beat 1.4s ease-in-out infinite; }
+@keyframes beat { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--bad) 0%, transparent); } }
+
+/* transport bar */
+.transport { position: absolute; z-index: 5; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--r-lg); padding: 12px 16px 12px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
+.controls { display: flex; align-items: center; gap: 4px; }
+.iconbtn { width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer;
+  color: var(--ink); transition: background .2s, transform .15s; }
+.iconbtn:hover { background: var(--hair); }
+.iconbtn:active { transform: scale(.92); }
+.iconbtn.play { width: 44px; height: 44px; background: var(--ink); color: var(--map); }
+.iconbtn.play:hover { background: var(--ink); opacity: .88; }
+.iconbtn svg { width: 16px; height: 16px; }
+.iconbtn.play svg { width: 18px; height: 18px; }
+.timeline { position: relative; height: 62px; cursor: pointer; min-width: 0; touch-action: none; }
+.timeline svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.right-ctl { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.mode-label { font-size: 11px; color: var(--ink2); }
+
+/* sidebar tabs and content */
+.tabs { display: flex; gap: 2px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.kpi { padding: 10px; border-radius: var(--r-md); background: var(--hair); display: flex; flex-direction: column; gap: 4px; }
+.kpi .lab { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink2); }
+.kpi .val { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi .sub { font-size: 11px; color: var(--ink3); font-variant-numeric: tabular-nums; }
+.sw { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--hair); font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 500; color: var(--ink3); font-size: 11px; }
+tr.active td { font-weight: 600; }
+tr.active td:first-child::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; }
+tr:last-child td { border-bottom: 0; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink2); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.chart { width: 100%; display: block; overflow: visible; }
+.chart text { fill: var(--ink3); font-size: 10px; font-family: var(--font); }
+.narrative { font-size: 12.5px; line-height: 1.5; color: var(--ink); padding: 11px 12px; border-radius: var(--r-md); background: var(--hair); }
+.narrative b { font-weight: 600; }
+
+.evlist { display: flex; flex-direction: column; gap: 2px; }
+.evrow { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 12px;
+  border: 0; background: transparent; text-align: left; cursor: pointer; width: 100%; }
+.evrow:hover { background: var(--hair); }
+.evrow.live { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.evrow .t { font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+.evrow .n { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
+.evrow .d { font-size: 11.5px; color: var(--ink2); grid-column: 2 / 4; }
+.evrow .e { font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--ink2); white-space: nowrap; }
+.evico { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; color: #fff; flex: none; }
+.evico svg { width: 11px; height: 11px; }
+
+/* inspector */
+.cellhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.pill.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+.pill.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.splitbar { display: flex; height: 30px; border-radius: 10px; overflow: hidden; gap: 2px; background: transparent; }
+.splitbar div { height: 100%; transition: flex-grow .5s cubic-bezier(.2,.8,.2,1); min-width: 0; position: relative; }
+.splitlab { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.slicerows { display: flex; flex-direction: column; gap: 10px; }
+.slicerow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.slicerow .name { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 12.5px; }
+.slicerow .meta { font-size: 11.5px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.bar { grid-column: 1 / 3; height: 8px; border-radius: 4px; background: var(--hair); position: relative; overflow: visible; }
+.bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; transition: width .5s cubic-bezier(.2,.8,.2,1); }
+.bar .dem { position: absolute; top: -3px; bottom: -3px; width: 2px; border-radius: 1px; background: var(--ink); transition: left .5s cubic-bezier(.2,.8,.2,1); }
+.status { font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.status.ok { color: var(--ok); } .status.bad { color: var(--bad); }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { display: flex; flex-direction: column; gap: 2px; }
+.fact b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 11px; color: var(--ink3); }
+
+#tip { position: fixed; z-index: 20; pointer-events: none; padding: 8px 11px; border-radius: 12px; font-size: 12px; max-width: 260px;
+  opacity: 0; transition: opacity .12s; line-height: 1.45; }
+#tip b { font-weight: 600; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 30; background: var(--map); transition: opacity .5s; }
+.loading div { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--ink2); }
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--hair-strong); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* city view */
+.hud .seg { pointer-events: auto; width: fit-content; background: var(--glass); border: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.ramp { display: flex; flex-direction: column; gap: 6px; padding: 9px 12px; border-radius: 12px; width: 248px; pointer-events: auto; font-size: 11.5px; }
+.ramp .grad { height: 8px; border-radius: 4px; }
+.ramp .ends { display: flex; justify-content: space-between; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.ramp .keys { display: flex; gap: 10px; flex-wrap: wrap; color: var(--ink2); }
+.ramp .keys span { display: inline-flex; align-items: center; gap: 5px; }
+.ramp .keys i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.ramp .ttl { font-weight: 600; color: var(--ink); }
+.linkbtn { border: 0; background: var(--accent); color: #fff; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; width: fit-content; }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.scope { font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink3); margin-left: 2px; }
+
+@media (max-width: 1099px) {
+  body { overflow: auto; }
+  .app { height: auto; display: flex; flex-direction: column; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+  #map { position: relative; height: 62vh; min-height: 360px; border-radius: var(--r-lg); order: 2; }
+  .toolbar { position: relative; left: auto; top: auto; transform: none; order: 1; flex-wrap: wrap; white-space: normal; border-radius: var(--r-lg); padding: 10px 12px; justify-content: space-between; }
+  .hud { position: relative; left: auto; top: auto; order: 3; pointer-events: auto; }
+  .clock { font-size: 34px; }
+  .transport { position: relative; left: auto; right: auto; bottom: auto; order: 4; grid-template-columns: 1fr; }
+  .controls { justify-content: center; }
+  .right-ctl { align-items: center; }
+  .panel { position: relative; inset: auto; width: auto; order: 5; overflow: visible; }
+  .inspector { order: 6; }
+  .panel-body { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <canvas id="map" aria-label="Map of 100 real Milan cells; each ring shows how the cell's bandwidth is split between slices"></canvas>
+
+  <header class="toolbar glass" role="toolbar" aria-label="Controls">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="var(--embb)" stroke-width="3" stroke-dasharray="34 100" transform="rotate(-90 12 12)"/><circle cx="12" cy="12" r="9" fill="none" stroke="var(--urllc)" stroke-width="3" stroke-dasharray="9 100" stroke-dashoffset="-36" transform="rotate(-90 12 12)"/><circle cx="12" cy="12" r="9" fill="none" stroke="var(--mmtc)" stroke-width="3" stroke-dasharray="9 100" stroke-dashoffset="-47" transform="rotate(-90 12 12)"/><circle cx="12" cy="12" r="3" fill="var(--ink)"/></svg>
+      Slice Twin
+    </div>
+    <div class="seg" id="viewSeg" role="group" aria-label="View">
+      <button aria-pressed="true" data-view="block" id="viewBlock" title="100 cells in central Milan, every slice of every cell">Block</button>
+      <button aria-pressed="false" data-view="city" id="viewCity" title="All 10,000 cells of the Milan grid">City</button>
+    </div>
+    <div class="sep"></div>
+    <div class="seg" id="ctrlSeg" role="group" aria-label="Controller"></div>
+    <div class="sep"></div>
+    <label class="switch" for="gainToggle"><input type="checkbox" id="gainToggle"> Gain vs Reactive</label>
+  </header>
+
+  <div class="hud">
+    <div class="clock num"><span id="clock">00:00</span><small id="dateLabel">Wed 6 Nov 2013 · Milan</small></div>
+    <div class="chips" id="sliceChips" role="group" aria-label="Show slices on the map"></div>
+    <div class="seg" id="metricSeg" role="group" aria-label="Colour the city by" hidden>
+      <button aria-pressed="true" data-metric="traffic" id="mTraffic">Traffic</button>
+      <button aria-pressed="false" data-metric="load" id="mLoad">Load</button>
+      <button aria-pressed="false" data-metric="sla" id="mSla">SLA misses</button>
+    </div>
+    <div class="ramp glass" id="cityRamp" hidden></div>
+    <div class="now-events" id="nowEvents" aria-live="polite"></div>
+  </div>
+
+  <aside class="panel sidebar glass" aria-label="Network">
+    <div class="panel-head">
+      <div class="seg tabs" id="sideTabs" role="tablist">
+        <button role="tab" aria-pressed="true" data-tab="overview" id="tabOverview">Network</button>
+        <button role="tab" aria-pressed="false" data-tab="events" id="tabEvents">Event list</button>
+      </div>
+    </div>
+    <div class="panel-body" id="paneOverview">
+      <div><div class="eyebrow">Right now · 100 cells</div></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="narrative" id="narrative"></div>
+      <div>
+        <h3>Bandwidth allocated across the network</h3>
+        <div class="legend" id="netLegend"></div>
+        <svg class="chart" id="netChart" viewBox="0 0 300 120" role="img" aria-label="Allocated bandwidth per slice over the day"></svg>
+      </div>
+      <div>
+        <h3>Cells meeting their SLA</h3>
+        <svg class="chart" id="slaChart" viewBox="0 0 300 110" role="img" aria-label="Share of cells meeting SLA per slice over the day"></svg>
+      </div>
+      <div>
+        <h3>Controllers, whole day</h3>
+        <table id="score"></table>
+        <p class="small" style="margin:6px 0 0">Share of cell-intervals meeting each slice's SLA, and mean reward. The perfect-forecast row is a ceiling: the same rules told the true next 10 minutes.</p>
+      </div>
+    </div>
+    <div class="panel-body" id="paneCity" hidden>
+      <div><div class="eyebrow">Right now · 10,000 cells</div></div>
+      <div class="kpis" id="cityKpis"></div>
+      <div class="narrative" id="cityNarrative"></div>
+      <div>
+        <h3>Bandwidth allocated across the city</h3>
+        <div class="legend" id="cityNetLegend"></div>
+        <svg class="chart" id="cityNet" viewBox="0 0 300 120" role="img" aria-label="Allocated bandwidth per slice over the day, whole city"></svg>
+      </div>
+      <div>
+        <h3>Cells meeting every SLA</h3>
+        <div class="legend" id="cityCtrlLegend"></div>
+        <svg class="chart" id="cityAllOk" viewBox="0 0 300 110" role="img" aria-label="Share of the city's cells meeting every slice's SLA, per controller"></svg>
+      </div>
+      <div>
+        <h3>Controllers, whole city, whole day</h3>
+        <table id="cityScore"></table>
+        <p class="small" style="margin:6px 0 0" id="cityScoreNote"></p>
+      </div>
+      <div>
+        <h3>Does the forecaster work city-wide?</h3>
+        <p class="small" id="cityTgnn" style="margin:0"></p>
+      </div>
+    </div>
+    <div class="panel-body" id="paneEvents" hidden>
+      <div class="small">Like Packet Tracer's simulation panel: each scripted event on this day, with how well the selected controller held each slice's SLA inside it. Select a row to jump there.</div>
+      <div class="evlist" id="evlist"></div>
+    </div>
+  </aside>
+
+  <aside class="panel inspector glass" id="blockInspector" aria-label="Selected cell">
+    <div class="panel-head">
+      <div class="cellhead">
+        <div>
+          <div class="eyebrow" id="cellEyebrow">Cell</div>
+          <h2 id="cellTitle">Cell</h2>
+        </div>
+        <span class="pill ok" id="cellPill">Healthy</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div>
+        <h3>How this cell's bandwidth is split</h3>
+        <div class="splitbar" id="splitbar"></div>
+        <div class="splitlab"><span id="capLabel">Capacity</span><span id="prbLabel">106 PRBs</span></div>
+      </div>
+      <div class="slicerows" id="slicerows"></div>
+      <div class="facts" id="facts"></div>
+      <div>
+        <h3>Allocated vs demand, 24 h</h3>
+        <div class="legend"><span><i style="background:var(--embb)"></i>eMBB</span><span><i style="background:var(--urllc)"></i>URLLC</span><span><i style="background:var(--mmtc)"></i>mMTC</span><span><i style="background:var(--ink);height:2px"></i>Total demand</span></div>
+        <svg class="chart" id="cellChart" viewBox="0 0 320 130" role="img" aria-label="Allocated bandwidth per slice and demand for the selected cell"></svg>
+      </div>
+      <div>
+        <h3>Latency against target (p95 ÷ target)</h3>
+        <svg class="chart" id="latChart" viewBox="0 0 320 100" role="img" aria-label="p95 latency relative to each slice's target"></svg>
+        <p class="small" style="margin:4px 0 0">Below the line means the slice meets its latency target (eMBB 50 ms, URLLC 5 ms, mMTC 100 ms).</p>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="panel inspector glass" id="cityInspector" aria-label="Selected city cell" hidden>
+    <div class="panel-head">
+      <div class="cellhead">
+        <div>
+          <div class="eyebrow" id="ccEyebrow">Cell</div>
+          <h2 id="ccTitle">Cell</h2>
+        </div>
+        <span class="pill ok" id="ccPill">Healthy</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="facts" id="ccFacts"></div>
+      <div>
+        <h3>This cell under each controller, now</h3>
+        <table id="ccTable"></table>
+      </div>
+      <div>
+        <h3>Its whole day</h3>
+        <svg class="chart" id="ccStrip" viewBox="0 0 320 150" role="img" aria-label="The cell's traffic over the day and the slices missing their SLA under each controller"></svg>
+        <p class="small" style="margin:4px 0 0">Top: the cell's real traffic. Rows: slices missing their SLA in each 10 minutes under each controller; darker means more slices.</p>
+      </div>
+      <div id="ccNote"></div>
+    </div>
+  </aside>
+
+  <footer class="transport glass" aria-label="Playback">
+    <div class="controls">
+      <button class="iconbtn" id="btnReset" aria-label="Back to midnight"><svg viewBox="0 0 16 16"><path d="M3 3v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.6 10.2A5 5 0 1 0 4.2 5.2L3 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button class="iconbtn" id="btnBack" aria-label="Step back"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="iconbtn play" id="btnPlay" aria-label="Play"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg></button>
+      <button class="iconbtn" id="btnFwd" aria-label="Step forward"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Time of day" aria-valuemin="0" aria-valuemax="143" aria-valuenow="0"><svg id="tlsvg"></svg></div>
+    <div class="right-ctl">
+      <div class="seg" id="modeSeg" role="group" aria-label="Mode">
+        <button aria-pressed="true" data-mode="realtime" id="modeRealtime">Realtime</button>
+        <button aria-pressed="false" data-mode="simulation" id="modeSim">Simulation</button>
+      </div>
+      <div class="seg" id="speedSeg" role="group" aria-label="Playback speed">
+        <button aria-pressed="false" data-speed="1" id="sp1">1×</button>
+        <button aria-pressed="true" data-speed="4" id="sp4">4×</button>
+        <button aria-pressed="false" data-speed="12" id="sp12">12×</button>
+      </div>
+    </div>
+  </footer>
+
+  <div id="tip" class="glass" role="tooltip"></div>
+  <div class="loading" id="loading"><div><span class="spinner"></span>Loading one real day of Milan traffic…</div></div>
+</div>
+
+<script>
+(() => {
+const $ = (id) => document.getElementById(id);
+const SL = ["eMBB", "URLLC", "mMTC"], SLKEY = ["embb", "urllc", "mmtc"];
+const EV = {
+  flash_crowd: { color: "--urllc", icon: '<path d="M4 9h3l-1 5 6-8H9l1-4z" fill="currentColor"/>' },
+  cell_outage: { color: "--bad", icon: '<path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' },
+  interference_spike: { color: "--warn", icon: '<path d="M2 8h2l2-4 3 8 2-4h3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>' },
+  urllc_burst: { color: "--urllc", icon: '<path d="M8 2v7M8 12v.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' },
+  mmtc_storm: { color: "--mmtc", icon: '<circle cx="4" cy="5" r="1.6" fill="currentColor"/><circle cx="11" cy="4" r="1.6" fill="currentColor"/><circle cx="8" cy="9" r="1.6" fill="currentColor"/><circle cx="4" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="11" r="1.6" fill="currentColor"/>' },
+  capacity_degradation: { color: "--warn", icon: '<path d="M3 11h10M5 7.5h6M7 4h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' },
+};
+const CODE_TYPE = [null, "flash_crowd", "cell_outage", "interference_spike", "urllc_burst", "mmtc_storm", "capacity_degradation"];
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let C = {};
+const readColors = () => { ["--map","--ink","--ink2","--ink3","--hair","--hair-strong","--embb","--urllc","--mmtc","--idle","--ok","--warn","--bad","--gain","--loss","--mid","--glass-strong","--accent"].forEach(k => C[k] = css(k)); };
+
+let D, N, T, P = {}, KEYS = [];
+const S = { t: 0, ctrl: "predictive", playing: !reduce, speed: 4, mode: "realtime", sel: 56, hover: -1, gain: false,
+            show: [true, true, true], tab: "overview", view: "block", metric: "traffic", csel: -1, chover: -1 };
+
+// ---------- data access ----------
+const share = (k, t, i, s) => P[k].share[(t * N + i) * 4 + s] / 1000;
+const served = (k, t, i, s) => P[k].served[(t * N + i) * 3 + s];
+const lat = (k, t, i, s) => P[k].lat[(t * N + i) * 3 + s];
+const ok = (k, t, i, s) => P[k].ok.charCodeAt((t * N + i) * 3 + s) === 49;
+const cap = (k, t, i) => P[k].cap[t * N + i];
+const load = (k, t, i) => P[k].load[t * N + i] / 1000;
+const reward = (k, t, i) => P[k].reward[t * N + i] / 1000;
+const demand = (t, i, s) => D.demand[(t * N + i) * 3 + s];
+const fcast = (t, i, s) => D.forecast[(t * N + i) * 3 + s];
+const code = (t, i) => D.code[t * N + i];
+const clampT = (t) => Math.max(0, Math.min(T - 1, t));
+
+function aggregates() {
+  for (const k of KEYS) {
+    const a = P[k];
+    a.netAlloc = [[], [], []]; a.netOk = [[], [], []]; a.netReward = [];
+    for (let t = 0; t < T; t++) {
+      for (let s = 0; s < 3; s++) {
+        let al = 0, okc = 0;
+        for (let i = 0; i < N; i++) { al += share(k, t, i, s) * cap(k, t, i); okc += ok(k, t, i, s) ? 1 : 0; }
+        a.netAlloc[s].push(al); a.netOk[s].push(okc / N);
+      }
+      let r = 0; for (let i = 0; i < N; i++) r += reward(k, t, i); a.netReward.push(r / N);
+    }
+  }
+  D.netDemand = []; for (let t = 0; t < T; t++) { let d = 0; for (let i = 0; i < N * 3; i++) d += D.demand[t * N * 3 + i]; D.netDemand.push(d); }
+}
+
+// ---------- layout of cells on the map ----------
+let W = 0, H = 0, dpr = 1, XY = [], R = 10, area = { x: 0, y: 0, w: 0, h: 0 };
+const canvas = $("map"), ctx = canvas.getContext("2d");
+function layout() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  const wide = innerWidth >= 1100;
+  area = wide ? { x: 360, y: 150, w: W - 360 - 388, h: H - 150 - 150 } : { x: 18, y: 18, w: W - 36, h: H - 36 };
+  const lats = D.cells.map(c => c.lat), lons = D.cells.map(c => c.lon);
+  const la0 = Math.min(...lats), la1 = Math.max(...lats), lo0 = Math.min(...lons), lo1 = Math.max(...lons);
+  // keep the real aspect ratio of the block (1 deg lon is shorter than 1 deg lat at Milan's latitude)
+  const kx = Math.cos(45.46 * Math.PI / 180), spanX = (lo1 - lo0) * kx, spanY = la1 - la0;
+  const scale = Math.min(area.w / spanX, area.h / spanY) * 0.92;
+  const ox = area.x + (area.w - spanX * scale) / 2, oy = area.y + (area.h - spanY * scale) / 2;
+  XY = D.cells.map(c => [ox + (c.lon - lo0) * kx * scale, oy + (la1 - c.lat) * scale]);
+  const spacing = Math.hypot(XY[1][0] - XY[0][0], XY[1][1] - XY[0][1]) || 40;
+  R = Math.max(7, Math.min(30, spacing * 0.36));
+}
+
+// ---------- particles ----------
+const parts = [];   // per cell per slice phase offsets
+function initParticles() { for (let i = 0; i < N; i++) parts.push([Math.random(), Math.random(), Math.random()]); }
+
+// ---------- map drawing ----------
+function frameValues(k, tf, i) {
+  const t0 = Math.floor(tf), t1 = clampT(t0 + 1), f = tf - t0;
+  const sh = [0, 1, 2, 3].map(s => share(k, t0, i, s) * (1 - f) + share(k, t1, i, s) * f);
+  return { sh, ld: load(k, t0, i) * (1 - f) + load(k, t1, i) * f };
+}
+let phase = 0;
+function drawMap(now) {
+  const k = S.ctrl, tf = S.t, t = Math.round(tf) > T - 1 ? T - 1 : Math.floor(tf);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  // neighbour links
+  ctx.lineWidth = 1; ctx.strokeStyle = C["--hair"];
+  ctx.beginPath();
+  D.cells.forEach((c, i) => c.nb.forEach(j => { if (j > i) { ctx.moveTo(XY[i][0], XY[i][1]); ctx.lineTo(XY[j][0], XY[j][1]); } }));
+  ctx.stroke();
+  const colors = [C["--embb"], C["--urllc"], C["--mmtc"], C["--idle"]];
+  const ringW = R * 0.3, rr = R - ringW / 2;
+  for (let i = 0; i < N; i++) {
+    const [x, y] = XY[i], cd = code(t, i), type = CODE_TYPE[cd];
+    const { sh, ld } = frameValues(k, tf, i);
+    // gain halo (compare mode)
+    if (S.gain && k !== "reactive") {
+      const g = reward(k, t, i) - reward("reactive", t, i);
+      if (Math.abs(g) > 0.01) {
+        ctx.beginPath(); ctx.arc(x, y, R * 1.42, 0, Math.PI * 2);
+        ctx.fillStyle = withAlpha(g > 0 ? C["--gain"] : C["--loss"], Math.min(0.55, 0.12 + Math.abs(g) * 1.2)); ctx.fill();
+      }
+    }
+    // event effects
+    if (type && !reduce) {
+      const pulse = 0.5 + 0.5 * Math.sin(now / 260 + i);
+      if (type === "flash_crowd" || type === "urllc_burst") {
+        ctx.beginPath(); ctx.arc(x, y, R * (1.2 + 0.25 * pulse), 0, Math.PI * 2);
+        ctx.fillStyle = withAlpha(C["--urllc"], 0.12 + 0.12 * pulse); ctx.fill();
+      } else if (type === "interference_spike") {
+        for (let w = 0; w < 2; w++) {
+          const p = ((now / 1400) + w / 2 + i * 0.07) % 1;
+          ctx.beginPath(); ctx.arc(x, y, R * (1 + p * 0.9), 0, Math.PI * 2);
+          ctx.strokeStyle = withAlpha(C["--warn"], 0.5 * (1 - p)); ctx.lineWidth = 1.5; ctx.stroke();
+        }
+      } else if (type === "mmtc_storm") {
+        for (let s = 0; s < 6; s++) {
+          const a = now / 700 + s * 1.05 + i, rad = R * (1.15 + 0.2 * Math.sin(now / 300 + s));
+          ctx.beginPath(); ctx.arc(x + Math.cos(a) * rad, y + Math.sin(a) * rad, 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = withAlpha(C["--mmtc"], 0.9); ctx.fill();
+        }
+      }
+    }
+    // base disc with load level
+    ctx.beginPath(); ctx.arc(x, y, R - ringW - 1, 0, Math.PI * 2);
+    ctx.fillStyle = C["--glass-strong"]; ctx.fill();
+    if (ld > 0.005) {
+      ctx.save(); ctx.beginPath(); ctx.arc(x, y, R - ringW - 1, 0, Math.PI * 2); ctx.clip();
+      const inner = (R - ringW - 1) * 2, top = y + (R - ringW - 1) - inner * Math.min(1, ld);
+      ctx.fillStyle = withAlpha(C["--ink"], 0.10 + 0.14 * ld); ctx.fillRect(x - R, top, R * 2, inner * 2);
+      ctx.restore();
+    }
+    // allocation ring with surface gaps
+    const outage = type === "cell_outage";
+    let a = -Math.PI / 2;
+    const gap = Math.min(0.12, 2 / rr);
+    for (let s = 0; s < 4; s++) {
+      const len = sh[s] * Math.PI * 2;
+      if (len > gap * 1.2) {
+        const dim = s < 3 && !S.show[s];
+        ctx.beginPath(); ctx.arc(x, y, rr, a + gap / 2, a + len - gap / 2);
+        ctx.strokeStyle = outage ? C["--idle"] : withAlpha(colors[s], dim ? 0.18 : 1);
+        ctx.lineWidth = ringW; ctx.lineCap = "butt"; ctx.stroke();
+        // packets riding the slice arc: count from served traffic, speed from how full the slice is
+        if (s < 3 && !outage && !dim && !reduce && R > 9) {
+          const sv = served(k, t, i, s), alloc = sh[s] * cap(k, t, i) || 1e-6;
+          const n = sv <= 0.05 ? 0 : Math.min(5, 1 + Math.floor(sv / (s === 0 ? 14 : 2.5)));
+          const speed = 0.05 + 0.35 * Math.min(1.2, sv / alloc);
+          for (let j = 0; j < n; j++) {
+            const fr = (parts[i][s] + phase * speed + j / n) % 1;
+            const ang = a + gap / 2 + fr * Math.max(0, len - gap);
+            ctx.beginPath(); ctx.arc(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr, Math.max(1.3, ringW * 0.28), 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fill();
+          }
+        }
+      }
+      a += len;
+    }
+    // outage: dashed red ring and traffic leaving for neighbours
+    if (outage) {
+      ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, R + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = C["--bad"]; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]);
+      if (!reduce) D.cells[i].nb.forEach((j, q) => {
+        for (let m = 0; m < 3; m++) {
+          const f = ((now / 1100) + m / 3 + q * 0.13) % 1;
+          ctx.beginPath(); ctx.arc(x + (XY[j][0] - x) * f, y + (XY[j][1] - y) * f, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = withAlpha(C["--bad"], 1 - f * 0.6); ctx.fill();
+        }
+      });
+    }
+    // SLA badge
+    const bad = [0, 1, 2].filter(s => !ok(k, t, i, s) && demand(t, i, s) > 0).length;
+    if (bad && R > 8) {
+      const bx = x + R * 0.72, by = y - R * 0.72;
+      ctx.beginPath(); ctx.arc(bx, by, Math.max(3.5, R * 0.2), 0, Math.PI * 2);
+      ctx.fillStyle = C["--bad"]; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C["--map"]; ctx.stroke();
+    }
+    // selection
+    if (i === S.sel || i === S.hover) {
+      ctx.beginPath(); ctx.arc(x, y, R + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = i === S.sel ? C["--ink"] : C["--ink3"]; ctx.lineWidth = i === S.sel ? 2 : 1.2; ctx.stroke();
+    }
+  }
+}
+function withAlpha(hex, a) {
+  if (!hex || hex[0] !== "#") return hex;
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// ---------- charts ----------
+const fmtT = (t) => D.times[clampT(Math.round(t))];
+function svgEl(svg, tag, attrs) { const e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; }
+function axisX(svg, x0, x1, y, w) {
+  [0, 36, 72, 108, 143].forEach(t => {
+    const x = x0 + (x1 - x0) * t / (T - 1);
+    svgEl(svg, "text", { x, y, "text-anchor": t === 0 ? "start" : t === 143 ? "end" : "middle" }).textContent = t === 143 ? "24:00" : D.times[t];
+  });
+}
+function eventBands(svg, x0, x1, y0, y1) {
+  EVS().forEach(ev => {
+    const a = x0 + (x1 - x0) * ev.start / (T - 1), b = x0 + (x1 - x0) * ev.end / (T - 1);
+    svgEl(svg, "rect", { x: a, y: y0, width: Math.max(1, b - a), height: y1 - y0, fill: "var(--hair)" });
+  });
+}
+function stacked(svg, series, colors, total, opts) {
+  svg.innerHTML = "";
+  const { w, h, left, bottom, max } = opts, x0 = left, x1 = w - 4, y0 = 6, y1 = h - bottom;
+  const X = (t) => x0 + (x1 - x0) * t / (T - 1), Y = (v) => y1 - (y1 - y0) * Math.min(1, v / max);
+  eventBands(svg, x0, x1, y0, y1);
+  [0, 0.5, 1].forEach(f => { const v = max * f; svgEl(svg, "line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: "var(--hair)" });
+    svgEl(svg, "text", { x: x0 - 4, y: Y(v) + 3, "text-anchor": "end" }).textContent = opts.fmt(v); });
+  const acc = new Array(T).fill(0);
+  series.forEach((ser, s) => {
+    const lower = acc.slice(); for (let t = 0; t < T; t++) acc[t] += ser[t];
+    let d = `M${X(0)},${Y(acc[0])}`; for (let t = 1; t < T; t++) d += `L${X(t)},${Y(acc[t])}`;
+    for (let t = T - 1; t >= 0; t--) d += `L${X(t)},${Y(lower[t])}`;
+    svgEl(svg, "path", { d: d + "Z", fill: colors[s], "fill-opacity": 0.85, stroke: "var(--map)", "stroke-width": 0.6 });
+  });
+  if (total) { let d = `M${X(0)},${Y(total[0])}`; for (let t = 1; t < T; t++) d += `L${X(t)},${Y(total[t])}`;
+    svgEl(svg, "path", { d, fill: "none", stroke: "var(--ink)", "stroke-width": 1.4, "stroke-dasharray": "3 2" }); }
+  axisX(svg, x0, x1, h - 2);
+  svg._play = svgEl(svg, "line", { x1: X(S.t), x2: X(S.t), y1: y0 - 4, y2: y1, stroke: "var(--ink)", "stroke-width": 1.5 });
+  svg._X = X; svg._x0 = x0; svg._x1 = x1;
+}
+function lines(svg, series, colors, opts) {
+  svg.innerHTML = "";
+  const { w, h, left, bottom, min, max, ref } = opts, x0 = left, x1 = w - 4, y0 = 6, y1 = h - bottom;
+  const X = (t) => x0 + (x1 - x0) * t / (T - 1), Y = (v) => y1 - (y1 - y0) * (Math.max(min, Math.min(max, v)) - min) / (max - min);
+  eventBands(svg, x0, x1, y0, y1);
+  opts.ticks.forEach(v => { svgEl(svg, "line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: "var(--hair)" });
+    svgEl(svg, "text", { x: x0 - 4, y: Y(v) + 3, "text-anchor": "end" }).textContent = opts.fmt(v); });
+  if (ref !== undefined) svgEl(svg, "line", { x1: x0, x2: x1, y1: Y(ref), y2: Y(ref), stroke: "var(--bad)", "stroke-width": 1, "stroke-dasharray": "4 3" });
+  series.forEach((ser, s) => { if (!ser) return; let d = `M${X(0)},${Y(ser[0])}`; for (let t = 1; t < T; t++) d += `L${X(t)},${Y(ser[t])}`;
+    svgEl(svg, "path", { d, fill: "none", stroke: colors[s], "stroke-width": opts.widths ? opts.widths[s] : 1.8, "stroke-dasharray": opts.dashes ? opts.dashes[s] : "none", "stroke-linejoin": "round", "stroke-linecap": "round" }); });
+  axisX(svg, x0, x1, h - 2);
+  svg._play = svgEl(svg, "line", { x1: X(S.t), x2: X(S.t), y1: y0 - 4, y2: y1, stroke: "var(--ink)", "stroke-width": 1.5 });
+  svg._X = X; svg._x0 = x0; svg._x1 = x1;
+}
+const SC = () => ["var(--embb)", "var(--urllc)", "var(--mmtc)"];
+function drawNetCharts() {
+  const a = P[S.ctrl];
+  stacked($("netChart"), a.netAlloc, SC(), D.netDemand, { w: 300, h: 120, left: 34, bottom: 16, max: Math.max(...D.netDemand, ...a.netAlloc[0].map((v, t) => v + a.netAlloc[1][t] + a.netAlloc[2][t])) * 1.05, fmt: (v) => v >= 1000 ? (v / 1000).toFixed(1) + " G" : Math.round(v) + "" });
+  lines($("slaChart"), a.netOk.map((s, k) => S.show[k] ? s : null), SC(), { w: 300, h: 110, left: 34, bottom: 16, min: 0, max: 1, ticks: [0, 0.5, 1], fmt: (v) => Math.round(v * 100) + "%" });
+}
+function drawCellCharts() {
+  const i = S.sel, k = S.ctrl;
+  const alloc = [0, 1, 2].map(s => Array.from({ length: T }, (_, t) => share(k, t, i, s) * cap(k, t, i)));
+  const dem = Array.from({ length: T }, (_, t) => demand(t, i, 0) + demand(t, i, 1) + demand(t, i, 2));
+  stacked($("cellChart"), alloc, SC(), dem, { w: 320, h: 130, left: 30, bottom: 16, max: Math.max(105, ...dem) * 1.02, fmt: (v) => Math.round(v) + "" });
+  const tgt = D.meta.target_latency_ms;
+  const ratio = [0, 1, 2].map(s => S.show[s] ? Array.from({ length: T }, (_, t) => demand(t, i, s) > 0 ? lat(k, t, i, s) / tgt[s] : 0) : null);
+  lines($("latChart"), ratio, SC(), { w: 320, h: 100, left: 30, bottom: 16, min: 0, max: 2, ref: 1, ticks: [0, 1, 2], fmt: (v) => v + "×" });
+}
+function movePlayheads() {
+  ["netChart", "slaChart", "cellChart", "latChart", "cityNet", "cityAllOk", "ccStrip"].forEach(id => { const s = $(id); if (s._play) { const x = s._X(S.t); s._play.setAttribute("x1", x); s._play.setAttribute("x2", x); } });
+  drawTimelineHead();
+}
+
+// ---------- timeline ----------
+let tl = {};
+function drawTimeline() {
+  const svg = $("tlsvg"); svg.innerHTML = "";
+  const w = svg.getBoundingClientRect().width || 600, h = 62;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const x0 = 8, x1 = w - 8, X = (t) => x0 + (x1 - x0) * t / (T - 1);
+  tl = { X, x0, x1, svg };
+  // network demand sparkline as the track background
+  const nd = S.view === "city" ? CD.netDemand : D.netDemand, max = Math.max(...nd);
+  let d = `M${X(0)},${44}`; for (let t = 0; t < T; t++) d += `L${X(t)},${44 - 24 * nd[t] / max}`; d += `L${X(T - 1)},44Z`;
+  svgEl(svg, "path", { d, fill: "var(--hair-strong)" });
+  svgEl(svg, "line", { x1: x0, x2: x1, y1: 44, y2: 44, stroke: "var(--hair-strong)" });
+  // events as capsules
+  EVS().forEach((ev, n) => {
+    const a = X(ev.start), b = X(ev.end), row = n % 3;
+    const r = svgEl(svg, "rect", { x: a, y: 46 + row * 5, width: Math.max(4, b - a), height: 4, rx: 2, fill: `var(${EV[ev.type].color})` });
+    r.setAttribute("data-ev", n);
+  });
+  for (let hh = 0; hh <= 24; hh += 3) {
+    const t = Math.min(T - 1, hh * 6);
+    svgEl(svg, "text", { x: X(t), y: 12, "text-anchor": hh === 0 ? "start" : hh === 24 ? "end" : "middle", fill: "var(--ink3)", "font-size": 10 }).textContent = String(hh).padStart(2, "0") + ":00";
+  }
+  tl.head = svgEl(svg, "g", {});
+  svgEl(tl.head, "line", { x1: 0, x2: 0, y1: 16, y2: 60, stroke: "var(--ink)", "stroke-width": 2 });
+  svgEl(tl.head, "circle", { cx: 0, cy: 18, r: 5, fill: "var(--ink)" });
+  drawTimelineHead();
+}
+function drawTimelineHead() { if (tl.head) tl.head.setAttribute("transform", `translate(${tl.X(S.t)},0)`); $("timeline").setAttribute("aria-valuenow", Math.round(S.t)); $("timeline").setAttribute("aria-valuetext", fmtT(S.t)); }
+
+// ---------- panels ----------
+function sliceDot(s) { return `<span class="sw" style="background:var(--${SLKEY[s]})"></span>`; }
+function renderKpis() {
+  const k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), a = P[k];
+  $("kpis").innerHTML = [0, 1, 2].map(s => {
+    const now = a.netOk[s][t], day = a.netOk[s].slice(0, t + 1).reduce((x, y) => x + y, 0) / (t + 1);
+    return `<div class="kpi"><div class="lab">${sliceDot(s)}${SL[s]}</div><div class="val">${Math.round(now * 100)}%</div><div class="sub">SLA met · ${Math.round(day * 100)}% so far</div></div>`;
+  }).join("");
+  // chips over the map
+  $("sliceChips").innerHTML = [0, 1, 2].map(s => {
+    const mb = a.netAlloc[s][t];
+    return `<button class="chip" aria-pressed="${S.show[s]}" data-s="${s}" id="chip${s}"><span class="dot" style="background:var(--${SLKEY[s]})"></span>${SL[s]} <b>${mb >= 1000 ? (mb / 1000).toFixed(2) + " Gbps" : Math.round(mb) + " Mbps"}</b></button>`;
+  }).join("");
+  $("sliceChips").querySelectorAll(".chip").forEach(b => b.onclick = () => { S.show[+b.dataset.s] = !S.show[+b.dataset.s]; renderAll(); });
+}
+function activeEvents(t) { return D.events.filter(ev => t >= ev.start && t < ev.end); }
+function renderNow() {
+  const t = Math.min(T - 1, Math.round(S.t));
+  $("clock").textContent = D.times[t];
+  const act = activeEvents(t);
+  $("nowEvents").innerHTML = act.map(ev => `<div class="now-ev"><i style="background:var(${EV[ev.type].color})"></i><b>${ev.label}</b><span class="muted">${ev.cells.length} cell${ev.cells.length > 1 ? "s" : ""} · until ${D.times[Math.min(T - 1, ev.end)]}</span></div>`).join("");
+  // narrative: what the controller just changed and why
+  const k = S.ctrl, prev = Math.max(0, t - 1);
+  let best = -1, bestD = 0;
+  for (let i = 0; i < N; i++) { let d = 0; for (let s = 0; s < 3; s++) d += Math.abs(share(k, t, i, s) - share(k, prev, i, s)); if (d > bestD) { bestD = d; best = i; } }
+  const label = P[k].label;
+  let txt = "";
+  if (k === "static") txt = `<b>Static</b> gives every slice a third of every cell, whatever the traffic. ${act.length ? `During the ${act[0].label.toLowerCase()}, nothing adapts.` : "Watch eMBB run out of room at busy hours while URLLC and mMTC sit mostly idle."}`;
+  else if (best >= 0 && bestD > 0.04) {
+    const ds = [0, 1, 2].map(s => share(k, t, best, s) - share(k, prev, best, s)), s = ds.map(Math.abs).indexOf(Math.max(...ds.map(Math.abs)));
+    txt = `<b>${label}</b> made its biggest move in <b>Cell ${D.cells[best].id}</b>: ${SL[s]} ${ds[s] > 0 ? "up" : "down"} to ${Math.round(share(k, t, best, s) * 100)}% of capacity (${ds[s] > 0 ? "+" : ""}${Math.round(ds[s] * 100)} pts)${act.length ? `, during the ${act[0].label.toLowerCase()}` : ""}.`;
+    if (k === "predictive") txt += ` It acted on the TGNN forecast of the next 10 minutes.`;
+  } else txt = `<b>${label}</b> is holding steady: demand changed little since ${D.times[prev]}.`;
+  $("narrative").innerHTML = txt;
+}
+function renderScore() {
+  const rows = [...KEYS.map(k => [k, P[k].label]), ["oracle", "Perfect forecast"]];
+  $("score").innerHTML = `<thead><tr><th>Controller</th>${SL.map((s, i) => `<th>${s}</th>`).join("")}<th>Reward</th></tr></thead><tbody>` +
+    rows.map(([k, lab]) => { const m = D.summary[k]; return `<tr class="${k === S.ctrl ? "active" : ""}"><td>${lab}</td>${SL.map(s => `<td>${Math.round(m.sla_ok[s] * 100)}%</td>`).join("")}<td>${m.mean_reward.toFixed(3)}</td></tr>`; }).join("") + "</tbody>";
+}
+function renderEvents() {
+  const k = S.ctrl, t = Math.round(S.t);
+  $("evlist").innerHTML = D.events.map((ev, n) => {
+    // SLA inside the event, for the cells it touched, with the selected controller
+    const okr = [0, 0, 0]; let cnt = 0;
+    for (let tt = ev.start; tt < Math.min(T, ev.end); tt++) for (const i of ev.cells) { cnt++; for (let s = 0; s < 3; s++) okr[s] += ok(k, tt, i, s) ? 1 : 0; }
+    const worst = okr.map(v => v / Math.max(cnt, 1)), ws = worst.indexOf(Math.min(...worst));
+    const live = t >= ev.start && t < ev.end;
+    return `<button class="evrow ${live ? "live" : ""}" data-n="${n}" id="ev${n}"><span class="t">${D.times[ev.start]}</span><span class="n"><span class="evico" style="background:var(${EV[ev.type].color})"><svg viewBox="0 0 16 16">${EV[ev.type].icon}</svg></span>${ev.label}</span><span class="e">${SL[ws]} SLA ${Math.round(worst[ws] * 100)}%</span><span class="d">${ev.description}</span></button>`;
+  }).join("");
+  $("evlist").querySelectorAll(".evrow").forEach(b => b.onclick = () => { const ev = D.events[+b.dataset.n]; S.t = ev.start; S.sel = ev.cells[Math.floor(ev.cells.length / 2)]; S.playing = false; renderAll(true); });
+}
+function renderInspector() {
+  const i = S.sel, k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), c = D.cells[i];
+  const cd = code(t, i), type = CODE_TYPE[cd];
+  $("cellEyebrow").textContent = `Grid row ${c.r} · column ${c.c} · ${c.lat.toFixed(4)}°N ${c.lon.toFixed(4)}°E`;
+  $("cellTitle").textContent = `Cell ${c.id}`;
+  const bad = [0, 1, 2].filter(s => !ok(k, t, i, s) && demand(t, i, s) > 0);
+  const pill = $("cellPill");
+  if (type === "cell_outage") { pill.className = "pill bad"; pill.textContent = "Outage"; }
+  else if (bad.length) { pill.className = "pill bad"; pill.textContent = bad.map(s => SL[s]).join(" · ") + " missing SLA"; }
+  else if (type) { pill.className = "pill warn"; pill.textContent = D.events.find(e => e.type === type).label; }
+  else { pill.className = "pill ok"; pill.textContent = "All slices within SLA"; }
+  const cp = cap(k, t, i), sh = [0, 1, 2, 3].map(s => share(k, t, i, s));
+  $("splitbar").innerHTML = sh.map((v, s) => `<div style="flex-grow:${Math.max(v, 0.0001)};background:${s < 3 ? `var(--${SLKEY[s]})` : "var(--idle)"};${s < 3 && !S.show[s] ? "opacity:.25" : ""}" title="${s < 3 ? SL[s] : "Idle"} ${Math.round(v * 100)}%"></div>`).join("");
+  $("capLabel").textContent = `${cp.toFixed(1)} Mbps usable now${cp < 99.5 ? ` (of 100; ${type === "cell_outage" ? "cell down" : "neighbour interference" + (type ? " and " + D.events.find(e => e.type === type).label.toLowerCase() : "")})` : ""}`;
+  $("prbLabel").textContent = sh.slice(0, 3).map((v, s) => `${SL[s]} ${Math.round(v * 106)}`).join(" · ") + " PRBs";
+  const tgt = D.meta.target_latency_ms;
+  $("slicerows").innerHTML = [0, 1, 2].map(s => {
+    const al = sh[s] * cp, dm = demand(t, i, s), sv = served(k, t, i, s), lt = lat(k, t, i, s), good = ok(k, t, i, s) || dm <= 0;
+    const scale = Math.max(al, dm, 0.01) * 1.15, fc = fcast(t, i, s);
+    return `<div class="slicerow"><span class="name">${sliceDot(s)}${SL[s]}</span><span class="status ${good ? "ok" : "bad"}">${good ? "✓ SLA met" : "✕ SLA missed"}</span>
+      <div class="bar"><div class="fill" style="width:${100 * al / scale}%;background:var(--${SLKEY[s]})"></div><div class="dem" style="left:calc(${Math.min(100, 100 * dm / scale)}% - 1px)" title="Demand"></div></div>
+      <span class="meta">${al.toFixed(1)} Mbps allocated · demand ${dm.toFixed(1)}${k === "predictive" ? ` · forecast ${fc.toFixed(1)}` : ""}</span><span class="meta">p95 ${dm > 0 ? lt.toFixed(lt < 10 ? 1 : 0) : "–"} / ${tgt[s]} ms</span></div>`;
+  }).join("");
+  const ld = load(k, t, i), rw = reward(k, t, i);
+  $("facts").innerHTML = `<div class="fact"><b>${Math.round(ld * 100)}%</b><span>Load</span></div><div class="fact"><b>${rw.toFixed(2)}</b><span>Reward</span></div><div class="fact"><b>${(sv => sv.toFixed(1))([0, 1, 2].reduce((a, s) => a + served(k, t, i, s), 0))}</b><span>Mbps served</span></div>`;
+}
+function renderLegend() {
+  $("netLegend").innerHTML = SL.map((s, i) => `<span><i style="background:var(--${SLKEY[i]})"></i>${s}</span>`).join("") + `<span><i style="background:var(--ink);height:2px"></i>Total demand</span>`;
+}
+function renderAll(full) {
+  if (S.view === "city") { renderCity(full); movePlayheads(); return; }
+  renderKpis(); renderNow(); renderInspector();
+  if (full) { renderScore(); renderEvents(); drawNetCharts(); drawCellCharts(); }
+  else { const t = Math.round(S.t); if (t !== renderAll._t) { renderEvents(); renderAll._t = t; } }
+  movePlayheads();
+}
+
+// ---------- controls ----------
+function setPlaying(p) {
+  S.playing = p;
+  $("btnPlay").setAttribute("aria-label", p ? "Pause" : "Play");
+  $("playIcon").innerHTML = p ? '<rect x="3.5" y="2.8" width="3.2" height="10.4" rx="1" fill="currentColor"/><rect x="9.3" y="2.8" width="3.2" height="10.4" rx="1" fill="currentColor"/>' : '<path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/>';
+}
+function step(dir) {
+  setPlaying(false);
+  if (S.mode === "simulation") {
+    // event-driven, like Packet Tracer: jump to the next / previous event boundary
+    const marks = [...new Set(EVS().flatMap(e => [e.start, e.end]))].sort((a, b) => a - b);
+    const t = Math.round(S.t);
+    const nxt = dir > 0 ? marks.find(m => m > t) : [...marks].reverse().find(m => m < t);
+    S.t = clampT(nxt ?? (dir > 0 ? T - 1 : 0));
+  } else S.t = clampT(Math.round(S.t) + dir);
+  renderAll(false);
+}
+function buildControls() {
+  $("ctrlSeg").innerHTML = KEYS.map(k => `<button aria-pressed="${k === S.ctrl}" data-k="${k}" id="ctrl-${k}" title="${P[k].description}">${P[k].label}</button>`).join("");
+  $("ctrlSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+    S.ctrl = b.dataset.k; $("ctrlSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    $("gainToggle").disabled = S.ctrl === "reactive"; if (S.ctrl === "reactive") { S.gain = false; $("gainToggle").checked = false; }
+    renderAll(true);
+  });
+  $("gainToggle").onchange = (e) => { S.gain = e.target.checked; if (S.view === "city") renderRamp(); };
+  $("btnPlay").onclick = () => { if (S.t >= T - 1) S.t = 0; setPlaying(!S.playing); };
+  $("btnBack").onclick = () => step(-1);
+  $("btnFwd").onclick = () => step(1);
+  $("btnReset").onclick = () => { S.t = 0; setPlaying(false); renderAll(false); };
+  $("speedSeg").querySelectorAll("button").forEach(b => b.onclick = () => { S.speed = +b.dataset.speed; $("speedSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  $("modeSeg").querySelectorAll("button").forEach(b => b.onclick = () => { S.mode = b.dataset.mode; $("modeSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  $("sideTabs").querySelectorAll("button").forEach(b => b.onclick = () => {
+    S.tab = b.dataset.tab; $("sideTabs").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    showPanes();
+  });
+  // timeline scrubbing
+  const tlEl = $("timeline");
+  const seek = (ev) => { const r = tlEl.getBoundingClientRect(); const f = (ev.clientX - r.left - tl.x0) / (tl.x1 - tl.x0); S.t = clampT(f * (T - 1)); renderAll(false); };
+  tlEl.addEventListener("pointerdown", (ev) => { setPlaying(false); tlEl.setPointerCapture(ev.pointerId); seek(ev); tlEl.onpointermove = seek; });
+  tlEl.addEventListener("pointerup", () => { tlEl.onpointermove = null; S.t = Math.round(S.t); renderAll(false); });
+  tlEl.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") { step(1); e.preventDefault(); } if (e.key === "ArrowLeft") { step(-1); e.preventDefault(); } });
+  // chart scrubbing + tooltips
+  ["netChart", "slaChart", "cellChart", "latChart"].forEach(id => {
+    const svg = $(id);
+    svg.addEventListener("pointermove", (ev) => {
+      if (!svg._X) return;
+      const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, x = (ev.clientX - r.left) * vb.width / r.width;
+      const t = clampT(Math.round((x - svg._x0) / (svg._x1 - svg._x0) * (T - 1)));
+      showTip(ev, chartTip(id, t));
+    });
+    svg.addEventListener("pointerleave", hideTip);
+    svg.addEventListener("click", (ev) => { const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, x = (ev.clientX - r.left) * vb.width / r.width;
+      S.t = clampT(Math.round((x - svg._x0) / (svg._x1 - svg._x0) * (T - 1))); setPlaying(false); renderAll(false); });
+  });
+  // map hover / select
+  canvas.addEventListener("pointermove", (ev) => {
+    const r = canvas.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+    if (S.view === "city") { cityPointer(ev, x, y); return; }
+    let best = -1, bd = R * 1.3;
+    XY.forEach(([cx, cy], i) => { const d = Math.hypot(cx - x, cy - y); if (d < bd) { bd = d; best = i; } });
+    S.hover = best; canvas.style.cursor = best >= 0 ? "pointer" : "default";
+    if (best >= 0) showTip(ev, cellTip(best)); else hideTip();
+  });
+  canvas.addEventListener("pointerleave", () => { S.hover = -1; S.chover = -1; hideTip(); });
+  canvas.addEventListener("click", () => {
+    if (S.view === "city") { cityClick(); return; }
+    if (S.hover >= 0) { S.sel = S.hover; drawCellCharts(); renderInspector(); }
+  });
+  $("viewSeg").querySelectorAll("button").forEach(b => b.onclick = () => setView(b.dataset.view));
+  $("metricSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+    S.metric = b.dataset.metric; $("metricSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderRamp();
+  });
+  ["cityNet", "cityAllOk", "ccStrip"].forEach(id => {
+    const svg = $(id);
+    const tAt = (ev) => { const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, x = (ev.clientX - r.left) * vb.width / r.width;
+      return clampT(Math.round((x - svg._x0) / (svg._x1 - svg._x0) * (T - 1))); };
+    svg.addEventListener("pointermove", (ev) => { if (svg._X) showTip(ev, cityChartTip(id, tAt(ev))); });
+    svg.addEventListener("pointerleave", hideTip);
+    svg.addEventListener("click", (ev) => { if (!svg._X) return; S.t = tAt(ev); setPlaying(false); renderAll(false); });
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest && e.target.closest("input,button,[role=slider]") && e.key !== " ") return;
+    if (e.key === " ") { e.preventDefault(); setPlaying(!S.playing); }
+    if (e.key === "ArrowRight") step(1);
+    if (e.key === "ArrowLeft") step(-1);
+    const n = ["1", "2", "3"].indexOf(e.key); if (n >= 0 && KEYS[n]) $("ctrl-" + KEYS[n]).click();
+  });
+  addEventListener("resize", () => { layout(); if (CD) cityLayout(); drawTimeline(); });
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener && mq.addEventListener("change", () => { readColors(); if (S.view === "city") { renderRamp(); renderAll(true); } });
+  new MutationObserver(() => { readColors(); if (S.view === "city") renderRamp(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+const tip = $("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(ev.clientX + 14, innerWidth - 280), y = Math.min(ev.clientY + 14, innerHeight - 140); tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+function cellTip(i) {
+  const k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), c = D.cells[i];
+  const rows = [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} <b>${Math.round(share(k, t, i, s) * 100)}%</b> · ${(share(k, t, i, s) * cap(k, t, i)).toFixed(1)} Mbps ${ok(k, t, i, s) || demand(t, i, s) <= 0 ? "✓" : "✕"}`).join("<br>");
+  const ty = CODE_TYPE[code(t, i)];
+  return `<b>Cell ${c.id}</b> · ${D.times[t]}${ty ? ` · ${D.events.find(e => e.type === ty).label}` : ""}<br>${rows}<br><span class="muted">Load ${Math.round(load(k, t, i) * 100)}% · idle ${Math.round(share(k, t, i, 3) * 100)}%</span>`;
+}
+function chartTip(id, t) {
+  const k = S.ctrl, a = P[k], i = S.sel;
+  if (id === "netChart") return `<b>${D.times[t]}</b> · network<br>` + [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${Math.round(a.netAlloc[s][t])} Mbps`).join("<br>") + `<br>Demand ${Math.round(D.netDemand[t])} Mbps`;
+  if (id === "slaChart") return `<b>${D.times[t]}</b> · cells meeting SLA<br>` + [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${Math.round(a.netOk[s][t] * 100)}%`).join("<br>");
+  if (id === "cellChart") return `<b>${D.times[t]}</b> · Cell ${D.cells[i].id}<br>` + [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${(share(k, t, i, s) * cap(k, t, i)).toFixed(1)} of ${demand(t, i, s).toFixed(1)} Mbps needed`).join("<br>");
+  return `<b>${D.times[t]}</b> · p95 latency<br>` + [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${demand(t, i, s) > 0 ? lat(k, t, i, s).toFixed(1) : "–"} ms (target ${D.meta.target_latency_ms[s]})`).join("<br>");
+}
+
+
+// ---------- city view: all 10,000 cells ----------
+let CD = null, CB = null, CO = {}, CG = { x0: 0, y0: 0, s: 1 }, cityOff = null, cityImg = null, cityGridLines = null;
+const CN = 10000, CGRID = 100;
+const EVS = () => S.view === "city" ? CD.events : D.events;
+const cDem = (t, i) => CB[t * CN + i];
+const cLoad = (k, t, i) => CB[CO[k] + t * CN + i] / 250;
+const cFlag = (k, t, i) => CB[CO[k] + CN * T + t * CN + i];
+const cMbps = (b) => Math.expm1(b / 255 * Math.log1p(CD.meta.demand_max_mbps));
+const cMet = (f) => (f & 1) + ((f >> 1) & 1) + ((f >> 2) & 1);
+const cLatLon = (i) => [45.3577 + Math.floor(i / CGRID) * 0.002116, 9.013 + (i % CGRID) * 0.003];
+const CTRL_STYLE = { static: { c: "var(--ink3)", dash: "2 3", w: 1.6 }, reactive: { c: "var(--ink2)", dash: "6 3", w: 1.6 }, predictive: { c: "var(--ink)", dash: "none", w: 2.2 } };
+const cellEvents = (t, i) => CD.events.filter(e => t >= e.start && t < e.end && e.cellSet.has(i));
+function hexRgb(hex) { const n = parseInt((hex || "#000000").slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+async function loadCity() {
+  if (CD) return;
+  $("loading").hidden = false;
+  $("loading").innerHTML = '<div><span class="spinner"></span>Loading all 10,000 cells of Milan…</div>';
+  const [j, buf] = await Promise.all([
+    fetch("city.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch("city.bin.gz").then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })]);
+  let u8 = new Uint8Array(buf);
+  if (u8[0] === 0x1f && u8[1] === 0x8b) {
+    if (!("DecompressionStream" in window)) throw new Error("this browser cannot unpack the city data");
+    u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+  }
+  const ctrls = j.meta.controllers;
+  if (u8.length !== CN * T * (1 + 2 * ctrls.length)) throw new Error("unexpected city data size");
+  CD = j; CB = u8;
+  ctrls.forEach((k, n) => CO[k] = CN * T * (1 + 2 * n));
+  CD.events.forEach(e => e.cellSet = new Set(e.cells));
+  CD.netDemand = CD.series.demand_gbps[0].map((v, t) => v + CD.series.demand_gbps[1][t] + CD.series.demand_gbps[2][t]);
+  cityOff = document.createElement("canvas"); cityOff.width = CGRID; cityOff.height = CGRID;
+  cityImg = cityOff.getContext("2d").createImageData(CGRID, CGRID);
+  cityLayout();
+  $("loading").hidden = true;
+}
+function cityLayout() {
+  const side = Math.max(120, Math.min(area.w, area.h) * 0.97), s = side / CGRID;
+  CG = { x0: area.x + (area.w - side) / 2, y0: area.y + (area.h - side) / 2, s, side };
+  // hairline grid between cells, drawn once
+  cityGridLines = document.createElement("canvas");
+  cityGridLines.width = Math.round(side * dpr); cityGridLines.height = Math.round(side * dpr);
+  if (s * dpr >= 5) {
+    const g = cityGridLines.getContext("2d"); g.scale(dpr, dpr); g.beginPath();
+    for (let k = 0; k <= CGRID; k++) { g.moveTo(k * s, 0); g.lineTo(k * s, side); g.moveTo(0, k * s); g.lineTo(side, k * s); }
+    g.strokeStyle = "rgba(128,128,128,0.10)"; g.lineWidth = 1 / dpr; g.stroke();
+  }
+}
+function showPanes() {
+  const city = S.view === "city";
+  $("paneOverview").hidden = S.tab !== "overview" || city;
+  $("paneCity").hidden = S.tab !== "overview" || !city;
+  $("paneEvents").hidden = S.tab !== "events";
+}
+async function setView(v) {
+  if (v === S.view) return;
+  if (v === "city") {
+    try { await loadCity(); }
+    catch (err) { $("loading").innerHTML = `<div>Couldn't load the city (${err.message}). <button class="linkbtn" id="cityRetry">Back to the block</button></div>`;
+      $("cityRetry").onclick = () => { $("loading").hidden = true; }; return; }
+  }
+  S.view = v;
+  $("viewSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.view === v));
+  const city = v === "city";
+  if (city && S.csel < 0) S.csel = (CD.meta.block.r0 + 5) * CGRID + CD.meta.block.c0 + 5;
+  showPanes();
+  $("blockInspector").hidden = city; $("cityInspector").hidden = !city;
+  $("sliceChips").hidden = city; $("metricSeg").hidden = !city; $("cityRamp").hidden = !city;
+  $("dateLabel").textContent = city ? "Wed 6 Nov 2013 · all of Milan" : "Wed 6 Nov 2013 · Milan";
+  canvas.setAttribute("aria-label", city ? "Map of all 10,000 Milan grid cells, coloured by traffic, load or SLA misses" : "Map of 100 real Milan cells; each ring shows how the cell's bandwidth is split between slices");
+  hideTip(); drawTimeline(); if (city) renderRamp(); renderAll(true);
+}
+function rampCss(rgbA, rgbB, gamma) {
+  const stops = [0, 0.25, 0.5, 0.75, 1].map(f => { const g = Math.pow(f, gamma), c = rgbA.map((a, q) => Math.round(a + (rgbB[q] - a) * (0.08 + 0.92 * g))); return `rgb(${c})`; });
+  return `linear-gradient(90deg, ${stops.join(",")})`;
+}
+function renderRamp() {
+  const map = hexRgb(C["--map"]), ink = hexRgb(C["--ink"]);
+  const gain = S.gain && S.ctrl !== "reactive";
+  let h;
+  if (gain) h = `<div class="ttl">${P[S.ctrl].label} vs Reactive</div><div class="keys"><span><i style="background:var(--gain)"></i>Meets more slices' SLA</span><span><i style="background:var(--loss)"></i>Meets fewer</span></div>`;
+  else if (S.metric === "traffic") h = `<div class="ttl">Real traffic per cell (log scale)</div><div class="grad" style="background:${rampCss(map, ink, 1.6)}"></div><div class="ends"><span>0</span><span>${Math.round(Math.expm1(Math.log1p(CD.meta.demand_max_mbps) / 2))}</span><span>${Math.round(CD.meta.demand_max_mbps)} Mbps</span></div>`;
+  else if (S.metric === "load") h = `<div class="ttl">Cell load</div><div class="grad" style="background:${rampCss(map, ink, 1)}"></div><div class="ends"><span>0%</span><span>50%</span><span>100%</span></div>`;
+  else h = `<div class="ttl">Slices missing their SLA</div><div class="keys"><span><i style="background:${withAlpha(C["--bad"], 0.4)}"></i>1</span><span><i style="background:${withAlpha(C["--bad"], 0.7)}"></i>2</span><span><i style="background:var(--bad)"></i>3</span><span><i style="background:var(--ink)"></i>Cell down</span></div>`;
+  $("cityRamp").innerHTML = h;
+}
+function drawCity(now) {
+  if (!CD) return;
+  const k = S.ctrl, tf = S.t, t0 = Math.min(T - 1, Math.floor(tf)), t1 = clampT(t0 + 1), f = tf - t0, tr = Math.min(T - 1, Math.round(tf));
+  const px = cityImg.data, map = hexRgb(C["--map"]), ink = hexRgb(C["--ink"]), bad = hexRgb(C["--bad"]), gainC = hexRgb(C["--gain"]), lossC = hexRgb(C["--loss"]);
+  const gain = S.gain && k !== "reactive";
+  const mix = (a, b, w, o) => { px[o] = a[0] + (b[0] - a[0]) * w; px[o + 1] = a[1] + (b[1] - a[1]) * w; px[o + 2] = a[2] + (b[2] - a[2]) * w; px[o + 3] = 255; };
+  for (let i = 0; i < CN; i++) {
+    const r = Math.floor(i / CGRID), c = i % CGRID, o = ((CGRID - 1 - r) * CGRID + c) * 4;
+    const dm = (cDem(t0, i) * (1 - f) + cDem(t1, i) * f) / 255;
+    const lit = Math.pow(dm, 1.6), quiet = 0.05 + 0.3 * lit;
+    if (gain) {
+      const dlt = cMet(cFlag(k, tr, i)) - cMet(cFlag("reactive", tr, i));
+      if (dlt > 0) mix(map, gainC, 0.35 + 0.2 * dlt, o); else if (dlt < 0) mix(map, lossC, 0.35 - 0.2 * dlt, o); else mix(map, ink, quiet * 0.6, o);
+    } else if (S.metric === "traffic") mix(map, ink, 0.04 + 0.96 * lit, o);
+    else if (S.metric === "load") mix(map, ink, 0.08 + 0.92 * (cLoad(k, t0, i) * (1 - f) + cLoad(k, t1, i) * f), o);
+    else {
+      const fl = cFlag(k, tr, i), miss = 3 - cMet(fl);
+      if (fl & 16) mix(map, ink, 1, o); else if (miss > 0) mix(map, bad, [0, 0.4, 0.7, 1][miss], o); else mix(map, ink, quiet * 0.6, o);
+    }
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  cityOff.getContext("2d").putImageData(cityImg, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(cityOff, CG.x0, CG.y0, CG.side, CG.side);
+  if (cityGridLines) ctx.drawImage(cityGridLines, CG.x0, CG.y0, CG.side, CG.side);
+  const s = CG.s, cx = (c) => CG.x0 + c * s, cy = (r) => CG.y0 + (CGRID - 1 - r) * s;
+  const label = (txt, x, y, color, align) => {
+    ctx.font = `600 11.5px ${css("--font")}`; ctx.textAlign = align || "left"; ctx.textBaseline = "middle";
+    ctx.lineWidth = 3.5; ctx.strokeStyle = C["--map"]; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y);
+  };
+  // the 100-cell block of the Block view
+  const b = CD.meta.block, bx = cx(b.c0), by = cy(b.r0 + b.size - 1);
+  ctx.strokeStyle = C["--accent"]; ctx.lineWidth = 2; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx - 1, by - 1, b.size * s + 2, b.size * s + 2, 4) : ctx.rect(bx - 1, by - 1, b.size * s + 2, b.size * s + 2); ctx.stroke();
+  label("Block view", bx - 8, by + b.size * s / 2, C["--accent"], "right");
+  // live events
+  for (const ev of CD.events) {
+    if (tr < ev.start || tr >= ev.end) continue;
+    let r0 = 99, r1 = 0, c0 = 99, c1 = 0;
+    ev.cells.forEach(i => { const r = Math.floor(i / CGRID), c = i % CGRID; r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); });
+    const pad = reduce ? 3 : 3 + 2 * (0.5 + 0.5 * Math.sin(now / 300)), col = css(EV[ev.type].color);
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(ev.type === "cell_outage" ? [4, 3] : []);
+    ctx.beginPath(); ctx.rect(cx(c0) - pad, cy(r1) - pad, (c1 - c0 + 1) * s + 2 * pad, (r1 - r0 + 1) * s + 2 * pad); ctx.stroke(); ctx.setLineDash([]);
+    if (ev.scope === "city" && !/\(\d\)$/.test(ev.label)) label(ev.label, cx(c1 + 1) + pad + 4, cy(r1) + s / 2, col);
+  }
+  // landmarks
+  CD.landmarks.forEach(m => {
+    const x = cx(m.c) + s / 2, y = cy(m.r) + s / 2;
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fillStyle = C["--ink"]; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C["--map"]; ctx.stroke();
+    label(m.name, x + 7, y, C["--ink2"]);
+  });
+  // hover and selection
+  [[S.chover, C["--ink3"], 1.2], [S.csel, C["--ink"], 2]].forEach(([i, col, lw]) => {
+    if (i < 0) return;
+    const r = Math.floor(i / CGRID), c = i % CGRID;
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.strokeRect(cx(c) - 2, cy(r) - 2, s + 4, s + 4);
+  });
+}
+function cityCellAt(x, y) {
+  const c = Math.floor((x - CG.x0) / CG.s), r = CGRID - 1 - Math.floor((y - CG.y0) / CG.s);
+  return c < 0 || c >= CGRID || r < 0 || r >= CGRID ? -1 : r * CGRID + c;
+}
+function inBlock(i) { const b = CD.meta.block, r = Math.floor(i / CGRID), c = i % CGRID; return r >= b.r0 && r < b.r0 + b.size && c >= b.c0 && c < b.c0 + b.size; }
+function cityPointer(ev, x, y) {
+  const i = cityCellAt(x, y);
+  S.chover = i; canvas.style.cursor = i >= 0 ? "pointer" : "default";
+  if (i < 0) { hideTip(); return; }
+  const k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), fl = cFlag(k, t, i), evs = cellEvents(t, i);
+  const sl = [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${(fl >> s) & 1 ? "✓" : "✕"}`).join(" &nbsp;");
+  showTip(ev, `<b>Cell ${i + 1}</b> · ${D.times[t]}${evs.length ? ` · ${evs[0].label}` : ""}<br>Traffic ${cMbps(cDem(t, i)).toFixed(1)} Mbps · load ${Math.round(cLoad(k, t, i) * 100)}%<br>${fl & 16 ? "Cell down" : sl}${inBlock(i) ? '<br><span class="muted">In the Block view: click to open it there</span>' : ""}`);
+}
+function cityClick() {
+  const i = S.chover;
+  if (i < 0) return;
+  if (inBlock(i) && S.csel === i) { openInBlock(i); return; }
+  S.csel = i; renderCityInspector(); drawCityStrip();
+}
+function openInBlock(i) {
+  const b = CD.meta.block, li = (Math.floor(i / CGRID) - b.r0) * b.size + (i % CGRID - b.c0);
+  S.sel = li; setView("block");
+}
+function renderCity(full) {
+  const k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), se = CD.series[k];
+  $("clock").textContent = D.times[t];
+  $("cityKpis").innerHTML = [0, 1, 2].map(s => {
+    const now = se.slice_ok[s][t], day = se.slice_ok[s].slice(0, t + 1).reduce((x, y) => x + y, 0) / (t + 1);
+    return `<div class="kpi"><div class="lab">${sliceDot(s)}${SL[s]}</div><div class="val">${(now * 100).toFixed(now > 0.995 && now < 1 ? 1 : 0)}%</div><div class="sub">cells in SLA · ${Math.round(day * 100)}% so far</div></div>`;
+  }).join("");
+  const act = CD.events.filter(e => t >= e.start && t < e.end && !/\(\d\)$/.test(e.label));
+  $("nowEvents").innerHTML = act.map(ev => `<div class="now-ev"><i style="background:var(${EV[ev.type].color})"></i><b>${ev.label}</b><span class="muted">${ev.scope === "city" ? "city" : "block"} · until ${D.times[Math.min(T - 1, ev.end)]}</span></div>`).join("");
+  const allOk = (key) => Math.round(CD.series[key].all_ok[t] * CN);
+  let busiest = 0, bv = -1; for (let i = 0; i < CN; i++) { const v = cDem(t, i); if (v > bv) { bv = v; busiest = i; } }
+  const others = KEYS.filter(x => x !== k).map(x => `${P[x].label} ${allOk(x).toLocaleString()}`).join(", ");
+  $("cityNarrative").innerHTML = `<b>${P[k].label}</b> keeps <b>${allOk(k).toLocaleString()}</b> of 10,000 cells within every slice's SLA at ${D.times[t]} (${others}). Busiest cell now: <b>Cell ${busiest + 1}</b>, ${cMbps(bv).toFixed(0)} Mbps.`;
+  renderCityInspector();
+  if (full) {
+    $("cityNetLegend").innerHTML = SL.map((s, i) => `<span><i style="background:var(--${SLKEY[i]})"></i>${s}</span>`).join("") + `<span><i style="background:var(--ink);height:2px"></i>Traffic</span>`;
+    const alloc = se.alloc_gbps, tot = alloc[0].map((v, q) => v + alloc[1][q] + alloc[2][q]);
+    stacked($("cityNet"), alloc, SC(), CD.netDemand, { w: 300, h: 120, left: 34, bottom: 16, max: Math.max(...CD.netDemand, ...tot) * 1.05, fmt: (v) => v.toFixed(0) + " G" });
+    $("cityCtrlLegend").innerHTML = KEYS.map(x => `<span><svg width="18" height="6" aria-hidden="true"><line x1="0" x2="18" y1="3" y2="3" stroke="${CTRL_STYLE[x].c}" stroke-width="${CTRL_STYLE[x].w}" stroke-dasharray="${CTRL_STYLE[x].dash}"/></svg>${P[x].label}</span>`).join("");
+    const lo = Math.min(...KEYS.flatMap(x => CD.series[x].all_ok)), mn = Math.max(0, Math.floor(lo * 10) / 10);
+    lines($("cityAllOk"), KEYS.map(x => CD.series[x].all_ok), KEYS.map(x => CTRL_STYLE[x].c),
+      { w: 300, h: 110, left: 34, bottom: 16, min: mn, max: 1, ticks: [mn, (mn + 1) / 2, 1], fmt: (v) => Math.round(v * 100) + "%",
+        dashes: KEYS.map(x => CTRL_STYLE[x].dash), widths: KEYS.map(x => x === k ? CTRL_STYLE[x].w + 0.6 : CTRL_STYLE[x].w) });
+    const sm = CD.summary;
+    $("cityScore").innerHTML = `<thead><tr><th>Controller</th>${SL.map(s => `<th>${s}</th>`).join("")}<th>Reward</th></tr></thead><tbody>` +
+      KEYS.map(x => `<tr class="${x === k ? "active" : ""}"><td>${P[x].label}</td>${SL.map(s => `<td>${Math.round(sm[x].sla_ok[s] * 100)}%</td>`).join("")}<td>${sm[x].mean_reward.toFixed(3)}</td></tr>`).join("") + "</tbody>";
+    $("cityScoreNote").innerHTML = `Share of the 1.44 million cell-intervals meeting each slice's SLA, and mean reward. In the dense 100-cell block: ` +
+      KEYS.map(x => `${P[x].label} ${sm[x].block_mean_reward.toFixed(3)}`).join(", ") + `. In the quiet outer city: ` + KEYS.map(x => `${P[x].label} ${sm[x].outer_mean_reward.toFixed(3)}`).join(", ") + ".";
+    $("cityTgnn").innerHTML = CD.meta.forecaster_note || "";
+    renderCityEvents();
+  } else { if (t !== renderCity._t) { renderCityEvents(); renderCity._t = t; } }
+}
+function renderCityEvents() {
+  const k = S.ctrl, t = Math.round(S.t), list = CD.events.filter(e => !/\(\d\)$/.test(e.label));
+  $("evlist").innerHTML = list.map(ev => {
+    const group = CD.events.filter(e => e.label.startsWith(ev.label.replace(/ \(\d\)$/, "")) && e.start === ev.start);
+    const cells = group.flatMap(e => e.cells), okr = [0, 0, 0]; let cnt = 0;
+    for (let tt = ev.start; tt < Math.min(T, ev.end); tt++) for (const i of cells) { cnt++; const fl = cFlag(k, tt, i); for (let s = 0; s < 3; s++) okr[s] += (fl >> s) & 1; }
+    const worst = okr.map(v => v / Math.max(cnt, 1)), ws = worst.indexOf(Math.min(...worst)), live = t >= ev.start && t < ev.end;
+    return `<button class="evrow ${live ? "live" : ""}" data-id="${ev.id}"><span class="t">${D.times[ev.start]}</span><span class="n"><span class="evico" style="background:var(${EV[ev.type].color})"><svg viewBox="0 0 16 16">${EV[ev.type].icon}</svg></span>${ev.label}<span class="scope">${ev.scope}</span></span><span class="e">${SL[ws]} SLA ${Math.round(worst[ws] * 100)}%</span><span class="d">${ev.description} ${cells.length} cell${cells.length > 1 ? "s" : ""}.</span></button>`;
+  }).join("");
+  $("evlist").querySelectorAll(".evrow").forEach(b => b.onclick = () => {
+    const ev = CD.events.find(e => e.id === +b.dataset.id); S.t = ev.start; S.csel = ev.cells[Math.floor(ev.cells.length / 2)]; setPlaying(false); renderAll(true);
+  });
+}
+function renderCityInspector() {
+  const i = S.csel; if (i < 0) return;
+  const k = S.ctrl, t = Math.min(T - 1, Math.round(S.t)), [la, lo] = cLatLon(i), r = Math.floor(i / CGRID), c = i % CGRID;
+  const dist = Math.hypot((la - 45.4641) * 111.2, (lo - 9.1919) * 111.2 * Math.cos(45.46 * Math.PI / 180));
+  $("ccEyebrow").textContent = `Grid row ${r} · column ${c} · ≈${la.toFixed(3)}°N ${lo.toFixed(3)}°E`;
+  $("ccTitle").textContent = `Cell ${i + 1}`;
+  const fl = cFlag(k, t, i), miss = [0, 1, 2].filter(s => !((fl >> s) & 1)), evs = cellEvents(t, i), pill = $("ccPill");
+  if (fl & 16) { pill.className = "pill bad"; pill.textContent = "Cell down"; }
+  else if (miss.length) { pill.className = "pill bad"; pill.textContent = miss.map(s => SL[s]).join(" · ") + " missing SLA"; }
+  else if (evs.length) { pill.className = "pill warn"; pill.textContent = evs[0].label.replace(/ \(\d\)$/, ""); }
+  else { pill.className = "pill ok"; pill.textContent = "All slices within SLA"; }
+  let mean = 0; for (let tt = 0; tt < T; tt++) mean += cMbps(cDem(tt, i)); mean /= T;
+  $("ccFacts").innerHTML = `<div class="fact"><b>${cMbps(cDem(t, i)).toFixed(1)}</b><span>Mbps now</span></div><div class="fact"><b>${mean.toFixed(1)}</b><span>Mbps day mean</span></div><div class="fact"><b>${dist.toFixed(1)} km</b><span>from the Duomo</span></div>`;
+  $("ccTable").innerHTML = `<thead><tr><th>Controller</th><th>Load</th>${SL.map(s => `<th>${s}</th>`).join("")}</tr></thead><tbody>` +
+    KEYS.map(x => { const f2 = cFlag(x, t, i); return `<tr class="${x === k ? "active" : ""}"><td>${P[x].label}</td><td>${Math.round(cLoad(x, t, i) * 100)}%</td>${[0, 1, 2].map(s => `<td style="color:var(--${(f2 >> s) & 1 ? "ok" : "bad"})">${f2 & 16 ? "–" : (f2 >> s) & 1 ? "✓" : "✕"}</td>`).join("")}</tr>`; }).join("") + "</tbody>";
+  $("ccNote").innerHTML = inBlock(i)
+    ? `<div class="narrative">This cell is in the 100-cell block, where every slice of every cell is shown. <button class="linkbtn" id="ccOpen" style="margin-top:8px;display:block">Open in Block view</button></div>`
+    : `<div class="narrative">${mean < 15 ? "A quiet cell: the network has plenty of room here, so what matters is not starving URLLC and mMTC when their traffic is near zero." : "A busy cell outside the block: adaptive slicing matters most here."}</div>`;
+  const btn = $("ccOpen"); if (btn) btn.onclick = () => openInBlock(i);
+  if (renderCityInspector._i !== i) { renderCityInspector._i = i; drawCityStrip(); }
+}
+function drawCityStrip() {
+  const svg = $("ccStrip"), i = S.csel; if (!CD || i < 0) return;
+  svg.innerHTML = "";
+  const w = 320, x0 = 64, x1 = w - 4, X = (t) => x0 + (x1 - x0) * t / (T - 1), cw = (x1 - x0) / (T - 1) + 0.6;
+  eventBands(svg, x0, x1, 6, 128);
+  const dem = Array.from({ length: T }, (_, t) => cMbps(cDem(t, i))), mx = Math.max(1, ...dem);
+  let d = `M${X(0)},56`; for (let t = 0; t < T; t++) d += `L${X(t)},${56 - 48 * dem[t] / mx}`; d += `L${X(T - 1)},56Z`;
+  svgEl(svg, "path", { d, fill: "var(--ink)", "fill-opacity": 0.18, stroke: "var(--ink)", "stroke-width": 1 });
+  svgEl(svg, "text", { x: x0 - 6, y: 12, "text-anchor": "end" }).textContent = `${mx.toFixed(0)} Mbps`;
+  svgEl(svg, "text", { x: x0 - 6, y: 56, "text-anchor": "end" }).textContent = "0";
+  KEYS.forEach((k, n) => {
+    const y = 66 + n * 21;
+    svgEl(svg, "text", { x: x0 - 6, y: y + 11, "text-anchor": "end" }).textContent = P[k].label;
+    svgEl(svg, "rect", { x: x0, y, width: x1 - x0, height: 15, fill: "var(--hair)", rx: 2 });
+    for (let t = 0; t < T; t++) {
+      const fl = cFlag(k, t, i), miss = 3 - cMet(fl);
+      if (fl & 16) svgEl(svg, "rect", { x: X(t), y, width: cw, height: 15, fill: "var(--ink)" });
+      else if (miss) svgEl(svg, "rect", { x: X(t), y, width: cw, height: 15, fill: "var(--bad)", "fill-opacity": [0, 0.4, 0.7, 1][miss] });
+    }
+  });
+  axisX(svg, x0, x1, 148);
+  svg._play = svgEl(svg, "line", { x1: X(S.t), x2: X(S.t), y1: 2, y2: 130, stroke: "var(--ink)", "stroke-width": 1.5 });
+  svg._X = X; svg._x0 = x0; svg._x1 = x1;
+}
+function cityChartTip(id, t) {
+  const k = S.ctrl;
+  if (id === "cityNet") { const a = CD.series[k].alloc_gbps; return `<b>${D.times[t]}</b> · whole city<br>` + [0, 1, 2].map(s => `${sliceDot(s)} ${SL[s]} ${a[s][t].toFixed(1)} Gbps`).join("<br>") + `<br>Traffic ${CD.netDemand[t].toFixed(1)} Gbps`; }
+  if (id === "cityAllOk") return `<b>${D.times[t]}</b> · cells meeting every SLA<br>` + KEYS.map(x => `${P[x].label} ${Math.round(CD.series[x].all_ok[t] * CN).toLocaleString()}`).join("<br>");
+  const i = S.csel; return `<b>${D.times[t]}</b> · Cell ${i + 1}<br>Traffic ${cMbps(cDem(t, i)).toFixed(1)} Mbps<br>` + KEYS.map(x => { const f = cFlag(x, t, i); return `${P[x].label}: ${f & 16 ? "cell down" : (3 - cMet(f)) ? (3 - cMet(f)) + " slice(s) missing SLA" : "all slices OK"}`; }).join("<br>");
+}
+
+// ---------- loop ----------
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  phase += dt;
+  if (S.playing) {
+    const before = Math.floor(S.t);
+    let nt = S.t + dt * S.speed / 2.5; // 1x = one 10-minute interval every 2.5 s
+    if (S.mode === "simulation") {
+      // auto-capture pauses when an event starts, as Packet Tracer stops on new events
+      const starts = EVS().map(e => e.start);
+      const hit = starts.find(st => st > S.t && st <= nt);
+      if (hit !== undefined) {
+        nt = hit; setPlaying(false);
+        const ev = EVS().find(e => e.start === hit);
+        if (S.view === "city") { S.csel = ev.cells[Math.floor(ev.cells.length / 2)]; drawCityStrip(); }
+        else { S.sel = ev.cells[0]; drawCellCharts(); }
+      }
+    }
+    if (nt >= T - 1) { nt = T - 1; setPlaying(false); }
+    S.t = nt;
+    if (Math.floor(S.t) !== before) renderAll(false); else movePlayheads();
+  }
+  if (S.view === "city") drawCity(now); else drawMap(now);
+  requestAnimationFrame(tick);
+}
+
+// ---------- boot ----------
+fetch("data.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
+  D = data; N = D.meta.cells; T = D.meta.intervals;
+  KEYS = Object.keys(D.policies); KEYS.forEach(k => P[k] = D.policies[k]);
+  aggregates(); readColors(); initParticles();
+  S.t = 17 * 6 + 3; // open at 17:30: the busy evening, just before the flash crowd
+  buildControls(); renderLegend(); layout(); drawTimeline(); setPlaying(S.playing);
+  renderAll(true);
+  $("loading").hidden = true;
+  requestAnimationFrame(tick);
+}).catch(err => {
+  $("loading").innerHTML = `<div>Couldn't load the day's data (${err.message}). Reload the page to try again.</div>`;
+});
+})();
+</script>
