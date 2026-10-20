@@ -1,0 +1,310 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FYP-A09 Results</title>
+<style>
+/* Layout: scorecard table first (all results at a glance), then one card per module with its charts. */
+:root {
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #6f6d67;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #006300; --bad: #b02a2a; --mid: #8a5a00;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #a09e96;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --good: #0ca30c; --bad: #ec7b7b; --mid: #fab219; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #a09e96;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --good: #0ca30c; --bad: #ec7b7b; --mid: #fab219; color-scheme: dark;
+}
+body { background: var(--page); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 28px 56px; }
+main { max-width: 980px; margin-inline: auto; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-size: clamp(24px, 4.5vw, 32px); margin: 0; font-weight: 600; line-height: 1.2; }
+h2 { font-size: 18px; margin: 0; font-weight: 600; }
+h3 { font-size: 14px; margin: 0 0 2px; font-weight: 600; }
+p { margin: 0; }
+.sub, .cap { color: var(--ink2); }
+.cap { font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px;
+  display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.cols > div { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 700px; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-size: 12px; font-weight: 600; color: var(--muted); }
+td.n, th.n { font-variant-numeric: tabular-nums; }
+td.src { font-size: 12px; color: var(--muted); word-break: break-all; }
+tr:last-child td { border-bottom: 0; }
+.v { font-weight: 600; white-space: nowrap; }
+.v.good { color: var(--good); } .v.bad { color: var(--bad); } .v.mid { color: var(--mid); }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { fill: var(--ink2); font-size: 11px; font-family: var(--font); }
+svg .val { fill: var(--ink); font-weight: 600; }
+svg .grid { stroke: var(--grid); stroke-width: 1; }
+svg .axis { stroke: var(--axis); stroke-width: 1; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
+.stat { display: flex; flex-direction: column; }
+.stat b { font-size: 22px; font-weight: 600; }
+.stat span { font-size: 12px; color: var(--muted); }
+.pending { border: 1px dashed var(--axis); border-radius: 8px; padding: 12px 14px; color: var(--ink2); }
+.note { border-left: 3px solid var(--mid); padding: 8px 12px; background: var(--page); border-radius: 0 8px 8px 0; color: var(--ink2); font-size: 14px; }
+#tip { position: fixed; z-index: 9; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px;
+  padding: 6px 9px; border-radius: 6px; max-width: 260px; opacity: 0; transition: opacity .08s; line-height: 1.35; }
+:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+</style>
+
+<main>
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <h1>FYP-A09 Results</h1>
+    <p class="sub">Digital Twin assisted network slicing (SSL, TGNN, MARL). Every number is from a run on real data and every row names its source file. Held-out data only; each result is next to a simple baseline.</p>
+  </header>
+
+  <section class="card">
+    <h2>Scorecard</h2>
+    <div class="tablewrap"><table id="score"></table></div>
+    <p class="cap">This table is the text view of every chart on the page.</p>
+  </section>
+
+  <section class="card">
+    <div><h2>Unified environment: answers to the 12 Oct review</h2><p class="cap">No public dataset joins traffic, topology, slices, actions and SLA outcomes, so we built one: real Milan traffic on the real grid, latency calibrated on the 6G RAN telemetry dataset, load-coupled interference. Trained on 5 real days, tested on the next 2; 3 seeds each.</p></div>
+    <div class="cols">
+      <div><h3>Why MARL: held-out reward as the network grows</h3><div id="c-scale"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>MARL (shared actor)</span><span><i style="background:var(--s2)"></i>Single centralised agent (tuned)</span><span><i style="background:var(--s3)"></i>Expert rules</span><span><i style="background:var(--muted)"></i>Equal split</span></div></div>
+      <div><h3>Actor parameters</h3><div id="c-params"></div>
+        <p class="cap">One shared MARL actor serves every cell, so its size does not change; the single agent needs a bigger network for every cell added.</p></div>
+    </div>
+    <div class="cols">
+      <div><h3>What the TGNN forecast is worth: the same expert rules, told different things about the next 10 minutes</h3><div id="c-pred"></div>
+        <div class="legend"><span><i style="background:var(--muted)"></i>Current demand</span><span><i style="background:var(--s1)"></i>TGNN forecast</span><span><i style="background:var(--s3)"></i>Perfect forecast</span></div></div>
+      <div><h3>Forecasting the whole city (10,000 cells), improvement over predicting the last value</h3><div class="tablewrap"><table id="t-city" style="min-width:420px"></table></div>
+        <p class="cap">The forecaster trained on the 100 central cells over-predicts quiet suburban cells by about 6 Mbps. Scaling each cell by its own level and training on random patches of the whole grid fixes it.</p></div>
+    </div>
+    <div class="note" id="unified-note"></div>
+    <div><h3>Digital Twin dataset</h3><p class="cap">Core year (400 cells x 364 days x 6 scenarios) and full city (10,000 cells x 62 recorded days x 3 scenarios), one row per cell per 10 minutes.</p></div>
+    <div class="stats" id="stats-twin"></div>
+  </section>
+
+  <section class="card">
+    <div><h2>SSL on 5G-NIDD</h2><p class="cap" id="nidd-cap"></p></div>
+    <div class="cols">
+      <div><h3>Held-out accuracy and Macro-F1</h3><div id="c-nidd"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>SSL embedding (64-D)</span><span><i style="background:var(--s2)"></i>Raw features</span><span><i style="background:var(--s3)"></i>Random 64-D</span></div></div>
+      <div><h3>Why the split mattered</h3><div id="c-split"></div>
+        <p class="cap">Same encoder, same classifier. The file is ordered in same-label blocks, so a sequential split put 99.9% of one class in the test set.</p></div>
+    </div>
+    <div class="note">Benign recall is the weak point: the SSL embedding finds 41% of benign flows (raw features: 40%), while it finds 99.9% of malicious ones. Training and validation losses differ by two orders of magnitude and we have not explained the gap, so the downstream F1 is our evidence, not the loss.</div>
+  </section>
+
+  <section class="card">
+    <div><h2>TGNN: next-step traffic forecast on 400 Milan cells</h2><p class="cap" id="tgnn-cap"></p></div>
+    <div class="cols">
+      <div><h3>Validation error against baselines (lower is better)</h3><div id="c-tgnn"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>TGNN</span><span><i style="background:var(--s2)"></i>Predict last value</span><span><i style="background:var(--s3)"></i>Training mean</span></div></div>
+      <div><h3>Full-day learning curve, epochs 5 to 25</h3><div id="c-tgnn-curve"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Validation</span><span><i style="background:var(--s3)"></i>Train</span><span><i style="background:var(--s2)"></i>Predict-last-value level</span></div></div>
+    </div>
+    <div class="note">The first run (9 windows, a partial day) did not beat the baseline; the full day (28 windows) does, by about 14%. One day, one seed, and the best epoch is picked on the same validation windows, so treat the margin as encouraging, not settled.</div>
+    <div class="pending" id="ablation"></div>
+  </section>
+
+  <section class="card">
+    <div><h2>MARL on the B5G slicing dataset</h2><p class="cap">Reward per agent, averaged. Rewards were recomputed after fixing a slice-attribution bug in the environment.</p></div>
+    <div class="cols">
+      <div><h3>Fresh held-out test block (<span id="test-n"></span> agents)</h3><div id="c-test"></div></div>
+      <div><h3>50-sample comparison (11,783 agents)</h3><div id="c-m50"></div></div>
+    </div>
+    <div class="cols">
+      <div><h3>Training curve, 1,000 episodes</h3><div id="c-train"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>MADDPG, 20-episode mean (with exploration noise)</span><span><i style="background:var(--s2)"></i>Heuristic, same samples</span><span><i style="background:var(--s3)"></i>Equal split, same samples</span></div></div>
+      <div><h3>Hyperparameter search (validation reward)</h3><div id="c-sweep"></div>
+        <p class="cap">All eight settings land within 0.001, so the search tells us nothing about tuning.</p></div>
+    </div>
+    <div class="note">The reward is nearly trivial: B5G has no latency, jitter or packet-loss values (0 of 4,350 sampled slices), so the only action-dependent term pays for giving a slice more share. Beating the heuristic shows the pipeline works, not that the policy is a strong slicer. Single seed, 50 test samples.</div>
+  </section>
+
+  <section class="card">
+    <h2>Topology and simulator checks</h2>
+    <div class="stats" id="stats"></div>
+    <p class="cap">Nearest-gNB association: moderate negative correlation between distance and recorded SINR, and every UE inside its assigned cell's range. Simu5G: one gNB and one UE carrying VoIP downlink for 5 simulated seconds. The project's own 19-gNodeB scenario is not wired in yet.</p>
+  </section>
+
+  <section class="card">
+    <h2>Data used</h2>
+    <div class="tablewrap"><table id="datat"></table></div>
+  </section>
+  <p class="cap">Repository: github.com/FYP-A09/6G. Figures regenerate from the files in <code>reports/</code>.</p>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = {"nidd_epochs": [[1, 0.37533, 0.000631], [2, 0.1319, 0.000756], [3, 0.1477, 0.000663], [4, 0.10442, 0.00056], [5, 0.11707, 0.001111], [6, 0.1294, 0.000588], [7, 0.1179, 0.000688], [8, 0.12752, 0.000984], [9, 0.16755, 0.000494], [10, 0.11144, 0.000653]], "nidd_rows": [1215890, 972712, 243178], "nidd_eval": {"ssl_embedding_64d": [0.7664221270016202, 0.7082709032462386, 0.40716087370613413, 0.9989365377190428], "processed_raw_features": [0.7655832353255639, 0.7068327383450808, 0.40457575852721694, 0.9992278044584132], "random_embedding_64d": [0.6070902795483144, 0.3777574211443442, 0.0, 1.0]}, "nidd_test": [243178, {"Benign": 477737, "Malicious": 738153}], "milan_ssl": [[1, 0.4794, 0.3344], [2, 0.4645, 0.332], [3, 0.4689, 0.3553], [4, 0.402, 0.3249], [5, 0.4572, 0.3329], [6, 0.3917, 0.3345], [7, 0.4366, 0.337], [8, 0.431, 0.3642]], "milan_rows": [500000, 399983, 100017], "tgnn_short": {"windows": 9, "tgnn": 0.00030069177187720523, "persist": 0.0002649969796443151, "mean": 0.001976136920145816}, "tgnn_full": {"windows": 28, "train_windows": 111, "tgnn": 0.000616041966298196, "persist": 0.0007195706930360757, "mean": 0.006394557987472841, "val_curve": [0.004397, 0.002537, 0.001835, 0.001316, 0.000773, 0.000627, 0.000634, 0.00064, 0.000649, 0.000644, 0.000639, 0.000638, 0.000634, 0.000629, 0.000627, 0.000627, 0.000624, 0.000622, 0.000621, 0.00062, 0.000619, 0.000618, 0.000618, 0.000617, 0.000616], "train_curve": [0.016674, 0.001527, 0.000999, 0.000769, 0.000609, 0.00048, 0.000424, 0.000409, 0.000398, 0.000389, 0.00038, 0.000373, 0.000365, 0.00036, 0.000354, 0.000349, 0.000344, 0.000341, 0.000338, 0.000335, 0.000333, 0.000331, 0.000329, 0.000327, 0.000325], "t": 144}, "marl50": {"equal_split": [0.3687, 0.333, 11783], "heuristic": [0.4287, 0.533, 11783], "untrained_actor_baseline": [0.366, 0.324, 11783]}, "tuning": [[0.05, 0.001, 1.0, 0.4583], [0.05, 0.001, 0.01, 0.4583], [0.05, 0.0001, 1.0, 0.4578], [0.05, 0.0001, 0.01, 0.4578], [0.2, 0.001, 1.0, 0.4583], [0.2, 0.001, 0.01, 0.4583], [0.2, 0.0001, 1.0, 0.4576], [0.2, 0.0001, 0.01, 0.4576]], "test": {"trained": [0.4474, 0.784, 12619], "equal_split": [0.3122, 0.333, 12619], "heuristic": [0.3722, 0.533, 12619]}, "train_curve": [0.246, 0.3408, 0.3684, 0.3777, 0.3152, 0.2827, 0.2957, 0.3289, 0.3743, 0.3726, 0.354, 0.3612, 0.3689, 0.3763, 0.3897, 0.4148, 0.4389, 0.3855, 0.3524, 0.3773, 0.3957, 0.4092, 0.4368, 0.4561, 0.4349, 0.4333, 0.4537, 0.4496, 0.4277, 0.4012, 0.416, 0.4305, 0.4272, 0.4533, 0.4744, 0.4257, 0.3728, 0.4213, 0.4603, 0.4479, 0.43, 0.3919, 0.417, 0.4517, 0.4148, 0.3955, 0.4146, 0.4338, 0.4411, 0.4377, 0.4353, 0.4153, 0.424, 0.4528, 0.4261, 0.4136, 0.4627, 0.5039, 0.471, 0.4262, 0.4313, 0.4547, 0.4517, 0.4155, 0.4066, 0.4192, 0.4395, 0.4537, 0.4076, 0.4305, 0.4639, 0.4111, 0.4177, 0.4311, 0.3999, 0.3933, 0.4079, 0.407, 0.4148, 0.4203, 0.3894, 0.3945, 0.4029, 0.4032, 0.3876, 0.4125, 0.4754, 0.4578, 0.445, 0.4206, 0.4466, 0.4975, 0.454, 0.3797, 0.3914, 0.4152, 0.4461, 0.4715, 0.4492, 0.4469], "train_base": {"equal_split": 0.3526, "heuristic": 0.4126}, "heur": {"part": "part1", "n_ues": 118, "skipped_no_lat_lon_or_sinr": 1, "mean_distance_m": 470.0475129573916, "mean_sinr_db": 4.2449087033898305, "pearson_distance_vs_sinr": -0.35507227833968774, "fraction_in_range": 1.0}, "ablation": {"ssl": 0.000616041966298196, "raw": 0.0006121862554989223, "verdict": "No measurable difference (raw is 0.6% lower), so on this task the SSL stage adds nothing over the five raw features it was trained on. Both beat the last-value baseline."}};
+const U = {"sizes": [9, 25, 49, 100], "marl": [[0.7666, 0.0185], [0.765, 0.042], [0.7582, 0.0495], [0.7686, 0.0299]], "single": [[0.4106, 0.0376], [0.2995, 0.0268], [0.2746, 0.0145], [0.2728, 0.0022]], "heur": {"equal_split": [0.7612, 0.731, 0.7121, 0.7128], "headroom_current": [0.7829, 0.755, 0.7343, 0.7385], "headroom_tgnn": [0.8416, 0.8024, 0.7821, 0.7902], "headroom_oracle": [0.9294, 0.8983, 0.8764, 0.8804]}, "params": {"marl": [19332, 19332, 19332, 19332], "single": [114468, 200548, 329668, 604048]}, "ablation": {"none": [0.7781, 0.0389], "oracle": [0.762, 0.0469], "tgnn": [0.765, 0.042]}, "forecast_block": [0.1205, 0.2886, 0.2738], "city": {"block_forecaster_on_city": {"block_100": [0.1181, 0.2964, 0.2735], "core_ring_300": [-0.0786, -0.2961, -0.3358], "outer_9600": [-9.8481, -1.0054, -1.0015], "city_10000": [-6.352, -0.7371, -0.7468]}, "city_forecaster": {"block_100": [0.2362, 0.36, 0.2656], "core_ring_300": [0.1862, 0.3027, 0.189], "outer_9600": [0.1906, 0.2724, 0.113], "city_10000": [0.1937, 0.2865, 0.1427]}}, "rows": 393606000, "events": 3236, "energy_saved_city": 0.032};
+const $ = (id) => document.getElementById(id);
+const f3 = (x) => x.toFixed(3), f4 = (x) => x.toFixed(4), e = (x) => x.toExponential(2);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- scorecard ---------- */
+const nE = D.nidd_eval, S = nE.ssl_embedding_64d, R = nE.processed_raw_features, Z = nE.random_embedding_64d;
+const pct = (v) => (v >= 0 ? "+" : "−") + Math.abs(Math.round(v * 100)) + "%";
+const last = U.sizes.length - 1;
+const rows = [
+ ["MARL vs single agent (unified)", `Held-out reward, ${U.sizes[last]} cells, 3 seeds`, `${f3(U.marl[last][0])} ± ${f3(U.marl[last][1])}`, `single agent ${f3(U.single[last][0])}; expert rules ${f3(U.heur.headroom_current[last])}; equal split ${f3(U.heur.equal_split[last])}`, ["good", "MARL holds, single agent falls"], "reports/unified/results.json"],
+ ["TGNN forecast value (unified)", `Reward of the expert rules, ${U.sizes[last]} cells`, `${f3(U.heur.headroom_tgnn[last])} with TGNN`, `current demand ${f3(U.heur.headroom_current[last])}; perfect forecast ${f3(U.heur.headroom_oracle[last])}`, ["good", "Helps at every size"], "reports/unified/results.json"],
+ ["City forecaster", "Better than last value, eMBB / URLLC / mMTC, 10,000 cells", U.city.city_forecaster.city_10000.map(pct).join(" / "), `block-trained model ${U.city.block_forecaster_on_city.city_10000.map(pct).join(" / ")}`, ["good", "Transfers city-wide"], "reports/unified/forecast_city.json"],
+ ["MARL + forecast input", "Held-out reward, 25 cells, 3 seeds", `${f3(U.ablation.tgnn[0])} ± ${f3(U.ablation.tgnn[1])}`, `no forecast ${f3(U.ablation.none[0])} ± ${f3(U.ablation.none[1])}; perfect ${f3(U.ablation.oracle[0])}`, ["bad", "Forecast does not help MARL yet"], "reports/unified/results.json"],
+ ["Digital Twin dataset", "Rows, 122 columns", (U.rows / 1e6).toFixed(1) + " M", `${U.events.toLocaleString()} injected events; night sleep saves ${(U.energy_saved_city * 100).toFixed(1)}% city energy`, ["good", "Generated and checked"], "reports/unified_twin/summary.json"],
+ ["SSL (5G-NIDD)", "Accuracy / Macro-F1, stratified held-out", `${f3(S[0])} / ${f3(S[1])}`, `raw ${f3(R[0])} / ${f3(R[1])}; random ${f3(Z[0])} / ${f3(Z[1])}`, ["mid", "Matches raw, beats random"], "reports/nidd_ssl_full/evaluation_stratified.json"],
+ ["TGNN (Milan, full day)", "Validation MSE, 28 windows", f4(D.tgnn_full.tgnn*1e3)+" ×10⁻³", `last value ${f4(D.tgnn_full.persist*1e3)} ×10⁻³; mean ${f4(D.tgnn_full.mean*1e3)} ×10⁻³`, ["good", "Beats baseline by "+Math.round((1-D.tgnn_full.tgnn/D.tgnn_full.persist)*100)+"%"], "reports/tgnn_milan_forecast_fullday/metrics.json"],
+ ["TGNN (Milan, partial day)", "Validation MSE, 9 windows", f4(D.tgnn_short.tgnn*1e3)+" ×10⁻³", `last value ${f4(D.tgnn_short.persist*1e3)} ×10⁻³; mean ${f4(D.tgnn_short.mean*1e3)} ×10⁻³`, ["bad", "Does not beat last value"], "reports/tgnn_milan_forecast/baselines.json"],
+ ["MARL (held-out test)", "Mean reward", f4(D.test.trained[0]), `heuristic ${f4(D.test.heuristic[0])}; equal split ${f4(D.test.equal_split[0])}`, ["mid", "Beats, reward is simple"], "reports/krish_marl_tuned/tuning_report.json"],
+ ["MARL (50 samples)", "Mean reward", `heuristic ${f4(D.marl50.heuristic[0])}`, `equal split ${f4(D.marl50.equal_split[0])}; untrained actor ${f4(D.marl50.untrained_actor_baseline[0])}`, ["good", "Heuristic beats equal split"], "reports/krish_marl_50/summary.json"],
+ ["Topology", "Pearson r, distance vs SINR (118 UEs)", f3(D.heur.pearson_distance_vs_sinr), "expected sign: negative", ["mid", "Consistent, moderate"], "reports/thrishala_heuristic_check/nearest_gnb_vs_sinr.json"],
+ ["Simu5G", "VoIP downlink, 5 s simulated", "MOS 4.41 / 5", "93 of 93 packets, 0 loss", ["good", "Toolchain works"], "docs/figures/simu5g_nr_validation.png"],
+ ["SSL (Milan)", "Masked-reconstruction validation loss", f3(D.milan_ssl[D.milan_ssl.length-1][2]), `best ${f3(Math.min(...D.milan_ssl.map(r=>r[2])))} (epoch ${D.milan_ssl.reduce((a,r)=>r[2]<a[2]?r:a)[0]})`, ["mid", "Plateaus; used by TGNN"], "reports/milan_ssl_full/metrics.json"],
+];
+const mark = {good: "▲ ", bad: "▼ ", mid: "● "};
+$("score").innerHTML = "<thead><tr><th>Module</th><th>Metric</th><th class=n>Ours</th><th>Baselines</th><th>Verdict</th><th>Source</th></tr></thead><tbody>" +
+  rows.map(r => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td class=n>${r[2]}</td><td class=n>${r[3]}</td><td class="v ${r[4][0]}">${mark[r[4][0]]}${r[4][1]}</td><td class=src>${r[5]}</td></tr>`).join("") + "</tbody>";
+
+/* ---------- tooltip ---------- */
+const tip = $("tip");
+document.addEventListener("mousemove", (ev) => {
+  const t = ev.target.closest && ev.target.closest("[data-tip]");
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.textContent = t.getAttribute("data-tip"); tip.style.opacity = 1;
+  const x = Math.min(ev.clientX + 14, innerWidth - 270), y = ev.clientY + 16;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+document.addEventListener("mouseleave", () => tip.style.opacity = 0);
+
+/* ---------- chart helpers ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function bars(el, groups, o) {
+  // groups: [{title, items:[{label, value, color, tip}]}], horizontal bars from one baseline
+  const W = 560, left = o.left || 150, right = 70, bh = 18, gap = 8;
+  let y = 0, out = "";
+  const max = o.max;
+  for (const g of groups) {
+    if (g.title) { out += `<text x="0" y="${y+10}" style="font-weight:600">${g.title}</text>`; y += 18; }
+    for (const it of g.items) {
+      const w = Math.max(2, (W - left - right) * it.value / max);
+      out += `<text x="${left-8}" y="${y+bh/2+4}" text-anchor="end">${it.label}</text>` +
+        `<path data-tip="${it.tip}" d="M${left} ${y} h${w-4} a4 4 0 0 1 4 4 v${bh-8} a4 4 0 0 1 -4 4 h${-(w-4)} z" fill="${it.color}"/>` +
+        `<text class="val" x="${left+w+6}" y="${y+bh/2+4}">${o.fmt(it.value)}</text>`;
+      y += bh + gap;
+    }
+    y += 8;
+  }
+  out = `<line class="axis" x1="${left}" x2="${left}" y1="0" y2="${y-8}"/>` + out;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${y}" role="img" aria-label="${o.label}">${out}</svg>`;
+}
+function lines(el, o) {
+  // o: {xs, series:[{name,color,vals}], refs:[{label,value,color}], ymin,ymax,fmt,xlabel}
+  const W = 560, H = 230, l = 54, r = 14, t = 12, b = 34;
+  const X = (i) => l + (W - l - r) * i / (o.xs.length - 1);
+  const Y = (v) => t + (H - t - b) * (1 - (v - o.ymin) / (o.ymax - o.ymin));
+  let s = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = o.ymin + (o.ymax - o.ymin) * k / 4;
+    s += `<line class="grid" x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${l-6}" y="${Y(v)+4}" text-anchor="end">${o.fmt(v)}</text>`;
+  }
+  const step = Math.ceil(o.xs.length / 6);
+  o.xs.forEach((x, i) => { if (i % step === 0 || i === o.xs.length - 1) s += `<text x="${X(i)}" y="${H-14}" text-anchor="middle">${x}</text>`; });
+  s += `<text x="${(l+W-r)/2}" y="${H}" text-anchor="middle">${o.xlabel}</text><line class="axis" x1="${l}" x2="${W-r}" y1="${H-b}" y2="${H-b}"/>`;
+  for (const rf of o.refs || []) s += `<line x1="${l}" x2="${W-r}" y1="${Y(rf.value)}" y2="${Y(rf.value)}" stroke="${rf.color}" stroke-width="2" stroke-dasharray="6 4"/>`;
+  for (const se of o.series) {
+    s += `<polyline fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${se.vals.map((v,i)=>X(i)+","+Y(v)).join(" ")}"/>`;
+    const i = se.vals.length - 1;
+    s += `<circle cx="${X(i)}" cy="${Y(se.vals[i])}" r="4" fill="${se.color}" stroke="var(--surface)" stroke-width="2"/>`;
+  }
+  // hover columns
+  o.xs.forEach((x, i) => {
+    const txt = `${o.xlabel} ${x}: ` + o.series.map(se => `${se.name} ${o.fmt(se.vals[i], true)}`).join("; ");
+    s += `<rect data-tip="${txt}" x="${X(i)-(W-l-r)/(o.xs.length-1)/2}" y="${t}" width="${(W-l-r)/(o.xs.length-1)}" height="${H-t-b}" fill="transparent"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H+4}" role="img" aria-label="${o.label}">${s}</svg>`;
+}
+
+/* ---------- unified environment ---------- */
+lines($("c-scale"), {xs: U.sizes.map(String), xlabel: "Cells (agents)", ymin: 0, ymax: 1, fmt: (v) => v.toFixed(2), label: "Held-out reward vs number of cells",
+  series: [{name: "MARL", color: "var(--s1)", vals: U.marl.map(m => m[0])}, {name: "Single agent", color: "var(--s2)", vals: U.single.map(m => m[0])},
+           {name: "Expert rules", color: "var(--s3)", vals: U.heur.headroom_current}, {name: "Equal split", color: "var(--muted)", vals: U.heur.equal_split}]});
+bars($("c-params"), U.sizes.map((n, i) => ({title: `${n} cells`, items: [
+  {label: "MARL", value: U.params.marl[i], color: "var(--s1)", tip: `${n} cells: MARL actor ${U.params.marl[i].toLocaleString()} parameters`},
+  {label: "Single agent", value: U.params.single[i], color: "var(--s2)", tip: `${n} cells: single-agent actor ${U.params.single[i].toLocaleString()} parameters`}]})),
+  {max: Math.max(...U.params.single), fmt: (v) => v >= 1e5 ? Math.round(v / 1000) + "k" : v.toLocaleString(), label: "Actor parameters by network size", left: 100});
+bars($("c-pred"), U.sizes.map((n, i) => ({title: `${n} cells`, items: [
+  {label: "Current demand", value: U.heur.headroom_current[i], color: "var(--muted)", tip: `${n} cells, expert rules on current demand: ${f4(U.heur.headroom_current[i])}`},
+  {label: "TGNN forecast", value: U.heur.headroom_tgnn[i], color: "var(--s1)", tip: `${n} cells, expert rules with the TGNN forecast: ${f4(U.heur.headroom_tgnn[i])}`},
+  {label: "Perfect forecast", value: U.heur.headroom_oracle[i], color: "var(--s3)", tip: `${n} cells, expert rules with the true next demand: ${f4(U.heur.headroom_oracle[i])}`}]})),
+  {max: 1, fmt: f3, label: "Value of the forecast", left: 120});
+const regions = [["block_100", "100 block cells"], ["core_ring_300", "300 cells around it"], ["outer_9600", "9,600 outer cells"], ["city_10000", "All 10,000 cells"]];
+$("t-city").innerHTML = "<thead><tr><th>Cells</th><th class=n>Block-trained</th><th class=n>City-trained</th></tr></thead><tbody>" +
+  regions.map(([k, lab]) => `<tr><td>${lab}</td><td class=n>${U.city.block_forecaster_on_city[k].map(pct).join(" / ")}</td><td class=n><b>${U.city.city_forecaster[k].map(pct).join(" / ")}</b></td></tr>`).join("") + "</tbody>";
+$("unified-note").textContent = `MARL matches the expert rules on current demand (within one standard deviation) but stays below the same rules fed the TGNN forecast (${f3(Math.min(...U.heur.headroom_tgnn))}–${f3(Math.max(...U.heur.headroom_tgnn))}). Giving MARL the forecast as an extra input did not help at this training budget (${f3(U.ablation.tgnn[0])} vs ${f3(U.ablation.none[0])} without, 25 cells). So today the forecast's value shows through the expert controller; making the learned agent use it is the next step.`;
+$("stats-twin").innerHTML = [[(U.rows / 1e6).toFixed(1) + " M", "rows"], ["122", "columns"], ["10,000", "cells (full city)"], ["6", "what-if scenarios"],
+  [U.events.toLocaleString(), "injected events"], [(U.energy_saved_city * 100).toFixed(1) + "%", "city energy saved by night sleep"]]
+  .map(s => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+
+/* ---------- NIDD ---------- */
+$("nidd-cap").textContent = `${D.nidd_rows[0].toLocaleString()} real flows; encoder trained 10 epochs; held-out test is ${D.nidd_test[0].toLocaleString()} flows (${D.nidd_test[1].Benign.toLocaleString()} benign and ${D.nidd_test[1].Malicious.toLocaleString()} malicious overall), stratified by label.`;
+const reps = [["SSL embedding", "var(--s1)", S], ["Raw features", "var(--s2)", R], ["Random 64-D", "var(--s3)", Z]];
+bars($("c-nidd"), [0, 1].map(k => ({title: k ? "Macro-F1" : "Accuracy", items: reps.map(r => ({label: r[0], value: r[2][k], color: r[1], tip: `${r[0]}: ${k ? "Macro-F1" : "accuracy"} ${f4(r[2][k])}; benign recall ${f3(r[2][2])}, malicious recall ${f3(r[2][3])}`}))})), {max: 1, fmt: f3, label: "SSL accuracy and Macro-F1"});
+bars($("c-split"), [{title: "Accuracy of the same SSL classifier", items: [
+  {label: "Sequential split", value: 0.0113, color: "var(--s2)", tip: "Sequential split on the full file: accuracy 0.0113 (test set was 99.88% benign)"},
+  {label: "Stratified split", value: S[0], color: "var(--s1)", tip: "Stratified split: accuracy " + f4(S[0])}]}], {max: 1, fmt: f3, label: "Effect of the split method", left: 120});
+
+/* ---------- TGNN ---------- */
+$("tgnn-cap").textContent = `Real grid adjacency, real SSL embeddings, next-interval internet traffic as the target. Full day: ${D.tgnn_full.train_windows} train and ${D.tgnn_full.windows} chronological validation windows over ${D.tgnn_full.t} intervals.`;
+const tg = (g, w) => ({title: w, items: [
+  {label: "TGNN", value: g.tgnn, color: "var(--s1)", tip: `TGNN: ${e(g.tgnn)}`},
+  {label: "Last value", value: g.persist, color: "var(--s2)", tip: `Predict last value: ${e(g.persist)}`}]});
+bars($("c-tgnn"), [tg(D.tgnn_short, `Partial day, ${D.tgnn_short.windows} windows`), tg(D.tgnn_full, `Full day, ${D.tgnn_full.windows} windows`)], {max: 0.0008, fmt: (v) => (v*1e3).toFixed(3)+" ×10⁻³", label: "TGNN vs last-value baseline", left: 80});
+const tc = D.tgnn_full, from = 4;
+lines($("c-tgnn-curve"), {xs: tc.val_curve.slice(from).map((_, i) => i + from + 1), xlabel: "Epoch", ymin: 0.0002, ymax: 0.0008,
+  fmt: (v, full) => full ? e(v) : (v*1e3).toFixed(1) + "e-3", label: "TGNN full-day learning curve",
+  series: [{name: "Validation", color: "var(--s1)", vals: tc.val_curve.slice(from)}, {name: "Train", color: "var(--s3)", vals: tc.train_curve.slice(from)}],
+  refs: [{value: tc.persist, color: "var(--s2)"}]});
+$("ablation").innerHTML = D.ablation
+  ? `<b>Ablation: do SSL embeddings help the TGNN?</b> Same model, same data, same split, with raw z-scored traffic features as input instead of the 64-D SSL embedding. Validation MSE: SSL ${e(D.ablation.ssl)}, raw ${e(D.ablation.raw)}. ${D.ablation.verdict}`
+  : `<b>Ablation, still running:</b> the same TGNN fed raw traffic features instead of SSL embeddings, to test whether the SSL stage helps. This card fills in when it finishes.`;
+
+/* ---------- MARL ---------- */
+const T = D.test;
+$("test-n").textContent = T.trained[2].toLocaleString();
+bars($("c-test"), [{items: [
+  {label: "MADDPG", value: T.trained[0], color: "var(--s1)", tip: `MADDPG: reward ${f4(T.trained[0])}, own-slice share ${f3(T.trained[1])}`},
+  {label: "Heuristic", value: T.heuristic[0], color: "var(--s2)", tip: `Heuristic: reward ${f4(T.heuristic[0])}, own-slice share ${f3(T.heuristic[1])}`},
+  {label: "Equal split", value: T.equal_split[0], color: "var(--s3)", tip: `Equal split: reward ${f4(T.equal_split[0])}, own-slice share ${f3(T.equal_split[1])}`}]}], {max: 0.6, fmt: f4, label: "Held-out MARL reward", left: 90});
+const M = D.marl50;
+bars($("c-m50"), [{items: [
+  {label: "Heuristic", value: M.heuristic[0], color: "var(--s2)", tip: `Heuristic: reward ${f4(M.heuristic[0])}, utilization ${f3(M.heuristic[1])}`},
+  {label: "Equal split", value: M.equal_split[0], color: "var(--s3)", tip: `Equal split: reward ${f4(M.equal_split[0])}, utilization ${f3(M.equal_split[1])}`},
+  {label: "Untrained actor", value: M.untrained_actor_baseline[0], color: "var(--s1)", tip: `Untrained actor: reward ${f4(M.untrained_actor_baseline[0])}, utilization ${f3(M.untrained_actor_baseline[1])}`}]}], {max: 0.6, fmt: f4, label: "50-sample MARL comparison", left: 100});
+lines($("c-train"), {xs: D.train_curve.map((_, i) => i * 10 + 10), xlabel: "Episode", ymin: 0.25, ymax: 0.5, fmt: (v) => v.toFixed(2), label: "MADDPG training curve",
+  series: [{name: "MADDPG", color: "var(--s1)", vals: D.train_curve}],
+  refs: [{value: D.train_base.heuristic, color: "var(--s2)"}, {value: D.train_base.equal_split, color: "var(--s3)"}]});
+bars($("c-sweep"), [{items: D.tuning.map((c, i) => ({label: `σ ${c[0]} · lr ${c[1]} · τ ${c[2]}`, value: c[3], color: "var(--s1)", tip: `exploration noise ${c[0]}, actor lr ${c[1]}, target tau ${c[2]}: validation reward ${f4(c[3])}`}))}], {max: 0.6, fmt: f4, label: "Hyperparameter search", left: 150});
+
+/* ---------- stats and data table ---------- */
+const stats = [["−0.355", "Pearson r, distance vs SINR"], ["118", "UEs checked"], ["100%", "UEs inside assigned cell range"],
+  ["28,092", "Simu5G events, 5 s"], ["93 / 93", "VoIP packets delivered"], ["4.82 ms", "Mean VoIP frame delay"], ["4.41", "MOS (out of 5)"], ["≈74 dB", "Downlink SINR, one UE"]];
+$("stats").innerHTML = stats.map(s => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+const data = [["5G-NIDD", "1,215,890 labelled flows", "SSL encoder training and evaluation"],
+  ["Telecom Italia Milan", "62 days, 10,000 cells, 10-minute intervals", "SSL on traffic features; TGNN forecast; the unified environment and the Digital Twin dataset (all 10,000 cells)"],
+  ["6G RAN telemetry", "30,000 telemetry windows", "Calibrating latency and SLA against load in the unified environment"],
+  ["NeversNet5G", "716 UE files, about 27 GB, 19 gNodeBs", "UE-to-gNodeB topology (695 nodes), telemetry replay"],
+  ["B5G slicing", "7,984 samples; latency, jitter, loss null in 0 of 4,350 sampled slices", "MARL environment, rewards, train/validation/test blocks"]];
+$("datat").innerHTML = "<thead><tr><th>Dataset</th><th>Size</th><th>Used for</th></tr></thead><tbody>" + data.map(r => `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("") + "</tbody>";
+</script>
+</html>

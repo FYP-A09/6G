@@ -1,0 +1,215 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FYP-A09 Progress Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single readable column, one status table, then three short lists. */
+:root {
+  --bg: #f6f8f9;
+  --surface: #ffffff;
+  --fg: #16232b;
+  --muted: #566772;
+  --line: #d9e1e6;
+  --accent: #0b6e8a;
+  --ok: #1d7a4d;   --ok-bg: #e2f3ea;
+  --part: #8a5a00; --part-bg: #fbefd3;
+  --open: #a23a30; --open-bg: #f9e3e0;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a20; --surface: #16252d; --fg: #e4edf1; --muted: #93a6b0; --line: #26373f;
+    --accent: #5cc3df;
+    --ok: #6fd6a0; --ok-bg: #173628; --part: #f0c36a; --part-bg: #3a2d10; --open: #f29a90; --open-bg: #3d1d19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a20; --surface: #16252d; --fg: #e4edf1; --muted: #93a6b0; --line: #26373f;
+  --accent: #5cc3df;
+  --ok: #6fd6a0; --ok-bg: #173628; --part: #f0c36a; --part-bg: #3a2d10; --open: #f29a90; --open-bg: #3d1d19;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 48px; }
+main { max-width: 860px; margin-inline: auto; display: flex; flex-direction: column; gap: 32px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+.kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: clamp(24px, 4.5vw, 32px); line-height: 1.2; margin: 0; font-weight: 600; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-size: 13px; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  margin: 0 0 10px; font-weight: 500; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 620px; }
+th, td { text-align: left; padding: 10px 14px; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; font-weight: 500; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-family: var(--mono); font-size: 11.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.ok { color: var(--ok); background: var(--ok-bg); }
+.part { color: var(--part); background: var(--part-bg); }
+.open { color: var(--open); background: var(--open-bg); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+li::marker { color: var(--accent); }
+.note { border-left: 3px solid var(--part); background: var(--surface); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 0; color: var(--muted); }
+.note b { color: var(--fg); font-weight: 600; }
+a { color: var(--accent); text-underline-offset: 2px; }
+footer { color: var(--muted); font-size: 13px; }
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: stage; }
+.stages li { counter-increment: stage; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.stages li::before { content: "Stage " counter(stage); font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+.stages b { font-weight: 600; }
+.stages span { color: var(--muted); font-size: 14px; }
+.why { margin: 12px 0 0; color: var(--muted); max-width: 70ch; }
+ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+ol.steps li::marker { color: var(--accent); font-family: var(--mono); }
+ol.steps span { color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<main>
+  <header>
+    <span class="kicker">FYP-A09 · Review discussion</span>
+    <h1>Digital Twin Assisted Network Slicing for 6G</h1>
+    <p class="sub">SSL, TGNN and MARL inside a Digital Twin. Status as of 12 Oct 2026, with the points to settle with sir; updated 16 Oct with our answers to his review comments.</p>
+  </header>
+
+  <section>
+    <h2>Update, 16 Oct: sir's four comments</h2>
+    <ol class="steps">
+      <li><b>Which datasets do the papers use?</b> <span>Of the 16 papers we reviewed, 8 generate their own data with a simulator, emulator or testbed, only one uses Milan, and none uses a single dataset that joins traffic, topology, actions and SLA outcomes.</span></li>
+      <li><b>Is there unified data?</b> <span>No. We checked the 10 datasets we hold and searched for more. The closest (B5G transport traces, single-cell O-RAN traces) have no per-cell allocation actions or SLA outcomes.</span></li>
+      <li><b>So we created it.</b> <span>Real Milan traffic on the real 100 x 100 grid, latency calibrated on the 6G RAN telemetry dataset (mean SLA-vs-load gap <span class="num">0.021</span>), load-coupled interference and injected incidents. The Digital Twin dataset has <span class="num">393.6 million</span> rows and <span class="num">122</span> columns: a 400-cell year with 6 what-if scenarios, and the full 10,000-cell city for all 62 recorded days.</span></li>
+      <li><b>Why MARL and not a single agent?</b> <span>Same reward, same training budget, held-out days, 3 seeds. MARL holds <span class="num">0.76–0.77</span> from 9 to 100 cells with one shared 19k-parameter actor. A tuned single agent falls from <span class="num">0.41</span> to <span class="num">0.27</span>, below equal split, as its network grows to 604k parameters. MARL matches the expert rules; the expert rules fed our TGNN forecast are still better (<span class="num">0.79–0.84</span>).</span></li>
+    </ol>
+    <p class="note"><b>Prediction helps, so far through the expert controller.</b> The TGNN forecast lifts the expert rules by about 0.05 reward at every network size, but as an extra MARL input it did not help (<span class="num">0.765</span> vs <span class="num">0.778</span>). A forecaster retrained on patches of the whole city beats persistence on all 10,000 cells (eMBB +19%), where the one trained on 100 central cells failed. All numbers: <a href="../results/">results dashboard</a>.</p>
+  </section>
+
+  <section>
+    <h2>What we tell sir today</h2>
+    <ul>
+      <li>All four datasets are ready, and the pipeline runs end to end: SSL, TGNN, MARL, Digital Twin gate.</li>
+      <li>SSL is trained on <span class="num">1.2M</span> flows: accuracy <span class="num">0.766</span>, Macro-F1 <span class="num">0.708</span> on held-out data. It matches raw features and beats random embeddings.</li>
+      <li>The TGNN forecasts Milan traffic and beats a "predict the last value" baseline by about 14% on a full day. Feeding raw features instead of SSL embeddings scores the same, so the SSL stage adds nothing on this task yet.</li>
+      <li>MADDPG scores <span class="num">0.447</span> on held-out samples against <span class="num">0.372</span> for the heuristic, with a simple reward because B5G has no latency or loss data.</li>
+      <li>We found and fixed two evaluation bugs (split leakage on NIDD, wrong-slice scoring on B5G).</li>
+      <li>Simu5G is installed and a real 5G run works. We want his view on the plan below.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Our approach</h2>
+    <ol class="stages">
+      <li><b>Self-supervised learning</b><span>Learn compact traffic representations from unlabelled telemetry by hiding some features and reconstructing them from the rest. Output: a fixed 64-D embedding per node per time step.</span></li>
+      <li><b>Temporal GNN</b><span>GraphSAGE aggregates neighbours at each step, a GRU carries state over time. Predicts the next step's throughput, latency and load.</span></li>
+      <li><b>Multi-agent RL</b><span>MADDPG, one agent per node and slice. Each chooses a share of resources across eMBB, URLLC and mMTC, scored by a reward built from QoS, utilization and reconfiguration cost.</span></li>
+      <li><b>Digital Twin gate</b><span>A candidate allocation is tested in the twin first. It is approved or rejected before anything would touch the real network.</span></li>
+    </ol>
+    <p class="why">The idea: existing Digital Twin and RL slicing work reacts to what the network already did. Putting a prediction stage (stages 1 and 2) in front of the controller lets it act on what is about to happen. No single public dataset has topology, traffic, and allocation actions with rewards together, so each stage is built on the dataset that fits it and the stages are joined through fixed interfaces (the 64-D embedding, and a predicted-demand record).</p>
+  </section>
+
+  <section>
+    <h2>Datasets and what each is used for</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Dataset</th><th>What it is</th><th>Used for</th></tr></thead>
+        <tbody>
+          <tr><td>5G-NIDD</td>
+            <td><span class="num">1.2M</span> labelled 5G network flows (benign and attack), with protocol fields.</td>
+            <td>Train and evaluate the SSL encoder. Labels are used only to test how useful the embeddings are.</td></tr>
+          <tr><td>Telecom Italia Milan</td>
+            <td>62 days of SMS, call and internet traffic on a <span class="num">100 × 100</span> grid of cells, every 10 minutes.</td>
+            <td>SSL on traffic features, then the TGNN forecast (400-cell block, real grid adjacency).</td></tr>
+          <tr><td>NeversNet5G</td>
+            <td>Vehicular 5G NR telemetry from Nevers: <span class="num">716</span> UE files, about 27 GB, 19 gNodeBs, produced by a Simu5G + SUMO run.</td>
+            <td>Real UE-to-gNodeB topology (695 nodes), telemetry replay, and the source configuration for our Simu5G scenario.</td></tr>
+          <tr><td>B5G slicing</td>
+            <td><span class="num">7,984</span> network samples with topology and per-slice (eMBB, URLLC, mMTC) flows and a QoS deviation value, <code>delta</code>.</td>
+            <td>The environment for the MARL stage: observations, rewards and the train / validate / test split.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="why">How we check ourselves: every result uses a held-out split (stratified for NIDD, chronological for Milan, separate sample blocks for MARL) and is compared against a simple baseline, since a model that cannot beat the baseline has not shown value yet.</p>
+  </section>
+
+  <section>
+    <h2>Where each module stands</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Module</th><th>Result on real data</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>SSL (5G-NIDD)</td>
+            <td>Trained on all 1.2M flows. Stratified held-out split: accuracy <span class="num">0.766</span>, Macro-F1 <span class="num">0.708</span>. Matches raw features (<span class="num">0.766 / 0.707</span>), beats random embeddings (<span class="num">0.607 / 0.378</span>). Benign recall is weak (<span class="num">0.41</span>).</td>
+            <td><span class="pill ok">working</span></td></tr>
+          <tr><td>TGNN (Milan)</td>
+            <td>Next-step forecast on 400 real cells over a full day. Validation MSE <span class="num">0.000616</span> against <span class="num">0.000720</span> for "predict the last value" (about 14% better, 28 windows, one seed). With raw features as input instead of SSL embeddings it scores <span class="num">0.000612</span>: no gain from SSL.</td>
+            <td><span class="pill part">beats baseline, SSL no gain</span></td></tr>
+          <tr><td>MARL (B5G)</td>
+            <td>Held-out reward: MADDPG <span class="num">0.447</span>, heuristic <span class="num">0.372</span>, equal-split <span class="num">0.312</span>. The reward is nearly trivial because B5G has no latency or loss data.</td>
+            <td><span class="pill part">pipeline works</span></td></tr>
+          <tr><td>Digital Twin loop</td>
+            <td>Runs end to end. Approves 0 actions: B5G lacks the telemetry the SLA check needs.</td>
+            <td><span class="pill part">limited by data</span></td></tr>
+          <tr><td>Simu5G / OMNeT++</td>
+            <td>Installed from source. Real NR run: 28,092 events, 93/93 packets, MOS <span class="num">4.41</span>. Our 19-gNodeB scenario is not wired in.</td>
+            <td><span class="pill part">toolchain only</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note"><b>Two bugs found and fixed.</b> The NIDD file is ordered in same-label blocks, so a sequential split put 99.88% of one class in the test set (about 1% accuracy). The B5G environment scored most rewards against the wrong slice, which invalidated our earlier MADDPG numbers. Both are fixed, with a regression test for the second.</p>
+
+  <section>
+    <h2>How we proceed</h2>
+    <ol class="steps">
+      <li><b>Make SSL earn its place.</b> <span>Raw inputs match the SSL embeddings on the Milan forecast. Next we try an SSL encoder that sees neighbouring cells and earlier intervals, and test longer forecast horizons and more days.</span></li>
+      <li><b>Connect the stages with real data.</b> <span>The Digital Twin loop still uses placeholder embeddings for B5G. We will train an SSL encoder on B5G's own slice features and feed it through the TGNN.</span></li>
+      <li><b>Try a joint SSL representation</b> <span>across NIDD and Milan, which is the gap our literature review points at, and test whether it transfers.</span></li>
+      <li><b>Move from replay to a live simulator.</b> <span>Wire our 19-gNodeB Simu5G scenario in. A simulator produces the latency and packet-loss telemetry that B5G lacks, which is what lets the reward use more than one term and lets the twin approve actions.</span></li>
+      <li><b>Calibrate SLA thresholds</b> <span>once we have the source paper's definition of <code>delta</code>.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>End review: the outcome we show (tentative)</h2>
+    <ol class="steps">
+      <li><b>A working Digital Twin demo.</b> <span>Real data goes in, the twin produces embeddings, a traffic forecast and a slice allocation, then approves or rejects it. Shown live, not only as slides.</span></li>
+      <li><b>The main claim, tested.</b> <span>Our contribution is that predicting before allocating helps. We have not tested that yet. The end review needs an ablation: MARL with the TGNN's predicted demand against MARL without it, and the TGNN with SSL embeddings against raw features (run once: no gain, so this needs a better SSL encoder).</span></li>
+      <li><b>One results table for every module</b> <span>against its baseline on held-out data: SSL F1, TGNN error against persistence, MARL reward against the heuristic.</span></li>
+      <li><b>Simulator evidence, if the Simu5G scenario gets wired in.</b> <span>The twin then sees real latency and packet loss and decides on real SLA values. If it does not get wired in, we say clearly that the evidence is offline replay.</span></li>
+      <li><b>Limitations and reproducibility.</b> <span>What did not work, what the data cannot support, and a repository anyone can rerun.</span></li>
+    </ol>
+    <p class="why">Items 2 and 4 are the ones that decide whether the project's claim is supported. They depend on the TGNN beating its baseline and on the simulator integration, so we should agree with sir which of the two is the priority.</p>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>Present next review</h2>
+      <ul>
+        <li>Dataset audit and the split findings</li>
+        <li>Pipeline: SSL, TGNN, MARL, Digital Twin gate</li>
+        <li>Baselines: raw and random embeddings, persistence, equal-split, heuristic</li>
+        <li>Metrics: accuracy and Macro-F1, MSE, mean reward</li>
+        <li>Validation: stratified, chronological, separate train/validation/test</li>
+        <li>Contribution: an SSL to TGNN prediction stage ahead of MARL</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Ask sir</h2>
+      <ul>
+        <li>The SSL stage gives no gain over raw inputs on the Milan forecast. Should we improve the encoder (neighbour and history context) or present it as a negative result?</li>
+        <li>Is a live Simu5G loop expected, or is the offline B5G replay enough?</li>
+        <li>Where do we get the exact <code>delta</code> / SLA definition from Farreras et al.?</li>
+        <li>Can we add a second data source for latency and loss in the reward?</li>
+        <li>How much implementation versus quantitative results is expected?</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>Code and reports: github.com/FYP-A09/6G</footer>
+</main>
+</html>
