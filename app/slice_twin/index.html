@@ -902,7 +902,9 @@ async function loadCity() {
   $("loading").innerHTML = '<div><span class="spinner"></span>Loading all 10,000 cells of Milan…</div>';
   const [j, buf] = await Promise.all([
     fetch("city.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-    fetch("city.bin.gz").then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })]);
+    fetch("city.bin.gz").then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .catch(() => fetch("city.gz.txt").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(s => { const b = atob(s.trim()), u = new Uint8Array(b.length); for (let k = 0; k < b.length; k++) u[k] = b.charCodeAt(k); return u.buffer; }))]);
   let u8 = new Uint8Array(buf);
   if (u8[0] === 0x1f && u8[1] === 0x8b) {
     if (!("DecompressionStream" in window)) throw new Error("this browser cannot unpack the city data");
