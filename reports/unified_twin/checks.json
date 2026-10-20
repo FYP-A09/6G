@@ -1,0 +1,70 @@
+{
+  "sample_events_day": {
+    "day_index": 0,
+    "event_id": 0,
+    "rows": 3575,
+    "columns": 122
+  },
+  "sample_scenarios_cell": {
+    "cell_id": 5051,
+    "day_index": 5,
+    "rows": 864
+  },
+  "sample_night_sleep": {
+    "rows": 3600,
+    "asleep_share": 0.3333
+  },
+  "energy_saving_cost_city": {
+    "awake_cells": {
+      "rows": 7799152,
+      "sla_ok_energy_saving": {
+        "eMBB": 0.9756,
+        "URLLC": 0.7197,
+        "mMTC": 0.6934
+      },
+      "sla_ok_baseline": {
+        "eMBB": 0.983,
+        "URLLC": 0.7613,
+        "mMTC": 0.7242
+      },
+      "mean_load_energy_saving": 0.0663,
+      "mean_load_baseline": 0.0449
+    },
+    "awake_cells_absorbing_traffic": {
+      "rows": 7284309,
+      "sla_ok_energy_saving": {
+        "eMBB": 0.9826,
+        "URLLC": 0.7215,
+        "mMTC": 0.6951
+      },
+      "sla_ok_baseline": {
+        "eMBB": 0.9904,
+        "URLLC": 0.7655,
+        "mMTC": 0.7273
+      },
+      "mean_load_energy_saving": 0.0524,
+      "mean_load_baseline": 0.0295
+    },
+    "night_energy_mwh": {
+      "baseline": 1982.65,
+      "energy_saving": 1593.36
+    },
+    "night_energy_saved": 0.1963,
+    "asleep_share_of_night_rows": 0.4759
+  },
+  "parquet_gb": {
+    "core_year": {
+      "baseline": 4.98,
+      "events": 4.98,
+      "growth_6g": 5.39,
+      "energy_saving": 4.95,
+      "industrial_urllc": 5.02,
+      "massive_iot": 5.48
+    },
+    "city_62d": {
+      "baseline": 13.56,
+      "events": 13.57,
+      "energy_saving": 13.41
+    }
+  }
+}
