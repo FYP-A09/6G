@@ -1,0 +1,227 @@
+{
+  "flows": 1215890,
+  "unique_flows": 408655,
+  "features": 83,
+  "classes": [
+    "Benign",
+    "HTTPFlood",
+    "ICMPFlood",
+    "SYNFlood",
+    "SYNScan",
+    "SlowrateDoS",
+    "TCPConnectScan",
+    "UDPFlood",
+    "UDPScan"
+  ],
+  "pretrain_pool": 326924,
+  "test": 81731,
+  "pretrain_loss": [
+    1.08249,
+    0.92933,
+    0.89335,
+    0.89466,
+    0.87251,
+    0.87298,
+    0.86853,
+    0.85655,
+    0.84628,
+    0.8467,
+    0.84959,
+    0.86636
+  ],
+  "label_budgets": {
+    "50": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.704,
+        "macro_f1_sd": 0.0647,
+        "accuracy_mean": 0.7283,
+        "runs": 5
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.6266,
+        "macro_f1_sd": 0.0396,
+        "accuracy_mean": 0.727,
+        "runs": 5
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.6936,
+        "macro_f1_sd": 0.0856,
+        "accuracy_mean": 0.7275,
+        "runs": 5
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.6842,
+        "macro_f1_sd": 0.0574,
+        "accuracy_mean": 0.7263,
+        "runs": 5
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.6435,
+        "macro_f1_sd": 0.0526,
+        "accuracy_mean": 0.7445,
+        "runs": 5
+      }
+    },
+    "200": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.8526,
+        "macro_f1_sd": 0.0256,
+        "accuracy_mean": 0.8581,
+        "runs": 5
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.7635,
+        "macro_f1_sd": 0.0197,
+        "accuracy_mean": 0.8492,
+        "runs": 5
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.8584,
+        "macro_f1_sd": 0.0333,
+        "accuracy_mean": 0.8605,
+        "runs": 5
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.8336,
+        "macro_f1_sd": 0.0282,
+        "accuracy_mean": 0.8678,
+        "runs": 5
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.8521,
+        "macro_f1_sd": 0.0276,
+        "accuracy_mean": 0.8833,
+        "runs": 5
+      }
+    },
+    "1000": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.8736,
+        "macro_f1_sd": 0.0129,
+        "accuracy_mean": 0.8838,
+        "runs": 5
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.8589,
+        "macro_f1_sd": 0.0109,
+        "accuracy_mean": 0.8786,
+        "runs": 5
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.8951,
+        "macro_f1_sd": 0.0255,
+        "accuracy_mean": 0.8937,
+        "runs": 5
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.881,
+        "macro_f1_sd": 0.0135,
+        "accuracy_mean": 0.8901,
+        "runs": 5
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.9049,
+        "macro_f1_sd": 0.0088,
+        "accuracy_mean": 0.9032,
+        "runs": 5
+      }
+    },
+    "5000": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.9095,
+        "macro_f1_sd": 0.0084,
+        "accuracy_mean": 0.8976,
+        "runs": 5
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.9015,
+        "macro_f1_sd": 0.0054,
+        "accuracy_mean": 0.8924,
+        "runs": 5
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.9115,
+        "macro_f1_sd": 0.01,
+        "accuracy_mean": 0.9023,
+        "runs": 5
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.8982,
+        "macro_f1_sd": 0.0138,
+        "accuracy_mean": 0.8981,
+        "runs": 5
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.919,
+        "macro_f1_sd": 0.0099,
+        "accuracy_mean": 0.907,
+        "runs": 5
+      }
+    },
+    "20000": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.9232,
+        "macro_f1_sd": 0.0006,
+        "accuracy_mean": 0.9041,
+        "runs": 2
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.9133,
+        "macro_f1_sd": 0.0056,
+        "accuracy_mean": 0.893,
+        "runs": 2
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.9238,
+        "macro_f1_sd": 0.0017,
+        "accuracy_mean": 0.9056,
+        "runs": 2
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.9234,
+        "macro_f1_sd": 0.0008,
+        "accuracy_mean": 0.9059,
+        "runs": 2
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.9316,
+        "macro_f1_sd": 0.0017,
+        "accuracy_mean": 0.9079,
+        "runs": 2
+      }
+    },
+    "all": {
+      "raw_logreg": {
+        "macro_f1_mean": 0.9257,
+        "macro_f1_sd": 0.0,
+        "accuracy_mean": 0.907,
+        "runs": 2
+      },
+      "ssl_logreg": {
+        "macro_f1_mean": 0.912,
+        "macro_f1_sd": 0.0,
+        "accuracy_mean": 0.8938,
+        "runs": 2
+      },
+      "raw_mlp": {
+        "macro_f1_mean": 0.9247,
+        "macro_f1_sd": 0.0007,
+        "accuracy_mean": 0.9095,
+        "runs": 2
+      },
+      "ssl_finetune": {
+        "macro_f1_mean": 0.9272,
+        "macro_f1_sd": 0.0043,
+        "accuracy_mean": 0.9086,
+        "runs": 2
+      },
+      "raw_lightgbm": {
+        "macro_f1_mean": 0.936,
+        "macro_f1_sd": 0.0,
+        "accuracy_mean": 0.9079,
+        "runs": 2
+      }
+    }
+  },
+  "seconds": 640
+}
