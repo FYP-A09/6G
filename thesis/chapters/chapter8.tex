@@ -1,10 +1,10 @@
 \label{chap.8}
 \section{Introduction}
-This chapter evaluates the pipeline as a whole in the unified environment of Chapter~\ref{chap.4}. It asks whether knowledge of the next traffic interval helps allocation, whether the forecast helps the learned controller, how the controllers behave across the whole city, and what a Digital Twin adds to the work. It then describes the Digital Twin dataset and its what-if scenarios, and ends with the limits of the surrogate environment, tested against a packet-level simulator.
+This chapter evaluates the whole pipeline in the unified environment of Chapter~\ref{chap.4}. We ask whether knowing the demand of the next interval helps allocation, whether the forecast helps the learned controller, how the controllers behave over the whole city, and what a Digital Twin adds to the work. We then describe the Digital Twin dataset and its what-if scenarios, and finish by testing the surrogate environment against a packet-level simulator.
 
 \section{Value of the Forecast}
 \label{sec:forecast-value}
-On the held-out week, the retrained forecaster of Chapter~\ref{chap.6} lowers the mean squared error by 18\%, 33\% and 31\% against persistence for eMBB, URLLC and mMTC. To see what this is worth for allocation, the same expert rule was run with three kinds of knowledge about the next ten minutes: current demand, the TGNN forecast, and the true next demand, which is an upper bound on what any forecast could give. Table~\ref{tab:forecast-value} reports the result.
+On the held-out week the retrained forecaster of Chapter~\ref{chap.6} has a mean squared error that is 18\%, 33\% and 31\% lower than persistence for eMBB, URLLC and mMTC. To see what this is worth for allocation, we ran the same expert rule with three kinds of knowledge about the next ten minutes: the current demand, the TGNN forecast, and the true next demand, which is an upper bound for any forecast. Table~\ref{tab:forecast-value} gives the result.
 
 \begin{table}[htbp]
 \centering
@@ -28,11 +28,11 @@ On the held-out week, the retrained forecaster of Chapter~\ref{chap.6} lowers th
 \label{fig:forecast-value}
 \end{figure}
 
-The forecast improves the expert rule by about 0.03 in reward at every network size, on all seven test days, with intervals of about 0.004 to 0.008. It recovers about one fifth of the gap to perfect knowledge. An earlier figure of 0.05 came from two test days and a forecaster trained on five days; with 39 training days and a full week of testing the benefit is smaller and better established. Using the value of the previous day at the same time as the forecast does not work: its mean reward is 0.74 to 0.78 at every size, below that of current demand.
+The forecast improves the expert rule by about 0.03 in reward at every network size and on all seven test days, with intervals of about 0.004 to 0.008. It closes about one fifth of the gap to perfect knowledge. An earlier estimate of 0.05 came from two test days and a forecaster trained on five days. With 39 training days and a whole week of testing, the benefit is smaller but better established. Using the value of the previous day at the same time as a forecast does not work: its mean reward is 0.74 to 0.78 at every size, which is below that of current demand.
 
 \section{The Forecast and the Learned Controller}
 \label{sec:forecast-marl}
-The forecast was also given to the MARL controller as an extra input. Table~\ref{tab:forecast-marl} shows that, at this training budget and with three seeds, it made no reliable difference. Giving the controller the true next-interval demand did not help either.
+We also gave the forecast to the MARL controller as an extra input. Table~\ref{tab:forecast-marl} shows that at this training budget, with three seeds, it made no reliable difference. Giving the controller the true next-interval demand did not help either.
 
 \begin{table}[htbp]
 \centering
@@ -56,11 +56,11 @@ True next-interval demand & $0.762\pm0.057$ \\ \hline
 \label{fig:forecast_for_marl}
 \end{figure}
 
-The three rewards differ by less than their sample standard deviations of 0.05 to 0.06, so the experiment shows neither a clear gain nor a clear loss. Under shifted traffic its effect on the learned policy also changes sign (Section~\ref{sec:marl_shift}).We therefore claim that forecasting helps the rule-based controller and that it has not been shown to help the learned one. The forecast is not wasted: the Digital Twin gate of Section~\ref{sec:gate} uses it to predict the outcome of a proposed allocation.
+The three rewards differ by less than their sample standard deviations of 0.05 to 0.06, so the experiment shows neither a clear gain nor a clear loss. Under shifted traffic the effect on the learned policy even changes sign (Section~\ref{sec:marl_shift}). We therefore claim that forecasting helps the rule-based controller, and we have not shown that it helps the learned one. The forecast is still useful: the Digital Twin gate of Section~\ref{sec:gate} uses it to predict the outcome of a proposed allocation.
 
 \section{Controllers Across the Whole City}
 \label{sec:city-controllers}
-The three controllers of the Slice Twin monitor (Chapter~\ref{chap.9}) were run on all 10{,}000 Milan cells for one day, Wednesday 6 November 2013, with scripted incidents. Static divides capacity equally. Reactive applies the expert rule to the current demand. Predictive applies it to the city-wide forecast. This day was not used to train the forecaster.
+We ran the three controllers of the Slice Twin monitor (Chapter~\ref{chap.9}) on all 10{,}000 Milan cells for one day, Wednesday 6 November 2013, with scripted incidents. Static divides the capacity equally. Reactive applies the expert rule to the current demand. Predictive applies it to the city-wide forecast. The forecaster was not trained on this day.
 
 \begin{table}[htbp]
 \centering
@@ -76,11 +76,11 @@ Predictive & 0.975 / 0.786 / 0.601 & 0.868 & 0.773 & 0.869 \\ \hline
 \end{tabular}
 \end{table}
 
-In the dense block the Predictive controller scores highest (0.773 against 0.735 and 0.709), as in Section~\ref{sec:forecast-value}. Across the city, however, Static scores highest (0.974 against 0.868 and 0.839). Most cells are lightly loaded, and the rule gives very little capacity to URLLC and mMTC when their traffic is close to zero, so those slices miss their targets when traffic returns. Since the outer city contains most cells, this outweighs the benefit of forecasting. An earlier run reported a city-wide score of 0.935 for the Predictive controller; that result came from over-allocation caused by a bias of the block-trained forecaster in the outer cells, and it was replaced by the table above. Because the comparison covers a single day, it shows the behaviour of the controllers and is not a ranking.
+In the dense block the Predictive controller scores highest (0.773 against 0.735 and 0.709), as in Section~\ref{sec:forecast-value}. Over the whole city, however, Static scores highest (0.974 against 0.868 and 0.839). Most cells are lightly loaded, and when URLLC and mMTC traffic is close to zero the rule gives those slices very little capacity, so they miss their targets when traffic comes back. The outer city has most of the cells, and this outweighs the benefit of forecasting. An earlier run reported 0.935 for the Predictive controller over the city. That came from over-allocation caused by a bias of the block-trained forecaster in the outer cells, and the table above replaces it. Since this is a single day, it shows how the controllers behave and does not rank them.
 
 \section{The Digital Twin Dataset}
 \label{sec:dt-dataset}
-No public dataset contains topology, per-slice traffic, QoS metrics, SLA outcomes and allocation decisions together. We therefore generated one from the unified environment (\texttt{src/\allowbreak unified/\allowbreak twin\_\allowbreak dataset.py}). Each row is one cell in one 10-minute interval. The data is stored in Parquet files on the project drive, with summaries and samples in the repository. Two builds were made (Table~\ref{tab:dt-size}), with 393.6 million rows in total.
+No public dataset contains topology, per-slice traffic, QoS metrics, SLA outcomes and allocation decisions together, so we generated one from the unified environment (\texttt{src/\allowbreak unified/\allowbreak twin\_\allowbreak dataset.py}). Each row is one cell in one 10-minute interval. The data is stored as Parquet files on the project drive, and summaries and samples are in the repository. We made two builds (Table~\ref{tab:dt-size}), with 393.6 million rows in total.
 
 \begin{table}[htbp]
 	\centering
@@ -101,17 +101,17 @@ No public dataset contains topology, per-slice traffic, QoS metrics, SLA outcome
 \end{table}
 
 \paragraph{Provenance.}
-The 62 recorded days are real Telecom Italia Milan data \cite{barlacchi2015}. The other days of the core year are bootstrapped from real days of the same weekday, with 20\% yearly growth and small random variation. The columns \texttt{source} and \texttt{source\_date} mark each row as real or bootstrapped. Latency and jitter follow curves calibrated on the 6G RAN telemetry. The radio fields follow the 3GPP CQI table \cite{3gpp38214} and power follows the EARTH base-station model \cite{auer2011}. The slice mapping, industrial zones, per-user rates and packet sizes are modelling assumptions.
+The 62 recorded days are real Telecom Italia Milan data \cite{barlacchi2015}. The other days of the core year are bootstrapped from real days of the same weekday, with 20\% growth per year and a little random variation. The columns \texttt{source} and \texttt{source\_date} say whether a row is real or bootstrapped. Latency and jitter follow curves calibrated on the 6G RAN telemetry. The radio fields follow the 3GPP CQI table \cite{3gpp38214} and the power follows the EARTH base-station model \cite{auer2011}. The slice mapping, the industrial zones, the per-user rates and the packet sizes are our own assumptions.
 
 \paragraph{Structure.}
-Each row has 122 columns: 20 for identity and calendar, 3 for control, 8 for events and state, 11 for radio and capacity, 6 for the neighbourhood, 3 for energy, 63 per-slice fields (21 for each slice, including demand 10, 30 and 60 minutes ahead as forecasting targets), 2 for reward and 6 for noisy telemetry. The full list is in Appendix~\ref{app:columns}.
+Each row has 122 columns. Twenty are for identity and calendar, 3 for control, 8 for events and state, 11 for radio and capacity, 6 for the neighbourhood and 3 for energy. There are 63 per-slice fields (21 for each slice, including the demand 10, 30 and 60 minutes ahead as forecasting targets), 2 for the reward and 6 for noisy telemetry. Appendix~\ref{app:columns} lists all of them.
 
 \paragraph{Validation.}
-All six scenarios were run for three days before the full build. The checks confirmed that (i) all scenarios have the same interval and cell rows; (ii) traffic is conserved under energy saving, because the traffic that sleeping cells hand over equals the traffic neighbours receive; (iii) the industrial and massive-IoT multipliers are applied exactly; (iv) 1.0\% of the telemetry is missing, as designed; and (v) the 10- and 60-minute targets equal the demand of the same cell one and six rows later. They are automated tests in the repository. They show that the generator is internally consistent, not that it agrees with a packet-level simulator.
+We ran all six scenarios for three days before the full build and checked five things. All scenarios have the same interval and cell rows. Traffic is conserved under energy saving, since the traffic that sleeping cells hand over equals what the neighbours receive. The industrial and massive-IoT multipliers are applied exactly. 1.0\% of the telemetry is missing, as designed. The 10- and 60-minute targets equal the demand of the same cell one and six rows later. These are automated tests in the repository. They show that the generator is consistent with itself, not that it agrees with a packet-level simulator.
 
 \section{What-if Scenarios}
 \label{sec:scenarios}
-All scenarios share the same days, behaviour policy and random noise, so any difference between two scenarios comes from the scenario itself. Table~\ref{tab:scenarios} gives the results for the core year.
+All scenarios share the same days, the same behaviour policy and the same random noise, so any difference between two scenarios comes from the scenario. Table~\ref{tab:scenarios} gives the results for the core year.
 \begin{table}[htbp]
 	\centering
 	\caption{Scenarios of the core year}
@@ -136,7 +136,7 @@ All scenarios share the same days, behaviour policy and random noise, so any dif
 	\end{tabular}
 \end{table}
 
-The scaled-traffic scenarios behave as intended: growth\_6g lowers eMBB compliance from 0.704 to 0.553, and massive\_iot lowers mMTC compliance from 0.651 to 0.524 and uses the most energy. The events scenario is almost the same as the baseline because over 99.8\% of its rows have no event. The effect shows when rows are grouped by event type (Table~\ref{tab:events}).
+The scaled-traffic scenarios behave as intended. growth\_6g lowers the eMBB compliance from 0.704 to 0.553, and massive\_iot lowers the mMTC compliance from 0.651 to 0.524 and uses the most energy. The events scenario is almost the same as the baseline because over 99.8\% of its rows have no event. The effect only shows when the rows are grouped by event type (Table~\ref{tab:events}).
 
 \begin{table}[htbp]
 	\centering
@@ -158,7 +158,7 @@ The scaled-traffic scenarios behave as intended: growth\_6g lowers eMBB complian
 	\end{tabular}
 \end{table}
 
-\paragraph{Energy saving across the city.} The energy-saving scenario was also run on the whole city for 62 days (Table~\ref{tab:energy}). Letting lightly loaded cells sleep from 01:00 to 05:00 cuts night-time energy by 19.6\%, from 1{,}983 MWh to 1{,}593 MWh, and total energy over the period by 3.2\%. The cost is a drop in URLLC compliance of the awake cells from 0.761 to 0.720, because their mean load rises from 0.045 to 0.066. The saving should therefore be read together with this QoS cost.
+\paragraph{Energy saving across the city.} We also ran the energy-saving scenario on the whole city for 62 days (Table~\ref{tab:energy}). When lightly loaded cells sleep from 01:00 to 05:00, night-time energy drops by 19.6\%, from 1{,}983 MWh to 1{,}593 MWh, and total energy over the period drops by 3.2\%. The price is that the URLLC compliance of the awake cells falls from 0.761 to 0.720, because their mean load rises from 0.045 to 0.066. The saving has to be read together with this loss of QoS.
 
 \begin{table}[htbp]
 	\centering
@@ -179,9 +179,9 @@ The scaled-traffic scenarios behave as intended: growth\_6g lowers eMBB complian
 
 \section{The Digital Twin as an Approval Gate}
 \label{sec:gate}
-A Digital Twin is useful only if it can check a decision before the decision is applied. The unified environment now has such a gate. Before a cell's allocation is applied, the twin predicts the outcome of the next interval for the proposed allocation and for a safe fallback, using the environment's QoS model and the TGNN forecast of that interval's demand. The fallback is the expert rule tuned on the training days. The proposal is approved if its predicted reward is at least the fallback's; otherwise the fallback is applied. The gate works per cell.
+A Digital Twin is only useful if it can check a decision before the decision is applied, and the unified environment now has a gate that does this. Before a cell's allocation is applied, the twin predicts the outcome of the next interval for the proposed allocation and for a safe fallback. It uses the QoS model of the environment and the TGNN forecast of the demand in that interval. The fallback is the expert rule tuned on the training days. The proposal is approved if its predicted reward is at least that of the fallback, and otherwise the fallback is applied. The gate works cell by cell.
 
-The gate was measured on the held-out week with controllers whose proposals are sometimes bad, as happens when a learning agent explores online: the trained MARL actor with Gaussian noise of standard deviation $\sigma$ added to its logits, and an equal split. Table~\ref{tab:gate} gives the reward with and without the gate.
+We measured the gate on the held-out week with controllers whose proposals are sometimes bad, as when a learning agent explores online. These were the trained MARL actor with Gaussian noise of standard deviation $\sigma$ added to its logits, and an equal split. Table~\ref{tab:gate} gives the reward with and without the gate.
 
 \begin{table}[htbp]
 \centering
@@ -203,7 +203,7 @@ The gate has two sides. For a good controller ($\sigma=0$) it gives nothing: the
 
 \section{Checking the Surrogate Against a Packet-Level Simulator}
 \label{sec:simu5g}
-The QoS model of the environment is a calibrated surrogate. To test it against a packet-level simulator, a load sweep was run in Simu5G 1.7.0 (OMNeT++ 6.4, INET 4.7): one gNodeB, ten UEs, downlink UDP traffic of 1000-byte messages, with the offered load stepped from 11\% to 125\% of the measured capacity of 56.1 Mbps, three repetitions per point. Table~\ref{tab:simu5g_sweep} and Figure~\ref{fig:simu5g_sweep} give the delay.
+The QoS model of our environment is a calibrated surrogate. To test it against a packet-level simulator we ran a load sweep in Simu5G 1.7.0 (OMNeT++ 6.4, INET 4.7), with one gNodeB and ten UEs receiving downlink UDP traffic in messages of 1000 bytes. The offered load went from 11\% to 125\% of the measured capacity of 56.1 Mbps, with three repetitions per point. Table~\ref{tab:simu5g_sweep} and Figure~\ref{fig:simu5g_sweep} show the delay.
 
 \begin{table}[htbp]
 \centering
@@ -267,7 +267,7 @@ The Digital Twin has three roles in this work.
     \item \textbf{Scenario generation.} The 393.6-million-row dataset, six what-if scenarios and automated consistency checks allow controlled evaluation under different conditions.
     \item \textbf{Approval gate.} Section~\ref{sec:gate} shows that the twin can reject poor proposals before they are applied, which protects the result from a degraded controller.
 \end{itemize}
-The main limit is that QoS comes from a calibrated surrogate whose reference telemetry is itself simulated. The drop in the mean gap from 0.086 to 0.021 shows fit and is not independent validation, and the Simu5G sweep shows that the shape of the surrogate differs from a packet-level model. The twin therefore supports comparisons between controllers under stated assumptions; it is not yet validated for deployment decisions.
+The main limit is that the QoS comes from a calibrated surrogate whose reference telemetry is itself simulated. The fall of the mean gap from 0.086 to 0.021 shows a good fit, not an independent validation, and the Simu5G sweep shows that the shape of the surrogate differs from a packet-level model. The twin therefore supports comparisons between controllers under assumptions that we state; it has not been validated for deployment decisions.
 
 \section{Summary}
-In the unified environment, the TGNN forecast improves the expert rule by about 0.03 in reward at every network size, on all seven test days, recovering about one fifth of the gap to perfect knowledge. It has not been shown to improve the learned controller. Over the whole city the static split scores highest because the rule starves quiet slices, while in the dense block the predictive controller is best. The Digital Twin dataset supports six scenarios, including an energy-saving policy that cuts night-time energy by 19.6\% at a URLLC cost on awake cells. The twin works as an approval gate that protects the result from poor proposals, and a Simu5G sweep shows that the surrogate agrees with the simulator on ordering but not on the shape of the delay curve.
+In the unified environment the TGNN forecast improves the expert rule by about 0.03 in reward at every network size and on all seven test days, which closes about one fifth of the gap to perfect knowledge. We have not shown that it improves the learned controller. Over the whole city the static split scores highest, because the rule starves the quiet slices, while in the dense block the predictive controller is best. The Digital Twin dataset supports six scenarios, among them an energy-saving policy that cuts night-time energy by 19.6\% at a URLLC cost on the awake cells. The twin also works as an approval gate that protects the result from poor proposals, and a Simu5G sweep shows that the surrogate agrees with the simulator on the order of delays but not on the shape of the delay curve.

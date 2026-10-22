@@ -1,21 +1,21 @@
 \label{chap.7}
 \section{Allocation Problem}
 \label{sec:allocation_problem}
-The last learned component distributes the capacity of each cell between the eMBB, URLLC and mMTC slices. Every cell has an agent. It observes 17 local quantities (demand, utilisation and QoS of each slice, the previous allocation, time of day, and the forecast when one is provided) and outputs four non-negative numbers, normalised by a softmax into the shares of eMBB, URLLC, mMTC and idle capacity. The environment of Chapter~\ref{chap.4} then computes the QoS, the SLA outcomes and the reward. Cells interact only through interference, because the usable capacity of a cell falls when its neighbours are loaded.
+The last learned component shares the capacity of each cell between the eMBB, URLLC and mMTC slices. Every cell has its own agent. The agent sees 17 local quantities: the demand, utilisation and QoS of each slice, its previous allocation, the time of day, and the forecast when one is given. It outputs four non-negative numbers, and a softmax turns them into the shares of eMBB, URLLC, mMTC and idle capacity. The environment of Chapter~\ref{chap.4} then works out the QoS, the SLA outcomes and the reward. The cells affect each other only through interference, since the usable capacity of a cell drops when its neighbours are loaded.
 
 \section{Scalable MARL Design}
 \label{sec:scalable_marl}
-All cells use one parameter-shared actor, a network with 19{,}332 parameters that maps a cell's own observation to its allocation. Since the actor never sees other cells' observations, it can be copied to any network size. Training uses a centralised neighbourhood critic: it evaluates a cell's observation and action together with the mean observation and mean action of its grid neighbours. Each agent's reward mixes in its neighbours' rewards, which encourages local coordination.
+All cells share one actor, a network with 19{,}332 parameters that maps the observation of a cell to its allocation. The actor never looks at other cells, so the same copy works at any network size. Training uses a centralised critic that looks at the neighbourhood: it takes the observation and action of a cell together with the mean observation and mean action of its grid neighbours. The reward of each agent also contains a share of its neighbours' rewards, which pushes the agents to coordinate locally.
 
-The learning algorithm is a MADDPG-style actor--critic \cite{lowe2017} with a replay buffer of 50{,}000 transitions, a discount factor of 0.9, soft target updates with $\tau=0.01$, learning rates of $3\times10^{-4}$ for the actor and $10^{-3}$ for the critic, and exploration noise added in logit space. The earlier B5G trainer used the observed reward as a one-step target, because its offline samples are contextual-bandit decisions rather than interactions with a simulator.
+The learning algorithm is an actor--critic in the style of MADDPG \cite{lowe2017}. It uses a replay buffer of 50{,}000 transitions, a discount factor of 0.9, soft target updates with $\tau=0.01$, learning rates of $3\times10^{-4}$ for the actor and $10^{-3}$ for the critic, and exploration noise added in logit space. The earlier B5G trainer used the observed reward as a one-step target, because its offline samples are single decisions and not interactions with a simulator.
 
 \section{Evaluation Protocol}
 \label{sec:marl_protocol}
-Every result in this chapter follows one protocol. Agents train on days 1 to 40 of the recorded data. Days 41 to 44 are used only to choose a checkpoint or tune a rule. The test is the held-out week 16 to 22 December 2013, one reward per day, and the table entries are the mean over those seven days. Differences between two controllers are paired by day, and the interval quoted is a 95\% interval on the mean difference with a $t$ value for six degrees of freedom. Consecutive days are not independent, so these intervals describe the variation between days of this one week; they do not cover a different week or a different city. Learned policies are also averaged over several seeds, and the number of seeds is stated in each table.
+Every result in this chapter uses the same protocol. Agents train on days 1 to 40 of the recorded data. Days 41 to 44 are only used to pick a checkpoint or tune a rule. The test is the held-out week of 16 to 22 December 2013, with one reward per day, and each table entry is the mean of those seven days. We compare two controllers day by day and quote a 95\% interval on the mean difference, using a $t$ value for six degrees of freedom. Consecutive days are not independent, so the intervals only describe how much the days of this one week vary; they say nothing about another week or another city. Learned policies are also averaged over several seeds, and every table gives the number of seeds.
 
 \section{MARL versus a Single Central Agent}
 \label{sec:marl_comparison}
-The first question is whether the decomposition into local agents matters. A single central agent sees the observations of all cells and outputs all allocations at once. It was trained with two learning rates on the same data, reward and number of episodes. Table~\ref{tab:marl_scaling} shows the result at a budget of 1{,}000 episodes.
+The first question is whether splitting the problem into local agents matters. A single central agent sees the observations of all cells and outputs all the allocations at once. We trained it with two learning rates, on the same data, reward and number of episodes. Table~\ref{tab:marl_scaling} shows the result at a budget of 1{,}000 episodes.
 
 \begin{table}[htbp]
 \centering
@@ -38,7 +38,7 @@ The first question is whether the decomposition into local agents matters. A sin
 \label{fig:marl_scaling}
 \end{figure}
 
-The shared actor keeps both its size and its reward as the network grows, whereas the central agent's actor grows from 114{,}468 to 604{,}048 parameters (Table~\ref{tab:marl_parameter_growth}) and its reward falls from about 0.43 to 0.27--0.28. This supports the decomposition. The single agent also receives one learning step per episode step for a very large action space, and in these runs its reward during training fell instead of rising, so the result shows that this central baseline performs poorly, not that every centralised design would. Shared parameters are the natural way to make the problem tractable, and that is the point of the comparison.
+The shared actor keeps both its size and its reward as the network grows. The central actor, in contrast, grows from 114{,}468 to 604{,}048 parameters (Table~\ref{tab:marl_parameter_growth}) and its reward falls from about 0.43 to 0.27--0.28. This supports the split into local agents. The central agent has to learn a very large action space from one learning step per episode step, and in our runs its reward went down during training instead of up. So the result tells us that this central baseline works badly, not that every centralised design would. Sharing parameters is the natural way to keep the problem manageable, and that is the point of the comparison.
 
 \begin{table}[htbp]
 \centering
@@ -56,12 +56,12 @@ The shared actor keeps both its size and its reward as the network grows, wherea
 
 \section{Comparison with Properly Tuned Rules}
 \label{sec:marl_vs_tuned}
-Learning must also be compared with the strongest simple controller, not only with equal split. The expert rule gives URLLC and mMTC enough capacity to keep their utilisation at a target, and the rest to eMBB. Its default targets were chosen by hand. Two tuned versions were therefore built, using only the training days.
+A learned controller should also be compared with the strongest simple one, not only with an equal split. The expert rule gives URLLC and mMTC enough capacity to hold their utilisation at a target, and the rest to eMBB. Its default targets were picked by hand, so we built two tuned versions that use the training days only.
 \begin{itemize}
-\item \textbf{Simple tuned rule.} Two utilisation targets (URLLC and mMTC) are chosen by grid search on the training days. At 25 cells the search picks 0.4 and 0.4 and raises the held-out reward of the forecast-fed rule from 0.804 to 0.878.
+\item \textbf{Simple tuned rule.} Two utilisation targets, one for URLLC and one for mMTC, are chosen by grid search on the training days. At 25 cells the search picks 0.4 and 0.4, and the held-out reward of the forecast-fed rule rises from 0.804 to 0.878.
 \item \textbf{Rich tuned rule.} The targets are chosen separately for each four-hour block of the day and each of three cell classes (by traffic level), 18 pairs in total.
 \end{itemize}
-Table~\ref{tab:marl_scaling} shows that at 1{,}000 episodes the shared MARL controller is clearly better than the untuned rules but loses to the simple tuned rule at 25 and 100 cells. The budget was then raised to a long protocol: 4{,}000 episodes, the checkpoint with the best validation reward, and an average of several seeds' actors in logit space. Table~\ref{tab:marl_long} reports it.
+Table~\ref{tab:marl_scaling} shows that at 1{,}000 episodes the shared MARL controller is clearly better than the untuned rules, but at 25 and 100 cells it loses to the simple tuned rule. We therefore moved to a longer protocol: 4{,}000 episodes, the checkpoint with the best validation reward, and an average of the actors from several seeds in logit space. Table~\ref{tab:marl_long} gives the result.
 
 \begin{table}[htbp]
 \centering
@@ -84,10 +84,10 @@ Table~\ref{tab:marl_scaling} shows that at 1{,}000 episodes the shared MARL cont
 \label{fig:marl_best}
 \end{figure}
 
-Against the simple tuned rule, the learned controller is better on every one of the seven test days at 9, 25 and 100 cells, by 0.023 to 0.024 in reward. Against the rich tuned rule the difference is within about 0.005 and the intervals include zero at 25 and 100 cells. The off-policy controller therefore matches a carefully tuned, time-aware rule and beats a simply tuned one; it does not clearly beat the strongest hand-built rule. The on-policy learners of Section~\ref{sec:marl_ppo} do go beyond it. The 100-cell result rests on one seed, and its interval describes the seven days only.
+Against the simple tuned rule, the learned controller is better on each of the seven test days at 9, 25 and 100 cells, by 0.023 to 0.024 in reward. Against the rich tuned rule the difference is about 0.005 or less, and at 25 and 100 cells the intervals include zero. So the off-policy controller matches a carefully tuned rule that knows the time of day and beats a simply tuned one, but it does not clearly beat the strongest hand-built rule. The on-policy learners of Section~\ref{sec:marl_ppo} do go beyond it. The 100-cell result rests on one seed, and its interval only describes the seven days.
 
 \subsection{What the learned controller does}
-Table~\ref{tab:marl_diagnosis} compares the allocations. The learned controller gives URLLC and mMTC about twice the capacity that the untuned rule gives them (shares of 0.23 and 0.09 against 0.11 and 0.04), so that their SLAs are met almost always. It accepts a slightly lower eMBB service fraction, and the net effect is higher reward. This is a coherent policy and not a numerical accident, and it is what the tuned rule finds as well.
+Table~\ref{tab:marl_diagnosis} compares the allocations. The learned controller gives URLLC and mMTC about twice the capacity that the untuned rule gives them (shares of 0.23 and 0.09 against 0.11 and 0.04), so their SLAs are almost always met. It accepts a slightly lower share of eMBB demand served, and overall the reward is higher. This is a sensible policy and not an accident of the numbers, and the tuned rule ends up in the same place.
 
 \begin{table}[htbp]
 \centering
@@ -106,7 +106,7 @@ Equal split & 0.18 / 0.99 / 1.00 & 0.77 & 0.33 / 0.33 / 0.33 & 0.750 \\ \hline
 
 \section{Training Variants}
 \label{sec:marl_variants}
-Several ways of improving the learner were tried at 25 cells (Table~\ref{tab:marl_variants}). Adding explicit neighbour communication to the actor, an expert-residual policy (the actor outputs a correction to the rule's allocation), an expert-regularised loss in the style of TD3+BC \cite{fujimoto2021minimalist} and richer observations were all tried. None of them is clearly better than the plain shared actor trained for the long protocol and then averaged (the on-policy learners of Section~\ref{sec:marl_ppo} are the exception); an actor given richer observations does not beat the rich tuned rule (a difference of $-0.007\pm0.009$, better on 2 of 7 days). The single-seed variants should be read as indications, not as rankings.
+We tried several ways to improve the learner at 25 cells (Table~\ref{tab:marl_variants}): explicit communication between neighbouring actors, an expert-residual policy in which the actor outputs a correction to the allocation of the rule, a loss regularised towards the expert in the style of TD3+BC \cite{fujimoto2021minimalist}, and richer observations. None of them is clearly better than the plain shared actor trained with the long protocol and averaged. The on-policy learners of Section~\ref{sec:marl_ppo} are the exception. An actor with richer observations does not beat the rich tuned rule (a difference of $-0.007\pm0.009$, better on 2 of 7 days). The variants with one seed are only hints and should not be read as a ranking.
 
 \begin{table}[htbp]
 \centering
@@ -128,7 +128,7 @@ Long protocol with extra observations, ensemble & 2 & 0.892 \\ \hline
 
 \section{On-Policy Baselines}
 \label{sec:marl_ppo}
-Independent PPO (IPPO) and a MAPPO-style variant \cite{schulman2017ppo, yu2022mappo, dewitt2020ippo} were implemented for comparison with the off-policy design. The policy is a Gaussian over the four logits, advantages use generalised advantage estimation \cite{schulman2016gae} with $\lambda=0.95$ and $\gamma=0.9$ on the team reward, the clipping parameter is 0.2, and each update uses 10 episodes. IPPO gives each cell's actor and value function only its own observation. In MAPPO the value function also sees the mean observation of the cell's grid neighbours, the neighbourhood form of a centralised critic, as in the DDPG critic, while the actor stays local. Both were trained for 8{,}000 episodes with the same checkpoint rule. Table~\ref{tab:marl_ppo} gives the outcome. All 12 runs end at almost the same reward, between 0.907 and 0.908, whichever variant or seed is used. This is higher than the off-policy controller of the previous sections (0.904) and higher than the rich tuned rule (0.899): averaged over the runs the difference to the rich rule is +0.009 $\pm$ 0.002, with a gain on 7 of 7 days, and every single run beats the rich rule on all seven days. The true-next-demand rule, which uses information no deployable controller has, is still higher at 0.920. IPPO and MAPPO give the same result, so in this environment the neighbourhood term in the value function brings no measurable benefit. The near-identical outcome of independent seeds suggests that the on-policy learner reliably finds the same good allocation behaviour, and that the remaining gap to the oracle comes from demand that cannot be predicted ten minutes ahead.
+To compare with the off-policy design we also implemented independent PPO (IPPO) and a MAPPO-style variant \cite{schulman2017ppo, yu2022mappo, dewitt2020ippo}. The policy is a Gaussian over the four logits. Advantages come from generalised advantage estimation \cite{schulman2016gae} with $\lambda=0.95$ and $\gamma=0.9$ on the team reward, the clipping parameter is 0.2, and each update uses 10 episodes. In IPPO the actor and the value function of a cell only see that cell. In MAPPO the value function also sees the mean observation of the grid neighbours, which is the neighbourhood form of a centralised critic as in the DDPG critic, while the actor stays local. Both were trained for 8{,}000 episodes with the same checkpoint rule. Table~\ref{tab:marl_ppo} gives the outcome. All 12 runs end at almost the same reward, between 0.907 and 0.908, whichever variant or seed is used. This is higher than the off-policy controller of the previous sections (0.904) and higher than the rich tuned rule (0.899): averaged over the runs the difference to the rich rule is +0.009 $\pm$ 0.002, with a gain on 7 of 7 days, and every single run beats the rich rule on all seven days. The true-next-demand rule, which uses information no deployable controller has, is still higher at 0.920. IPPO and MAPPO give the same result, so in this environment the neighbourhood term in the value function brings no measurable benefit. The near-identical outcome of independent seeds suggests that the on-policy learner reliably finds the same good allocation behaviour, and that the remaining gap to the oracle comes from demand that cannot be predicted ten minutes ahead.
 
 \begin{table}[htbp]
 \centering
@@ -146,7 +146,7 @@ Shared DDPG, long protocol, ensemble & 3 & 0.904 & +0.026 & +0.005 \\ \hline
 
 \section{Robustness to Traffic Shifts}
 \label{sec:marl_shift}
-A controller trained on ordinary traffic may fail when traffic changes. The held-out week was therefore replayed with the two scenario multipliers of Chapter~\ref{chap.8}: 6G growth and a massive-IoT surge. Table~\ref{tab:marl_shift} gives the results for controllers that were not retrained.
+A controller trained on ordinary traffic may fail when the traffic changes. We therefore replayed the held-out week with the two scenario multipliers of Chapter~\ref{chap.8}, 6G growth and a massive-IoT surge. Table~\ref{tab:marl_shift} gives the results for controllers that were not retrained.
 
 \begin{table}[htbp]
 \centering
@@ -162,7 +162,7 @@ Massive IoT (mMTC $\times$10) & 0.666 & 0.725 & 0.735 & 0.672 & 0.685 \\ \hline
 \end{tabular}
 \end{table}
 
-Under shifted traffic the learned controllers lose a lot of reward, and a tuned rule that is re-tuned on the new traffic is clearly better. The forecast input helps the learned policy on ordinary traffic and under 6G growth (by about 0.03) and costs about 0.01 under the surge, so its effect is not consistent. Training on a mixture of scenarios addresses the problem (Table~\ref{tab:marl_robust}): the mixed-trained policy beats an expert re-tuned on each scenario's own training days at every traffic condition on the mean, with a gain that is statistically clear on ordinary traffic and under 6G growth and is within noise under the massive-IoT surge.
+When the traffic shifts, the learned controllers lose a lot of reward, and a rule that is re-tuned on the new traffic is clearly better. The forecast input helps the learned policy on ordinary traffic and under 6G growth (by about 0.03) and costs about 0.01 under the surge, so its effect is not consistent. Training on a mixture of scenarios solves the problem (Table~\ref{tab:marl_robust}). The policy trained on the mixture beats an expert re-tuned on the training days of each scenario in every traffic condition on average. The gain is clear on ordinary traffic and under 6G growth, and it is within noise under the massive-IoT surge.
 
 \begin{table}[htbp]
 \centering
@@ -180,9 +180,9 @@ Massive IoT & 0.738 & +0.003 $\pm$ 0.003 & 6/7 \\ \hline
 
 \section{Earlier B5G MADDPG Development}
 \label{sec:b5g-maddpg}
-Before the unified Milan environment existed, MADDPG was implemented on the B5G network-slicing release. The environment loads graph, routing and slice data and creates one observation for each node that originates at least one flow. The policy uses a shared actor and a critic that evaluates the local state and allocation. Initial comparisons included equal allocation, a rule-based heuristic and an untrained actor.
+Before the unified Milan environment existed, we implemented MADDPG on the B5G network-slicing release. The environment loads the graph, routing and slice data and makes one observation for every node that starts at least one flow. The policy is a shared actor with a critic that looks at the local state and allocation. The first comparisons used equal allocation, a rule-based heuristic and an untrained actor.
 
-During development, slice identifiers were found to restart across slice types. Using the identifier alone as the agent key merged the records of eMBB, URLLC and mMTC and invalidated the statistics, so results affected by the error were excluded. The B5G release also lacks populated latency and packet-loss fields, which an SLA-based reward needs. These experiments therefore show that the replay, training and evaluation pipeline runs, but they do not show that the learned policy improves real QoS.
+While developing it we found that the slice identifiers restart for each slice type. Using the identifier alone as the agent key therefore mixed up the records of eMBB, URLLC and mMTC and made the statistics invalid, so we excluded the affected results. The B5G release also has no usable latency and packet-loss fields, which an SLA-based reward needs. These experiments show that the replay, training and evaluation pipeline runs, but they do not show that the learned policy improves real QoS.
 
 \section{Chapter Conclusion}
 \label{sec:marl-conclusion}

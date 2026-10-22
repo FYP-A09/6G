@@ -42,7 +42,7 @@ Our pipeline has four stages (Table~\ref{tab:pipeline}). A self-supervised learn
 \subsection{Contributions}
 Each contribution below is supported by experiments in the later chapters, and the limits of each are stated there.
 \begin{enumerate}
-	\item \textbf{A unified slicing environment.} No public dataset combines topology, per-slice traffic, quality of service (QoS) and allocation actions. We built an environment from real Telecom Italia Milan traffic, with latency calibrated on a public 6G radio access network (RAN) telemetry dataset, in which every component is marked real, calibrated or modelled.
+	\item \textbf{A unified slicing environment.} No public dataset combines topology, per-slice traffic, quality of service (QoS) and allocation actions. We built one from real Telecom Italia Milan traffic, with latency calibrated on a public 6G radio access network (RAN) telemetry dataset, and we mark every component as real, calibrated or modelled.
 	\item \textbf{A fair evaluation of MARL.} A parameter-shared controller keeps a fixed-size actor from 9 to 100 cells while a central agent does not scale. Against expert rules tuned on the training days, it wins on all seven test days at every size (by 0.023 to 0.026 in reward), and an on-policy PPO-family learner also beats a rule tuned per time of day and cell class (by 0.009 at 25 cells, on every test day), whereas the off-policy learner only matches that rule.
 	\item \textbf{A measurement of what prediction is worth.} Giving the expert rule the TGNN forecast raises its reward by about 0.03 on every test day, about one fifth of the gap to perfect knowledge. The benefit to the learned controller is not established.
 	\item \textbf{A city-scale forecasting finding.} A forecaster trained only on the dense centre was 10.8 times worse than persistence in the outer city. Per-cell scaling, random spatial patches and more training days fixed this, and the retrained forecaster beats persistence in all 10{,}000 cells (18\%, 33\% and 31\% lower error for the three slices).
@@ -54,10 +54,10 @@ Each contribution below is supported by experiments in the later chapters, and t
 \subsection{Scope}
 The thesis does not cover the following.
 \begin{itemize}
-	\item A packet-level simulator inside the training loop. QoS comes from a calibrated surrogate, and the telemetry used for calibration is itself simulated. The project's own 19-gNodeB scenario is not connected to Simu5G; only a single-cell load sweep was run.
+	\item A packet-level simulator inside the training loop. The QoS comes from a calibrated surrogate, and the telemetry used to calibrate it is itself simulated. Our own 19-gNodeB scenario is not connected to Simu5G; we only ran a single-cell load sweep.
 	\item A statistically wide evaluation. Results use one held-out week (seven days), at most three seeds per learned controller (one at 100 cells), and one city.
 	\item Deployment on a live or emulated network. The prototype replays recorded days.
 \end{itemize}
 
 \subsection{Organisation}
-Chapter~\ref{chap.2} reviews the literature and the research gap. Chapter~\ref{chap.3} describes the datasets and their preparation. Chapter~\ref{chap.4} presents the system design, the problem formulation and the unified environment. Chapters~\ref{chap.5}, \ref{chap.6} and \ref{chap.7} cover self-supervised representation learning, temporal GNN forecasting and MARL for slice allocation. Chapter~\ref{chap.8} gives the integrated evaluation, the Digital Twin dataset, the approval gate and the Simu5G check. Chapter~\ref{chap.9} describes the Slice Twin prototype, and Chapter~\ref{chap.10} concludes with limitations and future work.
+Chapter~\ref{chap.2} reviews the literature and the research gap, and Chapter~\ref{chap.3} describes the datasets and how we prepared them. Chapter~\ref{chap.4} presents the system design, the problem formulation and the unified environment. Chapters~\ref{chap.5}, \ref{chap.6} and \ref{chap.7} cover self-supervised representation learning, temporal GNN forecasting and MARL for slice allocation. Chapter~\ref{chap.8} gives the integrated evaluation, the Digital Twin dataset, the approval gate and the Simu5G check. Chapter~\ref{chap.9} describes the Slice Twin prototype, and Chapter~\ref{chap.10} ends with the limitations and future work.
