@@ -42,6 +42,9 @@ ROOT = Path(__file__).resolve().parents[2]
 MODEL = ROOT / "data" / "processed" / "unified" / "tgnn_city_forecaster_v2.pt"
 DAY = 144
 TRAIN_DAYS, VAL_DAYS, TEST_DAYS = (0, 41), (41, 45), (45, 52)
+# Days that are never used as training targets or in the scale statistics: 5 and 6 (5-6 Nov) are the test
+# days of the MARL experiments and the demo day of the monitor, so forecasts there are out of sample.
+EXCLUDE_DAYS = (5, 6)
 PATCH, F_IN = 32, 9
 torch.set_num_threads(8)
 
@@ -109,7 +112,7 @@ def train(grid, scale, cs, epochs=20, steps=1500, seed=0):
     model = CityTGNN()
     opt = torch.optim.Adam(model.parameters(), lr=1e-3)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=epochs * steps)
-    fit_t = np.arange(DAY + WINDOW, TRAIN_DAYS[1] * DAY - 1)
+    fit_t = np.array([t for t in range(DAY + WINDOW, TRAIN_DAYS[1] * DAY - 1) if (t + 1) // DAY not in EXCLUDE_DAYS])
     val_t = np.arange(VAL_DAYS[0] * DAY, VAL_DAYS[1] * DAY - 1, 7)
     val_patches = [(r, c) for r, c in ((34, 34), (2, 2), (60, 10), (10, 64), (66, 66), (45, 45))]
     idx = lambda r, c: np.array([(r + i) * GRID + c + j for i in range(PATCH) for j in range(PATCH)])
@@ -167,11 +170,12 @@ def main():
     grid = full_grid(BASE / "milan_full_grid_62d.npy")
     # per-cell scale and time-of-day average from the training days only, streamed day by day
     acc, p95_parts = np.zeros((DAY, GRID * GRID, 3)), []
-    for d in range(*TRAIN_DAYS):
+    days = [d for d in range(*TRAIN_DAYS) if d not in EXCLUDE_DAYS]
+    for d in days:
         day = load_range(grid, scale, d * DAY, (d + 1) * DAY)
         acc += day
         p95_parts.append(np.percentile(day, 95, axis=0))
-    tod_mean = (acc / (TRAIN_DAYS[1] - TRAIN_DAYS[0])).astype(np.float32)
+    tod_mean = (acc / len(days)).astype(np.float32)
     p95 = np.median(np.stack(p95_parts), axis=0)                 # typical daily 95th percentile per cell
     cs = np.maximum(p95, 0.01 * np.percentile(p95, 95, axis=0)).astype(np.float32)
     print(f"stats from {TRAIN_DAYS[1]} training days ({time.time() - t_start:.0f}s)", flush=True)
@@ -194,7 +198,7 @@ def main():
     f1 = v1.predict(m1, D, cs1, t0=t0)                           # v1 forecast[t] = prediction of t+1
     fc["tgnn_v1_5days"] = f1[ts - t0].astype(np.float32)
 
-    report = {"split_days": {"train": TRAIN_DAYS, "validation": VAL_DAYS, "test": TEST_DAYS,
+    report = {"split_days": {"train": TRAIN_DAYS, "excluded_days": EXCLUDE_DAYS, "validation": VAL_DAYS, "test": TEST_DAYS,
                              "test_dates": f"{START + dt.timedelta(TEST_DAYS[0])} to {START + dt.timedelta(TEST_DAYS[1] - 1)}"},
               "val_history": hist, "regions": {}}
     for name, m in regions().items():

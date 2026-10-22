@@ -91,3 +91,20 @@
       has no effect (episodes are one-step with `done=True`, so target networks are never
       used). (3) 50 test samples, single seed. Extending the reward (item above) is what
       would make this comparison meaningful.
+
+## Update 22 Oct 2026: MARL retrained properly on the unified environment
+
+The B5G MADDPG result above is unchanged, but the question "does MARL help?" was re-run on the unified
+Milan environment with a real training budget (`src/unified/marl_v2*.py`, full write-up in
+`docs/Unified_Data_and_MARL.md` section 2). The first unified study (5 training days, 300 episodes) under-trained
+every learner and is superseded.
+
+- Training on 40 days, tested on a held-out week (16-22 Dec), with the TGNN v2 forecast as input.
+- **Single agent vs MARL:** single agent 0.44 / 0.34 / 0.28 at 9 / 25 / 100 cells (two learning rates tried);
+  MARL 0.93 / 0.83 / 0.86 (1,000 episodes, 2 seeds; 100 cells 1 seed), with a constant 19,332-parameter actor.
+- **Against a fair rule baseline:** the expert headroom rule with its two utilisation targets tuned by grid search
+  on the training days scores 0.878 at 25 cells. MARL with 4,000 episodes and the checkpoint chosen on validation
+  days scores 0.899 / 0.899 / 0.903 (ensemble 0.904): +0.022 to +0.027 over the tuned rule, on 7 of 7 test days.
+  With 1,000 to 2,000 episodes and the final checkpoint it only ties the tuned rule.
+- Neighbour communication and an expert-residual start added nothing; an expert-regularised actor loss did not help.
+- When the traffic mix changes (6G growth, massive IoT) and nothing is retrained, MARL is worse than the tuned rule.

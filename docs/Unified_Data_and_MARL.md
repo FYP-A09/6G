@@ -3,7 +3,7 @@
 Response to the supervisor's review comments (12 Oct 2026):
 
 1. Look for unified data that connects everything.
-2. Why MARL, why not a single agent?
+2. Why MARL, why not a single agent? (section 2)
 3. If unified data is not available, create it synthetically.
 4. Which datasets do the papers use?
 
@@ -108,91 +108,160 @@ can be varied.
 
 ## 2. Why MARL and not a single agent?
 
-We tested it on the unified environment. Both methods are DDPG with the same reward,
-the same training budget (300 episodes of 6 hours, 10,300 updates) and the same test
-days (the last 2 of 7 real Milan days, never seen in training). 3 seeds each, at 9, 25,
-49 and 100 cells.
+Every number below is on a **held-out week** (16-22 Dec 2013, days 45-51), never used for training,
+tuning or checkpoint choice; the unit is the mean reward of one day, 7 days per run. Controllers are trained
+on days 1-40 and see the TGNN v2 forecast (section 5). Reward 1.0 means every SLA met and all demand served.
+Code: `src/unified/marl_v2*.py`; results: `reports/unified/marl_v2_*.json`.
 
-- **Single agent:** one centralised actor sees every cell (state = N x 17) and outputs
-  every cell's slice shares (N x 4). Its learning rate was tuned first: 5 settings on a
-  validation day, best actor lr = 1e-4 (`reports/unified/single_agent_sweep.json`).
-- **MARL:** one actor shared by all cells, each acting on its own 17 local features;
-  a critic that also sees the mean of its grid neighbours' observations and actions;
-  a team reward that mixes each cell's reward with its neighbours'.
+Two learners, the same reward and the same training budget:
 
-Held-out reward (mean ± sd over 3 seeds; 1.0 = every SLA met and all demand served):
+- **Single agent:** one centralised actor sees every cell (state = N x 17) and outputs every cell's slice
+  shares (N x 4). Run with two actor learning rates (1e-4 and 3e-4); the better is reported.
+- **MARL:** one actor shared by all cells, each acting on its own 17 local features, with a critic that also
+  sees the mean of its grid neighbours' observations and actions and a team reward mixing each cell's reward
+  with its neighbours'.
 
-| Cells | MARL | Single agent (tuned) | Equal split | Expert rules, current demand | Expert rules + TGNN forecast | Expert rules + perfect forecast |
+And three non-learning references, because beating a badly tuned rule proves little:
+
+- **Equal split.**
+- **Expert rules:** URLLC and mMTC capacity sized to a target utilisation, the rest to eMBB. The *untuned* version
+  uses hand-set targets (0.50 / 0.65). The *tuned* version has those two targets chosen by grid search on the training
+  days (for 25 cells: 0.4 / 0.4), with the forecast or with current demand.
+- **Expert rules on the true next demand** (an upper bound for this rule).
+
+### 2.1 The single agent does not scale; MARL does
+
+1,000 episodes for every learner, final checkpoint, 2 seeds (100 cells: 1 seed):
+
+| Cells | MARL | Single agent (best of 2 rates) | Equal split | Expert, untuned + forecast | Expert, tuned + forecast | Actor parameters, MARL / single |
 |---|---|---|---|---|---|---|
-| 9 | **0.767 ± 0.018** | 0.411 ± 0.038 | 0.761 | 0.783 | 0.842 | 0.929 |
-| 25 | **0.765 ± 0.042** | 0.300 ± 0.027 | 0.731 | 0.755 | 0.802 | 0.898 |
-| 49 | **0.758 ± 0.049** | 0.275 ± 0.014 | 0.712 | 0.734 | 0.782 | 0.876 |
-| 100 | **0.769 ± 0.030** | 0.273 ± 0.002 | 0.713 | 0.739 | 0.790 | 0.880 |
+| 9 | **0.926** (0.929, 0.923) | 0.442 | 0.785 | 0.825 | 0.909 | 19,332 / 114,468 |
+| 25 | **0.833** (0.894, 0.773) | 0.337 | 0.750 | 0.804 | 0.877 | 19,332 / 200,548 |
+| 100 | **0.857** (0.857) | 0.284 | 0.735 | 0.794 | 0.865 | 19,332 / 604,048 |
 
-| Cells | MARL actor parameters | Single-agent actor parameters | Single-agent input / output size |
-|---|---|---|---|
-| 9 | 19,332 | 114,468 | 153 / 36 |
-| 25 | 19,332 | 200,548 | 425 / 100 |
-| 49 | 19,332 | 329,668 | 833 / 196 |
-| 100 | 19,332 | 604,048 | 1,700 / 400 |
+- **The single agent is far worse at every size and gets worse as the network grows** (0.442 at 9 cells, 0.284 at 100),
+  below even equal split. This is not a learning-rate effect: both rates give about the same result, and its training reward
+  barely moves between episodes 500 and 1,000 at 25 and 100 cells (0.31 to 0.32; 0.28 to 0.28). Its input and output grow with the number of cells (400 outputs at 100 cells) and its actor with them.
+- **MARL's actor stays at 19,332 parameters** at every size, because every cell's experience trains the same actor.
+  It can be applied to a network of any size.
+- **It matches how a RAN is run:** each cell decides from its own and its neighbours' measurements, with no central
+  controller collecting the whole network's state every 10 minutes and no single point of failure.
+- **With this short budget MARL is about level with the tuned expert rules** (better at 9 cells, worse at 25 and 100: 0.926 vs 0.909 at 9 cells, 0.833 vs 0.877 at 25,
+  0.857 vs 0.865 at 100), and at 25 cells the two seeds disagree (0.894, 0.773). Section 2.2 shows what longer training does.
 
-Per-slice SLA rate at 100 cells: MARL eMBB 0.57, URLLC 0.98, mMTC 0.39, demand served
-0.89; single agent eMBB 0.21, URLLC 0.35, mMTC 0.24, demand served 0.27.
+### 2.2 Trained long enough, MARL beats the tuned expert rules (25 cells)
 
-What this shows:
+The 1,000-episode runs were still improving. With **4,000 episodes and the checkpoint chosen on validation days 41-44**
+(`marl_v2_best.py`), three seeds reach 0.899, 0.899, 0.903, and the average of the three actors is **0.904**.
 
-1. **The single agent does not scale.** Its input and output grow with the number of
-   cells (400 outputs at 100 cells) and so does its network (114k → 604k parameters).
-   Its reward falls from 0.41 to 0.27 as the network grows and it is below the
-   equal-split baseline at every size. It mostly learns to leave capacity idle.
-2. **MARL does not depend on network size.** The shared actor has the same 19,332
-   parameters at 9 or 100 cells, every cell's experience trains it (more cells = more
-   data, not a harder problem), and its reward stays at 0.76–0.77 at every size.
-   A trained actor can be applied to a network of any size without retraining.
-3. **It fits how a RAN is run.** Each cell decides from its own measurements and its
-   neighbours', so there is no central controller to collect the whole network's state
-   every 10 minutes and no single point of failure.
-4. **MARL learns the expert rules, but not more.** It matches or slightly beats the
-   hand-written expert policy on current demand (within one standard deviation), and it
-   stays below the expert policy given the TGNN forecast (0.79–0.84).
+| 25 cells, held-out week | Reward |
+|---|---|
+| Equal split | 0.750 |
+| Expert rules, untuned, current demand | 0.775 |
+| Expert rules, untuned, with forecast | 0.804 |
+| Expert rules, tuned, current demand | 0.847 |
+| Expert rules, tuned, with forecast | 0.877 |
+| MARL, 2,000 episodes, final checkpoint, 3 seeds | 0.881 ± 0.021 |
+| **MARL, 4,000 episodes, validation-selected, 3 seeds** | **0.900** (0.899, 0.899, 0.903) |
+| **MARL, ensemble of those 3 actors** | **0.904** |
+| Expert rules on the true next demand (upper bound for the rule) | 0.920 |
 
-Honest limits:
-- Equal training budget. A centralised agent trained much longer, or with a
-  factorised action space, may do better; with the same budget it does not.
-- Decision time is not a differentiator at this size: both take about 0.1–0.2 ms
-  per decision on a CPU.
-- Forecast as an MARL input (25 cells, 3 seeds): no forecast 0.778 ± 0.039, TGNN
-  forecast 0.765 ± 0.042, perfect forecast 0.762 ± 0.047. The forecast does not help
-  the learned agent at this training budget, while the same forecast lifts the expert
-  rules by about 0.05 at every size. So today the TGNN's value is shown through the
-  expert controller; making MARL use it is the next step.
+- **MARL beats the tuned expert with the forecast by +0.026 (95% CI +/-0.005) for the ensemble, positive on 7 of 7 days;**
+  each seed alone gains +0.022, +0.022, +0.025, also on 7 of 7 days. Against the tuned expert on current demand it gains +0.057.
+- **Where the gain comes from** (`marl_v2_diagnosis.json`): MARL reserves about twice the expert's capacity for URLLC and mMTC
+  (23% / 9% of each cell against 11% / 4%),
+  so those slices meet their SLA 99% / 100% of the time against 80% / 61%,
+  and it gives up a little eMBB (68% against 72% SLA, 92.4% against 94.8% of demand served).
+  That is the trade the reward asks for, found from data rather than set by hand. The grid-searched expert finds a similar
+  trade with two numbers, which is why it is the right opponent.
+- **Tricks that did not help.** Letting each actor see its neighbours' observations (0.899), starting from the tuned expert and learning a
+  correction (0.894), or both (0.892), single seed each, add nothing measurable to plain MARL trained long (0.899-0.903).
+  An expert-regularised actor loss (TD3+BC form) without the forecast reached 0.844 (3 seeds), no better than plain MARL.
+- **Seed instability matters.** The final-checkpoint runs span 0.864-0.904; choosing the checkpoint on validation days removes most of that spread (0.899-0.903) and is what turns "ties the expert" into "beats it".
 
-TGNN forecast quality on the test days (mean squared error, Mbps², next 10 minutes):
-eMBB 53.9 vs 61.2 for persistence (12% better), URLLC 0.92 vs 1.30 (29%), mMTC 0.52 vs
-0.71 (27%).
+![MARL against references](figures/unified_marl_best.png)
+![Reward against network size](figures/unified_marl_vs_single.png)
 
-**Does the forecaster generalise to the whole city?** At first, no. The forecaster
-trained on the 100 central cells was applied to all 10,000 Milan cells on the same two
-held-out days. On the 9,600 quiet outer cells its eMBB error was 10.8x that of persistence,
-because it had learned the centre's traffic level and over-predicted those cells by about 6 Mbps.
+### 2.3 The forecast helps both controllers; a changed traffic mix does not favour MARL
 
-We fixed the cause rather than the symptom (`src/unified/forecast_city.py`):
-- each cell's traffic is divided by its own training-period 95th percentile
-- every training step uses a random 32 x 32 patch of the grid
+- **Expert rules.** On the held-out week the TGNN forecast lifts the untuned expert by +0.029 reward (95% CI +/-0.006, positive on 7/7 days at 25 cells, similar at 9, 49 and 100),
+  recovering about 20% of the gap to the true next demand; the tuned expert gains +0.030.
+  "Same time yesterday" used as the forecast is *worse* than current demand (0.758 vs 0.775).
+  The first study, on 2 test days, had shown +0.04 to +0.05.
+- **MARL.** With the forecast MARL scores 0.881 ± 0.021 and without it 0.851 ± 0.077 (3 seeds each, 2,000 episodes, final checkpoint): a gain of
+  +0.030, but the seeds overlap, so it is not established. The earlier "forecast does not help MARL" result (0.765 vs 0.778) came from a 300-episode run on 5 days and is superseded.
+- **A changed traffic mix.** Trained and tuned on ordinary traffic and scored *without retraining* on a 6G-growth mix (eMBB x1.3, URLLC x2, mMTC x3) and a massive-IoT mix (mMTC x10):
 
-Same model, same training days. Result, `reports/unified/forecast_city.json`, improvement over
-persistence on the held-out days:
+| Held-out week | Equal split | Tuned expert + forecast | MARL + forecast | MARL, no forecast |
+|---|---|---|---|---|
+| Recorded traffic | 0.750 | 0.877 | 0.881 ± 0.021 | 0.851 ± 0.077 |
+| 6G-growth mix | 0.615 | 0.762 | 0.724 ± 0.028 | 0.692 ± 0.062 |
+| Massive-IoT mix | 0.666 | 0.725 | 0.672 ± 0.024 | 0.685 ± 0.015 |
 
-| Cells | Block forecaster (eMBB / URLLC / mMTC) | City forecaster (eMBB / URLLC / mMTC) |
+  The trained controllers lose to the hand-tuned rule once the mix changes. So the case for MARL here is *finding the policy from data without hand
+  tuning and scaling to any number of cells*, not robustness to shifts it was not trained on.
+
+### 2.4 What this does and does not show
+
+1. Against a single centralised agent, shared-parameter MARL is much better and scales; this is the answer to "why not a single agent".
+2. Against a well-tuned rule, MARL is better by about 0.03 reward at 25 cells when trained long with checkpoint selection, and only equal to it with a short budget.
+3. The result at 25 cells has not been repeated at 9 and 100 cells with the long protocol (4,000 episodes would take hours at 100 cells), 100 cells has one seed in the scaling table, and every number is one
+   region, one week and a calibrated surrogate environment, not a packet-level simulator.
+4. The expert baseline has two tuned numbers; a richer tuned baseline (per-hour targets, per-cell targets) might close part of the gap.
+5. Decision time is not a differentiator at this size: both take about 0.1-0.2 ms per decision on a CPU.
+
+The first study (`reports/unified/results.json`: 5 training days, 300 episodes, 2 test days) is **superseded** by everything above.
+It under-trained both learners and is kept only for the record.
+
+## 5. The forecaster (TGNN v2) and self-supervised learning
+
+**Forecaster** (`src/unified/forecast_city_v2.py`; `reports/unified/forecast_city_v2.json`). The GraphSAGE + GRU model, trained on 39 real days (days 5 and 6 held out entirely),
+random 32 x 32 patches of the grid, per-cell scaling, "same time yesterday" and time of day as inputs, a residual head with no ceiling, validation on days 41-44.
+Test: the held-out week, every one of the 10,000 cells. Improvement in mean squared error over repeating the last value:
+
+| Cells | Trained on 5 days (earlier) | Trained on 39 days (v2) |
 |---|---|---|
-| 100 block cells | +12% / +30% / +27% | **+24% / +36% / +27%** |
-| 300 cells around the block | -8% / -30% / -34% | **+19% / +30% / +19%** |
-| 9,600 outer cells | -985% / -101% / -100% | **+19% / +27% / +11%** |
-| All 10,000 cells | -635% / -74% / -75% | **+19% / +29% / +14%** |
+| 100 block cells | -12% / +17% / +21% | **+21% / +36% / +35%** |
+| 300 cells around | -49% / +8% / +7% | **+15% / +33% / +32%** |
+| 9,600 outer cells | -34% / +9% / +5% | **+18% / +34% / +31%** |
+| All 10,000 cells | -34% / +9% / +7% | **+18% / +33% / +31%** |
 
-The city forecaster is also better on the block it was not specifically trained for, and
-its bias on the outer cells drops from +6.2 to +0.16 Mbps. The Slice Twin app's City
-view uses it.
+(eMBB / URLLC / mMTC.) Training length was the problem: the 5-day version of the same model is worse than persistence on eMBB in this week.
+A first forecaster trained only on the 100 central cells over-predicted the quiet outer cells and was 10.8 times worse than persistence there, which is why the
+city version uses per-cell scaling and patch training. Seasonal baselines are much worse than persistence at a 10-minute horizon
+("same time yesterday": 7 to 8 times its eMBB error; 4.7 times in an independent check on raw data), so persistence is the baseline to beat.
+![City forecaster](figures/unified_forecast_city.png)
 
-Figures: `docs/figures/unified_marl_vs_single.png`, `unified_prediction_value.png`,
-`unified_forecast_ablation.png`.
+**Self-supervised learning** (`src/unified/ssl_nidd.py`; `ssl_nidd.json`, `ssl_nidd_scarf.json`). The first 5G-NIDD evaluation was flawed:
+807,235 of 1,215,890 flows (66%) are exact duplicates, so identical flows sat in both train and test, and row-index columns leaked identity.
+After de-duplication (408,655 flows), dropping identifier columns, a stratified split, and nine attack classes, we tested masked-feature and contrastive (SCARF) pretraining with 50 to all labelled flows:
+
+| Labelled flows | Raw features, LightGBM | Raw features, MLP | SSL embedding (masked), logistic regression | Fine-tuned encoder (contrastive) | Raw + contrastive embedding |
+|---|---|---|---|---|---|
+| 50 | 0.643 | 0.694 | 0.627 | 0.688 | 0.690 |
+| 200 | 0.852 | 0.858 | 0.763 | 0.850 | 0.848 |
+| 1,000 | 0.905 | 0.895 | 0.859 | 0.894 | 0.888 |
+| 5,000 | 0.919 | 0.911 | 0.901 | 0.901 | 0.915 |
+| 20,000 | 0.932 | 0.924 | 0.913 | 0.925 | 0.924 |
+| all | 0.936 | 0.925 | 0.912 | 0.929 | 0.926 |
+
+Macro-F1 on 81,731 unseen flows (5 label draws up to 5,000 labels, 2 above). Raw features reach 0.926 to 0.936, against the old 0.708, so most of the earlier gap was the leakage.
+**Pretraining never gives a reliable advantage over raw features at any label budget**: it is no better than the best raw-feature model at any budget (at 50 labels LightGBM itself is the weakest, but a raw-feature MLP or logistic regression, 0.694 and 0.704, beats the fine-tuned encoder, 0.688), it ties with all labels, and it adds at most +0.014 to a linear model at 1,000 to 5,000 labels.
+This is a negative result and is reported as one.
+![SSL label efficiency](figures/unified_ssl_label_efficiency.png)
+
+## Regenerate
+
+```bash
+python src/unified/forecast_city_v2.py          # city forecaster v2 (about 45 min on CPU)
+python src/unified/forecast_value_v2.py         # value of the forecast to the expert rules, held-out week
+python src/unified/marl_v2.py refs              # reference policies; ddpg_fc / bc_fc / bc_nofc for the variants
+python src/unified/marl_v2_tuned_expert.py      # expert rules tuned on the training days
+python src/unified/marl_v2_scaling.py 3         # also 5 and 10; then marl_v2_scaling_refs.py
+python src/unified/marl_v2_best.py train 0      # also 1 and 2; then: marl_v2_best.py report
+python src/unified/marl_v2_plus.py comm 0       # also res, comm_res; then: marl_v2_plus.py report
+python src/unified/marl_v2_shift.py ddpg_fc     # also ddpg_nofc, experts
+python src/unified/marl_v2_diagnose.py
+python src/unified/ssl_nidd.py ; python src/unified/ssl_nidd.py scarf
+python src/unified/figures.py
+```

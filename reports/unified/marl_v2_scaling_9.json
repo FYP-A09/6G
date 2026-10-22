@@ -1,0 +1,108 @@
+{
+  "cells": 9,
+  "episodes": 1000,
+  "runs": [
+    {
+      "config": "marl",
+      "seed": 0,
+      "mean": 0.9293,
+      "per_day": [
+        0.923,
+        0.9154,
+        0.9096,
+        0.9112,
+        0.9173,
+        0.9573,
+        0.9709
+      ],
+      "actor_params": 19332,
+      "train_seconds": 384,
+      "last_100_train_reward": 0.922
+    },
+    {
+      "config": "single_lr1e-4",
+      "seed": 0,
+      "mean": 0.4565,
+      "per_day": [
+        0.4529,
+        0.4514,
+        0.4366,
+        0.4423,
+        0.4509,
+        0.4748,
+        0.4867
+      ],
+      "actor_params": 114468,
+      "train_seconds": 637,
+      "last_100_train_reward": 0.4546
+    },
+    {
+      "config": "single_lr3e-4",
+      "seed": 0,
+      "mean": 0.4286,
+      "per_day": [
+        0.4308,
+        0.4168,
+        0.4095,
+        0.4241,
+        0.4183,
+        0.4579,
+        0.4426
+      ],
+      "actor_params": 114468,
+      "train_seconds": 629,
+      "last_100_train_reward": 0.4455
+    },
+    {
+      "config": "marl",
+      "seed": 1,
+      "mean": 0.9226,
+      "per_day": [
+        0.9185,
+        0.9096,
+        0.9015,
+        0.9042,
+        0.9104,
+        0.9537,
+        0.9605
+      ],
+      "actor_params": 19332,
+      "train_seconds": 481,
+      "last_100_train_reward": 0.9127
+    },
+    {
+      "config": "single_lr1e-4",
+      "seed": 1,
+      "mean": 0.4093,
+      "per_day": [
+        0.4204,
+        0.4153,
+        0.3994,
+        0.3983,
+        0.4083,
+        0.409,
+        0.4144
+      ],
+      "actor_params": 114468,
+      "train_seconds": 639,
+      "last_100_train_reward": 0.4285
+    },
+    {
+      "config": "single_lr3e-4",
+      "seed": 1,
+      "mean": 0.4549,
+      "per_day": [
+        0.4521,
+        0.447,
+        0.4455,
+        0.4411,
+        0.4497,
+        0.4646,
+        0.4842
+      ],
+      "actor_params": 114468,
+      "train_seconds": 616,
+      "last_100_train_reward": 0.4347
+    }
+  ]
+}

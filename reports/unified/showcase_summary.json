@@ -31,18 +31,18 @@
   },
   "predictive": {
     "sla_ok": {
-      "eMBB": 0.5886,
-      "URLLC": 0.8656,
-      "mMTC": 0.6806
+      "eMBB": 0.5915,
+      "URLLC": 0.8237,
+      "mMTC": 0.6108
     },
     "sla_ok_during_events": {
-      "eMBB": 0.1238,
-      "URLLC": 0.6906,
-      "mMTC": 0.7459
+      "eMBB": 0.1303,
+      "URLLC": 0.2769,
+      "mMTC": 0.3974
     },
-    "mean_reward": 0.7903,
-    "served_fraction": 0.8489,
-    "cell_intervals_all_slices_ok": 0.351
+    "mean_reward": 0.7684,
+    "served_fraction": 0.8503,
+    "cell_intervals_all_slices_ok": 0.2904
   },
   "oracle": {
     "sla_ok": {

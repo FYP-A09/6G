@@ -85,3 +85,26 @@
       `src/ssl/neversnet_ssl.py`. It processes one UE CSV at a time and was
       validated on a real sample file; full-dataset execution requires the
       teammate's complete part folders.
+
+## Update 21 Oct 2026: SSL retrained and re-evaluated properly
+
+The first evaluation above is superseded. It fed a linear classifier all labelled flows, where
+self-supervised pretraining is not expected to help, and it had two flaws: 2/3 of the 1.2 M
+5G-NIDD flows are exact duplicates (so identical flows sat in both train and test), and the
+row index, `Seq` and `Offset` columns leak identity. `src/unified/ssl_nidd.py` fixes both
+(408,655 unique flows, identifier columns dropped, stratified 80/20 split, 9 attack classes) and
+tests SSL where it should help: 50 to all labelled flows, 5 label draws per budget.
+
+- **Raw features alone reach macro-F1 0.926 (logistic regression) / 0.936 (LightGBM)**, against the
+  old 0.708. Most of the old gap was the leakage and the duplicates.
+- **Masked-feature pretraining** (`reports/unified/ssl_nidd.json`) is below raw features at every budget
+  with few labels (50 labels: 0.627 vs 0.704 as an embedding; 200 labels: 0.763 vs 0.853) and ties them
+  with all labels (fine-tuned 0.927 vs 0.925 MLP).
+- **Contrastive pretraining (SCARF)** (`reports/unified/ssl_nidd_scarf.json`) is the same story:
+  fine-tuned 0.929 with all labels against 0.925 for the same MLP from scratch, and below LightGBM (0.936).
+  Concatenating the embedding to the raw features helped logistic regression slightly at 1,000 and 5,000
+  labels (0.888 vs 0.874; 0.915 vs 0.909) and nowhere else.
+- **Conclusion for the report:** a longer-trained encoder does not change the finding. On 5G-NIDD,
+  pretraining gives no reliable advantage over raw features at any label budget. State it as a negative
+  result; the cleaned-up evaluation (de-duplication, no identifier columns, label-efficiency study) is the
+  contribution. Figure: `docs/figures/unified_ssl_label_efficiency.png`.

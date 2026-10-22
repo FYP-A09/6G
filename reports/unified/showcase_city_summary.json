@@ -1,9 +1,9 @@
 {
   "forecast_mse_city": {
     "tgnn": [
-      5.6492,
-      0.1124,
-      0.0698
+      5.0501,
+      0.0988,
+      0.058
     ],
     "persistence": [
       6.8526,
@@ -11,9 +11,9 @@
       0.083
     ],
     "tgnn_better_by": [
-      0.1756,
-      0.2689,
-      0.1588
+      0.263,
+      0.3571,
+      0.3009
     ]
   },
   "static": {
@@ -53,18 +53,18 @@
   "predictive": {
     "sla_ok": {
       "eMBB": 0.9752,
-      "URLLC": 0.7944,
-      "mMTC": 0.6646
+      "URLLC": 0.7861,
+      "mMTC": 0.6012
     },
     "sla_ok_during_events": {
-      "eMBB": 0.7194,
-      "URLLC": 0.6676,
-      "mMTC": 0.6028
+      "eMBB": 0.7185,
+      "URLLC": 0.6963,
+      "mMTC": 0.5722
     },
-    "cell_intervals_all_ok": 0.5303,
-    "mean_reward": 0.8795,
-    "served_fraction": 0.9181,
-    "block_mean_reward": 0.7838,
-    "outer_mean_reward": 0.8805
+    "cell_intervals_all_ok": 0.4736,
+    "mean_reward": 0.8678,
+    "served_fraction": 0.9174,
+    "block_mean_reward": 0.7728,
+    "outer_mean_reward": 0.8688
   }
 }

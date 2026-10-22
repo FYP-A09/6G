@@ -35,15 +35,15 @@ Everything below was run on real data; numbers come from `reports/` and the
 
 | Module | What exists | Result |
 |---|---|---|
-| SSL (5G-NIDD) | Masked-reconstruction encoder, 64-D embeddings, trained on all 1.2M flows | Stratified held-out split: accuracy 0.766, Macro-F1 0.708 — matches raw features (0.766 / 0.707), beats random embeddings (0.607 / 0.378); Benign recall is weak (0.41) |
+| SSL (5G-NIDD) | Masked-reconstruction and contrastive (SCARF) encoders, 64-D embeddings; de-duplicated data (408,655 unique flows of 1.2M), identifier columns removed, 50 to all labels | Raw features reach macro-F1 0.926 (0.936 with LightGBM); **pretraining gives no reliable gain over raw features at any label budget** (fine-tuned 0.929 with all labels). The earlier 0.708 came from leakage and duplicate flows. See [`docs/Unified_Data_and_MARL.md`](docs/Unified_Data_and_MARL.md) section 5 |
 | SSL (Milan) | Masked-reconstruction encoder on the full-scale release | Trains; embeddings feed the TGNN |
-| TGNN | GraphSAGE + GRU `TGNNPredictor`; next-step forecast on 400 real Milan cells over a full day | Beats "predict the last value" by about 14% (MSE 0.000616 vs 0.000720, 28 validation windows, one seed). Feeding raw features instead of SSL embeddings scores the same (0.000612), so SSL adds nothing here — see `docs/team/thrishala_sn/tasks.md` |
+| TGNN | GraphSAGE + GRU; first version on 400 cells over one day, then the city-wide `forecast_city_v2.py` (39 days, 10,000 cells, held-out week) | City-wide: **+18% / +33% / +31% over persistence** (eMBB / URLLC / mMTC); the same model trained on 5 days was worse than persistence on eMBB. The first one-day result (14% over persistence; raw features = SSL embeddings) is in `docs/team/thrishala_sn/tasks.md` |
 | MARL | B5G environment, MADDPG, train/validate/test tuning search | Trained actor 0.447 vs heuristic 0.372 vs equal-split 0.312 on a fresh test block; the reward is nearly trivial (B5G has no latency/loss data), so treat as a working pipeline, not a strong policy |
 | Digital Twin | Orchestrator: B5G sample → TGNN → MARL action → twin approve/reject gate | Runs end to end; approves 0 actions because B5G lacks the telemetry the SLA check needs |
 | Unified environment (`src/unified/`) | Real Milan traffic + real grid adjacency, QoS calibrated on the 6G RAN telemetry dataset, load-coupled interference; one record per cell per 10 min | Answers the 12 Oct review: no public dataset unifies traffic, topology, slices, actions and SLA, so we built one — see [`docs/Unified_Data_and_MARL.md`](docs/Unified_Data_and_MARL.md) |
-| MARL vs single agent | Shared-actor MADDPG vs tuned centralised DDPG, 9-100 cells, 3 seeds, held-out days | MARL 0.76-0.77 at every size with a constant 19k-parameter actor; single agent falls from 0.41 to 0.27 (below equal split). MARL matches the expert rules but stays below expert rules + TGNN forecast (0.79-0.84) |
-| TGNN forecast value | Next-10-min per-slice forecast on the 100-cell grid | Beats persistence by 12% / 29% / 27% (eMBB / URLLC / mMTC); lifts the expert controller by about 0.05 reward at every size; does **not** help MARL as an extra input (0.765 vs 0.778 without) |
-| City-wide forecaster | `src/unified/forecast_city.py`: same TGNN, per-cell scaling, trained on random 32x32 patches of the grid | Beats persistence on all 10,000 cells by 19% / 29% / 14%; the block-trained model did not transfer (10.8x persistence's error on quiet cells) |
+| MARL vs single agent | Shared-actor MADDPG vs centralised DDPG (two learning rates), 9 / 25 / 100 cells, held-out week 16-22 Dec | Single agent **0.44 / 0.34 / 0.28**; MARL **0.93 / 0.83 / 0.86** with a constant 19k-parameter actor (1,000 episodes). Trained 4,000 episodes with validation-selected checkpoints, MARL scores **0.90 (ensemble 0.904) at 25 cells, +0.026 over a grid-tuned expert rule (7 of 7 days)**; it does not beat a hand-tuned rule when the traffic mix changes |
+| TGNN forecast value | Value of the v2 forecast to the expert slicing rules, held-out week | **+0.03 reward** at every size (positive on 7 of 7 days, about 20% of the gap to a perfect forecast); "same time yesterday" as a forecast is worse than current demand. For MARL, 0.881 with the forecast vs 0.851 without (3 seeds, overlapping) |
+| City-wide forecaster | Patch-trained, per-cell-scaled TGNN (`forecast_city_v2.py`); the 100-cell-trained version failed on quiet cells (10.8x persistence's error) | See the TGNN row; figures in `docs/figures/unified_forecast_city.png` |
 | Digital Twin dataset | `src/unified/twin_dataset.py`: core year (400 cells x 364 days x 6 scenarios) + full city (10,000 cells x 62 days x 3 scenarios) | 393.6 million rows x 122 columns on the project drive; datasheet [`docs/Unified_Twin_Dataset.md`](docs/Unified_Twin_Dataset.md) |
 | Simulator | OMNeT++ 6.4.0 + INET 4.7.0 + Simu5G 1.7.0 built in WSL2; real NR VoIP run | 28,092 events, MOS 4.41/5, 0 loss — the project's own 19-gNodeB scenario is **not** wired in yet |
 
@@ -58,9 +58,10 @@ python src/ssl/evaluate_embeddings.py <Combined.csv> reports/nidd_ssl_full/best_
 python src/ssl/milan_ssl.py <milan full-scale data dir> reports/milan_ssl_full --max-files 1 --max-rows 500000 --epochs 8
 python src/tgnn/train_milan_forecast.py <milan data dir> reports/milan_ssl_full/best_milan_model.pt reports/tgnn_milan_forecast --max-files 1 --max-rows 500000
 python src/marl/tune_maddpg.py          # needs the full B5G release; edit ROOT at the top
-python src/unified/experiments.py   # unified env: heuristics, TGNN, MARL vs single agent -> reports/unified/results.json
+python src/unified/forecast_city_v2.py     # city-wide TGNN forecaster, trained on 39 days (see docs/Unified_Data_and_MARL.md for the full list)
+python src/unified/forecast_value_v2.py && python src/unified/marl_v2_best.py train 0   # value of the forecast; the long-trained MARL
+python src/unified/ssl_nidd.py           # SSL label-efficiency study on 5G-NIDD
 python src/unified/figures.py
-python src/unified/forecast_city.py    # city-wide TGNN forecaster -> reports/unified/forecast_city.json
 python src/unified/twin_dataset.py --block 20 --days 364    # Digital Twin dataset (needs the Milan files)
 python -m pytest tests/ -q
 ```
@@ -76,6 +77,10 @@ python -m pytest tests/ -q
 - `torch_geometric_temporal`'s `GConvGRU` does not install on Windows; it does build in WSL2 Ubuntu, but
   `TGNNPredictor` still uses a plain `GRUCell`.
 - The orchestrator still uses placeholder SSL embeddings for B5G and an untrained TGNN.
+- The unified-environment QoS is a calibrated surrogate, not a packet-level simulator; Simu5G is not yet used to validate its latency curve.
+- The long-trained MARL result (beats the tuned expert) is at 25 cells; 9 and 100 cells use the shorter protocol, 100 cells with one seed.
+- There is no Digital Twin approve/reject gate in the unified pipeline yet; the controllers are tested in the environment, not gated by a twin.
+- Trained controllers lose to a hand-tuned rule when the traffic mix changes without retraining (6G-growth, massive-IoT mixes).
 
 ## Getting started
 

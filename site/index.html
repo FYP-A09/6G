@@ -53,25 +53,25 @@ a { color: var(--accent); }
     <a class="card primary" href="slice-twin/"><b>Slice Twin monitor</b><span>Watch three controllers split each cell's bandwidth through a real day in Milan, from 100 cells up to the whole city.</span><em>Open the live demo →</em></a>
     <a class="card" href="results/"><b>Results dashboard</b><span>Every result on held-out data next to its baseline, including the negative ones.</span><em>View results →</em></a>
     <a class="card" href="brief/"><b>Review brief</b><span>Approach, datasets and our answers to the 12 October review comments.</span><em>Read the brief →</em></a>
-    <a class="card" href="record/FYP-A09_Project_Record.pdf"><b>Project record</b><span>The full 62-page record of the work so far.</span><em>Open PDF →</em></a>
+    <a class="card" href="record/FYP-A09_Project_Record.pdf"><b>Project record</b><span>The full 67-page record of the work so far.</span><em>Open PDF →</em></a>
     <a class="card" href="record/FYP-A09_Project_Record.docx"><b>Project record (Word)</b><span>The same record as an editable .docx file.</span><em>Download →</em></a>
   </div>
 
   <h2>Key results</h2>
   <div class="stats">
-    <div class="stat"><b>0.76</b><span>MARL reward, flat from 9 to 100 cells (single agent: 0.41 → 0.27)</span></div>
-    <div class="stat"><b>19,332</b><span>parameters in the shared MARL actor at every network size</span></div>
-    <div class="stat"><b>+19%</b><span>city forecaster over persistence on all 10,000 cells (eMBB)</span></div>
+    <div class="stat"><b>0.90</b><span>MARL reward at 25 cells, above a grid-tuned expert rule (0.88) on 7 of 7 test days</span></div>
+    <div class="stat"><b>0.44 → 0.28</b><span>single centralised agent, 9 to 100 cells (MARL: 0.93, 0.83, 0.86)</span></div>
+    <div class="stat"><b>+18% / +33% / +31%</b><span>city forecaster over persistence on all 10,000 cells (eMBB / URLLC / mMTC)</span></div>
     <div class="stat"><b>393.6 M</b><span>rows × 122 columns in the Digital Twin dataset</span></div>
   </div>
-  <p style="color:var(--ink2);margin-top:18px">What did not work, reported as such: self-supervised embeddings gave no gain over raw features, and giving the forecast to the MARL agent did not improve it. The forecast helps through an expert allocation policy instead (about +0.05 reward at every size).</p>
+  <p style="color:var(--ink2);margin-top:18px">What did not work, reported as such: self-supervised pretraining gave no reliable gain over raw features on 5G-NIDD; with a short training budget MARL only ties the tuned expert rule; and trained controllers lose to the tuned rule when the traffic mix changes without retraining. The forecast adds about +0.03 reward to the expert rule on every test day.</p>
 
   <h2>How it works</h2>
   <ul class="plain">
     <li><b>Real data:</b> Telecom Italia Milan traffic on the real 100 × 100 grid; internet, calls and SMS mapped to eMBB, URLLC and mMTC.</li>
     <li><b>Calibrated QoS:</b> latency against load fitted to a public 6G RAN telemetry dataset, with load-coupled interference between neighbouring cells.</li>
-    <li><b>Forecasting:</b> GraphSAGE + GRU temporal GNN; a city-wide version trained on random grid patches with per-cell scaling.</li>
-    <li><b>Allocation:</b> one shared actor per cell with a neighbourhood critic, compared with a centralised agent and expert rules.</li>
+    <li><b>Forecasting:</b> GraphSAGE + GRU temporal GNN, trained on 39 days over the whole city with random grid patches and per-cell scaling.</li>
+    <li><b>Allocation:</b> one shared actor per cell with a neighbourhood critic, compared with a centralised agent and with expert rules, including a grid-tuned one.</li>
   </ul>
 
   <h2>Team</h2>

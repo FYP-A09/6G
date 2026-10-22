@@ -74,65 +74,40 @@ ol.steps span { color: var(--muted); }
   <header>
     <span class="kicker">FYP-A09 · Review discussion</span>
     <h1>Digital Twin Assisted Network Slicing for 6G</h1>
-    <p class="sub">SSL, TGNN and MARL inside a Digital Twin. Status as of 12 Oct 2026, with the points to settle with sir; updated 16 Oct with our answers to his review comments.</p>
+    <p class="sub">SSL, TGNN and MARL inside a Digital Twin. Status as of 22 Oct 2026, including our answers to the four review comments of 12 Oct and what we found when we retrained everything properly.</p>
   </header>
 
   <section>
-    <h2>Update, 16 Oct: sir's four comments</h2>
+    <h2>Sir's four comments</h2>
     <ol class="steps">
-      <li><b>Which datasets do the papers use?</b> <span>Of the 16 papers we reviewed, 8 generate their own data with a simulator, emulator or testbed, only one uses Milan, and none uses a single dataset that joins traffic, topology, actions and SLA outcomes.</span></li>
+      <li><b>Which datasets do the papers use?</b> <span>Of the 16 papers we reviewed, 8 generate their own data with a simulator, emulator or testbed, only one uses Milan, and none uses a dataset that joins traffic, topology, actions and SLA outcomes.</span></li>
       <li><b>Is there unified data?</b> <span>No. We checked the 10 datasets we hold and searched for more. The closest (B5G transport traces, single-cell O-RAN traces) have no per-cell allocation actions or SLA outcomes.</span></li>
-      <li><b>So we created it.</b> <span>Real Milan traffic on the real 100 x 100 grid, latency calibrated on the 6G RAN telemetry dataset (mean SLA-vs-load gap <span class="num">0.021</span>), load-coupled interference and injected incidents. The Digital Twin dataset has <span class="num">393.6 million</span> rows and <span class="num">122</span> columns: a 400-cell year with 6 what-if scenarios, and the full 10,000-cell city for all 62 recorded days.</span></li>
-      <li><b>Why MARL and not a single agent?</b> <span>Same reward, same training budget, held-out days, 3 seeds. MARL holds <span class="num">0.76–0.77</span> from 9 to 100 cells with one shared 19k-parameter actor. A tuned single agent falls from <span class="num">0.41</span> to <span class="num">0.27</span>, below equal split, as its network grows to 604k parameters. MARL matches the expert rules; the expert rules fed our TGNN forecast are still better (<span class="num">0.79–0.84</span>).</span></li>
+      <li><b>So we created it.</b> <span>Real Milan traffic on the real 100 x 100 grid, latency calibrated on the 6G RAN telemetry dataset (SLA-vs-load gap <span class="num">0.021</span>), load-coupled interference and injected incidents. The Digital Twin dataset has <span class="num">393.6 million</span> rows and <span class="num">122</span> columns: a 400-cell year with 6 what-if scenarios, and all 10,000 Milan cells for the 62 recorded days.</span></li>
+      <li><b>Why MARL and not a single agent?</b> <span>Same reward and training budget, tested on a held-out week. A single centralised agent scores <span class="num">0.44 / 0.34 / 0.28</span> at 9 / 25 / 100 cells and gets worse as it grows (its network reaches 604k parameters). The shared-actor MARL scores <span class="num">0.93 / 0.83 / 0.86</span> with the same 19k-parameter actor at every size. Trained longer (4,000 episodes, checkpoint chosen on validation days), MARL scores <span class="num">0.904</span> at 25 cells and beats a hand-tuned expert rule (<span class="num">0.877</span>) by <span class="num">+0.026</span> on 7 of 7 test days.</span></li>
     </ol>
-    <p class="note"><b>Prediction helps, so far through the expert controller.</b> The TGNN forecast lifts the expert rules by about 0.05 reward at every network size, but as an extra MARL input it did not help (<span class="num">0.765</span> vs <span class="num">0.778</span>). A forecaster retrained on patches of the whole city beats persistence on all 10,000 cells (eMBB +19%), where the one trained on 100 central cells failed. All numbers: <a href="../results/">results dashboard</a>.</p>
+    <p class="note"><b>What we are careful about.</b> The expert rule it beats had its two thresholds tuned by grid search on the training days; against an untuned rule the gap is much larger, which proves little. With a short training budget MARL only ties the tuned rule, and when the traffic mix changes (6G growth, massive IoT) without retraining it loses to the tuned rule. The long-training result is at 25 cells; 100 cells has one seed.</p>
   </section>
 
   <section>
     <h2>What we tell sir today</h2>
     <ul>
-      <li>All four datasets are ready, and the pipeline runs end to end: SSL, TGNN, MARL, Digital Twin gate.</li>
-      <li>SSL is trained on <span class="num">1.2M</span> flows: accuracy <span class="num">0.766</span>, Macro-F1 <span class="num">0.708</span> on held-out data. It matches raw features and beats random embeddings.</li>
-      <li>The TGNN forecasts Milan traffic and beats a "predict the last value" baseline by about 14% on a full day. Feeding raw features instead of SSL embeddings scores the same, so the SSL stage adds nothing on this task yet.</li>
-      <li>MADDPG scores <span class="num">0.447</span> on held-out samples against <span class="num">0.372</span> for the heuristic, with a simple reward because B5G has no latency or loss data.</li>
-      <li>We found and fixed two evaluation bugs (split leakage on NIDD, wrong-slice scoring on B5G).</li>
-      <li>Simu5G is installed and a real 5G run works. We want his view on the plan below.</li>
+      <li>The pipeline runs end to end on real data, and the module results below are all on held-out data against baselines.</li>
+      <li><b>TGNN forecaster:</b> retrained on 39 days over the whole city, it beats "repeat the last value" by <span class="num">+18% / +33% / +31%</span> (eMBB / URLLC / mMTC) across all 10,000 cells on a held-out week. The version trained on 5 days was worse than that baseline on eMBB, so training length was the problem.</li>
+      <li><b>Value of the forecast:</b> it lifts the expert slicing rule by <span class="num">+0.03</span> reward on every one of the 7 test days, about a fifth of the gap to a perfect forecast.</li>
+      <li><b>SSL:</b> after fixing leaked and duplicated data, raw features reach macro-F1 <span class="num">0.926</span> on 5G-NIDD. Masked and contrastive pretraining give no reliable gain over raw features at any label budget (50 to all labels). We report this as a negative result.</li>
+      <li>We found and fixed three evaluation problems: split leakage and duplicate flows on NIDD, wrong-slice scoring on B5G, and under-trained learners in our first unified study.</li>
     </ul>
   </section>
 
   <section>
     <h2>Our approach</h2>
     <ol class="stages">
-      <li><b>Self-supervised learning</b><span>Learn compact traffic representations from unlabelled telemetry by hiding some features and reconstructing them from the rest. Output: a fixed 64-D embedding per node per time step.</span></li>
-      <li><b>Temporal GNN</b><span>GraphSAGE aggregates neighbours at each step, a GRU carries state over time. Predicts the next step's throughput, latency and load.</span></li>
-      <li><b>Multi-agent RL</b><span>MADDPG, one agent per node and slice. Each chooses a share of resources across eMBB, URLLC and mMTC, scored by a reward built from QoS, utilization and reconfiguration cost.</span></li>
-      <li><b>Digital Twin gate</b><span>A candidate allocation is tested in the twin first. It is approved or rejected before anything would touch the real network.</span></li>
+      <li><b>Self-supervised learning</b><span>Learn compact representations from unlabelled telemetry by hiding or corrupting features. Tested against raw features: no gain.</span></li>
+      <li><b>Temporal GNN</b><span>GraphSAGE over the cell graph, a GRU over time; forecasts the next 10 minutes of demand per slice for every cell.</span></li>
+      <li><b>Multi-agent RL</b><span>One shared actor per cell with a neighbourhood critic; each cell chooses its eMBB / URLLC / mMTC split.</span></li>
+      <li><b>Digital Twin</b><span>A virtual network for training, what-if scenarios and a 393.6 M-row dataset. An approve/reject gate exists only in the early B5G loop.</span></li>
     </ol>
-    <p class="why">The idea: existing Digital Twin and RL slicing work reacts to what the network already did. Putting a prediction stage (stages 1 and 2) in front of the controller lets it act on what is about to happen. No single public dataset has topology, traffic, and allocation actions with rewards together, so each stage is built on the dataset that fits it and the stages are joined through fixed interfaces (the 64-D embedding, and a predicted-demand record).</p>
-  </section>
-
-  <section>
-    <h2>Datasets and what each is used for</h2>
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Dataset</th><th>What it is</th><th>Used for</th></tr></thead>
-        <tbody>
-          <tr><td>5G-NIDD</td>
-            <td><span class="num">1.2M</span> labelled 5G network flows (benign and attack), with protocol fields.</td>
-            <td>Train and evaluate the SSL encoder. Labels are used only to test how useful the embeddings are.</td></tr>
-          <tr><td>Telecom Italia Milan</td>
-            <td>62 days of SMS, call and internet traffic on a <span class="num">100 × 100</span> grid of cells, every 10 minutes.</td>
-            <td>SSL on traffic features, then the TGNN forecast (400-cell block, real grid adjacency).</td></tr>
-          <tr><td>NeversNet5G</td>
-            <td>Vehicular 5G NR telemetry from Nevers: <span class="num">716</span> UE files, about 27 GB, 19 gNodeBs, produced by a Simu5G + SUMO run.</td>
-            <td>Real UE-to-gNodeB topology (695 nodes), telemetry replay, and the source configuration for our Simu5G scenario.</td></tr>
-          <tr><td>B5G slicing</td>
-            <td><span class="num">7,984</span> network samples with topology and per-slice (eMBB, URLLC, mMTC) flows and a QoS deviation value, <code>delta</code>.</td>
-            <td>The environment for the MARL stage: observations, rewards and the train / validate / test split.</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="why">How we check ourselves: every result uses a held-out split (stratified for NIDD, chronological for Milan, separate sample blocks for MARL) and is compared against a simple baseline, since a model that cannot beat the baseline has not shown value yet.</p>
+    <p class="why">The idea: slicing that reacts to what the network already did arrives late. A forecast in front of the controller lets it act on what is about to happen. No public dataset has topology, traffic and allocation actions with SLA outcomes together, so we built one from real Milan traffic.</p>
   </section>
 
   <section>
@@ -142,74 +117,61 @@ ol.steps span { color: var(--muted); }
         <thead><tr><th>Module</th><th>Result on real data</th><th>Status</th></tr></thead>
         <tbody>
           <tr><td>SSL (5G-NIDD)</td>
-            <td>Trained on all 1.2M flows. Stratified held-out split: accuracy <span class="num">0.766</span>, Macro-F1 <span class="num">0.708</span>. Matches raw features (<span class="num">0.766 / 0.707</span>), beats random embeddings (<span class="num">0.607 / 0.378</span>). Benign recall is weak (<span class="num">0.41</span>).</td>
-            <td><span class="pill ok">working</span></td></tr>
-          <tr><td>TGNN (Milan)</td>
-            <td>Next-step forecast on 400 real cells over a full day. Validation MSE <span class="num">0.000616</span> against <span class="num">0.000720</span> for "predict the last value" (about 14% better, 28 windows, one seed). With raw features as input instead of SSL embeddings it scores <span class="num">0.000612</span>: no gain from SSL.</td>
-            <td><span class="pill part">beats baseline, SSL no gain</span></td></tr>
+            <td>408,655 unique flows (66% of the 1.2M were duplicates). Macro-F1 on 81,731 unseen flows: raw features <span class="num">0.926</span> (LightGBM <span class="num">0.936</span>), fine-tuned contrastive encoder <span class="num">0.929</span>. With 50 labels raw features <span class="num">0.704</span> beat the SSL embedding (<span class="num">0.594 to 0.627</span>).</td>
+            <td><span class="pill part">no gain from SSL</span></td></tr>
+          <tr><td>TGNN (Milan, city-wide)</td>
+            <td>39 training days, held-out week, 10,000 cells: <span class="num">+18% / +33% / +31%</span> better than persistence. A version trained on only the 100 central cells was 10.8 times worse than persistence on quiet cells.</td>
+            <td><span class="pill ok">beats baseline</span></td></tr>
+          <tr><td>MARL (unified environment)</td>
+            <td>Held-out week. 25 cells: <span class="num">0.904</span> long-trained vs <span class="num">0.877</span> for the tuned expert rule and <span class="num">0.750</span> for equal split. Single centralised agent: <span class="num">0.34</span>.</td>
+            <td><span class="pill ok">beats single agent and tuned rule at 25 cells</span></td></tr>
           <tr><td>MARL (B5G)</td>
-            <td>Held-out reward: MADDPG <span class="num">0.447</span>, heuristic <span class="num">0.372</span>, equal-split <span class="num">0.312</span>. The reward is nearly trivial because B5G has no latency or loss data.</td>
+            <td>Held-out reward: MADDPG <span class="num">0.447</span>, heuristic <span class="num">0.372</span>, equal split <span class="num">0.312</span>. The reward is nearly trivial because B5G has no latency or loss data.</td>
             <td><span class="pill part">pipeline works</span></td></tr>
-          <tr><td>Digital Twin loop</td>
-            <td>Runs end to end. Approves 0 actions: B5G lacks the telemetry the SLA check needs.</td>
-            <td><span class="pill part">limited by data</span></td></tr>
+          <tr><td>Digital Twin</td>
+            <td>Dataset and monitor app built. The early B5G approve/reject gate approves 0 actions (no SLA telemetry); the unified pipeline has no gate yet.</td>
+            <td><span class="pill part">gate missing</span></td></tr>
           <tr><td>Simu5G / OMNeT++</td>
-            <td>Installed from source. Real NR run: 28,092 events, 93/93 packets, MOS <span class="num">4.41</span>. Our 19-gNodeB scenario is not wired in.</td>
+            <td>Installed from source. Real NR run: 28,092 events, 93/93 packets, MOS <span class="num">4.41</span>. Our own scenario is not wired in; the QoS model is a calibrated surrogate.</td>
             <td><span class="pill part">toolchain only</span></td></tr>
         </tbody>
       </table>
     </div>
+    <p class="why">How we check ourselves: every result is on held-out data (a held-out week for the unified work) and next to a simple baseline, including a tuned one.</p>
   </section>
-
-  <p class="note"><b>Two bugs found and fixed.</b> The NIDD file is ordered in same-label blocks, so a sequential split put 99.88% of one class in the test set (about 1% accuracy). The B5G environment scored most rewards against the wrong slice, which invalidated our earlier MADDPG numbers. Both are fixed, with a regression test for the second.</p>
 
   <section>
     <h2>How we proceed</h2>
     <ol class="steps">
-      <li><b>Make SSL earn its place.</b> <span>Raw inputs match the SSL embeddings on the Milan forecast. Next we try an SSL encoder that sees neighbouring cells and earlier intervals, and test longer forecast horizons and more days.</span></li>
-      <li><b>Connect the stages with real data.</b> <span>The Digital Twin loop still uses placeholder embeddings for B5G. We will train an SSL encoder on B5G's own slice features and feed it through the TGNN.</span></li>
-      <li><b>Try a joint SSL representation</b> <span>across NIDD and Milan, which is the gap our literature review points at, and test whether it transfers.</span></li>
-      <li><b>Move from replay to a live simulator.</b> <span>Wire our 19-gNodeB Simu5G scenario in. A simulator produces the latency and packet-loss telemetry that B5G lacks, which is what lets the reward use more than one term and lets the twin approve actions.</span></li>
-      <li><b>Calibrate SLA thresholds</b> <span>once we have the source paper's definition of <code>delta</code>.</span></li>
+      <li><b>Strengthen the evidence.</b> <span>More seeds and the long protocol at 9 and 100 cells, a richer tuned expert baseline (per-hour or per-cell targets), and IPPO/MAPPO baselines.</span></li>
+      <li><b>Build the Digital Twin gate</b> <span>so allocations are checked against a one-step look-ahead before they are applied, and measure its effect.</span></li>
+      <li><b>Validate the QoS surrogate</b> <span>against a Simu5G load sweep, the only independent check available.</span></li>
+      <li><b>Write the papers</b> <span>(a review and a forecast-value benchmark) once sir approves the plan.</span></li>
     </ol>
-  </section>
-
-  <section>
-    <h2>End review: the outcome we show (tentative)</h2>
-    <ol class="steps">
-      <li><b>A working Digital Twin demo.</b> <span>Real data goes in, the twin produces embeddings, a traffic forecast and a slice allocation, then approves or rejects it. Shown live, not only as slides.</span></li>
-      <li><b>The main claim, tested.</b> <span>Our contribution is that predicting before allocating helps. We have not tested that yet. The end review needs an ablation: MARL with the TGNN's predicted demand against MARL without it, and the TGNN with SSL embeddings against raw features (run once: no gain, so this needs a better SSL encoder).</span></li>
-      <li><b>One results table for every module</b> <span>against its baseline on held-out data: SSL F1, TGNN error against persistence, MARL reward against the heuristic.</span></li>
-      <li><b>Simulator evidence, if the Simu5G scenario gets wired in.</b> <span>The twin then sees real latency and packet loss and decides on real SLA values. If it does not get wired in, we say clearly that the evidence is offline replay.</span></li>
-      <li><b>Limitations and reproducibility.</b> <span>What did not work, what the data cannot support, and a repository anyone can rerun.</span></li>
-    </ol>
-    <p class="why">Items 2 and 4 are the ones that decide whether the project's claim is supported. They depend on the TGNN beating its baseline and on the simulator integration, so we should agree with sir which of the two is the priority.</p>
   </section>
 
   <div class="grid">
     <section>
-      <h2>Present next review</h2>
+      <h2>Present at the final review</h2>
       <ul>
-        <li>Dataset audit and the split findings</li>
-        <li>Pipeline: SSL, TGNN, MARL, Digital Twin gate</li>
-        <li>Baselines: raw and random embeddings, persistence, equal-split, heuristic</li>
-        <li>Metrics: accuracy and Macro-F1, MSE, mean reward</li>
-        <li>Validation: stratified, chronological, separate train/validation/test</li>
-        <li>Contribution: an SSL to TGNN prediction stage ahead of MARL</li>
+        <li>The unified environment and the 393.6 M-row dataset</li>
+        <li>MARL against a single agent and against a tuned rule</li>
+        <li>The city-wide forecaster and what the forecast is worth</li>
+        <li>The Slice Twin monitor, live</li>
+        <li>Negative results and limitations</li>
       </ul>
     </section>
     <section>
       <h2>Ask sir</h2>
       <ul>
-        <li>The SSL stage gives no gain over raw inputs on the Milan forecast. Should we improve the encoder (neighbour and history context) or present it as a negative result?</li>
-        <li>Is a live Simu5G loop expected, or is the offline B5G replay enough?</li>
-        <li>Where do we get the exact <code>delta</code> / SLA definition from Farreras et al.?</li>
-        <li>Can we add a second data source for latency and loss in the reward?</li>
-        <li>How much implementation versus quantitative results is expected?</li>
+        <li>SSL gives no gain on this data after a careful retest. Present it as a negative result, or invest in a different SSL design?</li>
+        <li>Is a Digital Twin gate plus a Simu5G check expected before the final review, or is reporting them as future work enough?</li>
+        <li>Do the 5 marks for papers apply to this semester, and is a ready-to-submit draft enough?</li>
+        <li>Should the papers be a review plus a forecast-value benchmark, as we propose?</li>
       </ul>
     </section>
   </div>
 
-  <footer>Code and reports: github.com/FYP-A09/6G</footer>
+  <footer>Code and reports: github.com/FYP-A09/6G · <a href="../results/">Results dashboard</a></footer>
 </main>
 </html>

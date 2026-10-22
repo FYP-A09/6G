@@ -1,0 +1,108 @@
+{
+  "cells": 25,
+  "episodes": 1000,
+  "runs": [
+    {
+      "config": "marl",
+      "seed": 0,
+      "mean": 0.894,
+      "per_day": [
+        0.8809,
+        0.8761,
+        0.873,
+        0.8715,
+        0.8795,
+        0.9249,
+        0.9522
+      ],
+      "actor_params": 19332,
+      "train_seconds": 400,
+      "last_100_train_reward": 0.8789
+    },
+    {
+      "config": "single_lr1e-4",
+      "seed": 0,
+      "mean": 0.3315,
+      "per_day": [
+        0.3374,
+        0.3322,
+        0.3293,
+        0.3317,
+        0.3311,
+        0.3256,
+        0.3334
+      ],
+      "actor_params": 200548,
+      "train_seconds": 871,
+      "last_100_train_reward": 0.3342
+    },
+    {
+      "config": "single_lr3e-4",
+      "seed": 0,
+      "mean": 0.3011,
+      "per_day": [
+        0.3019,
+        0.3009,
+        0.2952,
+        0.2966,
+        0.2949,
+        0.3033,
+        0.3151
+      ],
+      "actor_params": 200548,
+      "train_seconds": 869,
+      "last_100_train_reward": 0.3289
+    },
+    {
+      "config": "marl",
+      "seed": 1,
+      "mean": 0.7728,
+      "per_day": [
+        0.7646,
+        0.7569,
+        0.7488,
+        0.7574,
+        0.7556,
+        0.801,
+        0.8252
+      ],
+      "actor_params": 19332,
+      "train_seconds": 600,
+      "last_100_train_reward": 0.7688
+    },
+    {
+      "config": "single_lr1e-4",
+      "seed": 1,
+      "mean": 0.3416,
+      "per_day": [
+        0.3465,
+        0.3412,
+        0.3356,
+        0.3395,
+        0.3375,
+        0.3416,
+        0.3497
+      ],
+      "actor_params": 200548,
+      "train_seconds": 760,
+      "last_100_train_reward": 0.3313
+    },
+    {
+      "config": "single_lr3e-4",
+      "seed": 1,
+      "mean": 0.3572,
+      "per_day": [
+        0.3532,
+        0.3502,
+        0.352,
+        0.35,
+        0.3516,
+        0.3632,
+        0.3801
+      ],
+      "actor_params": 200548,
+      "train_seconds": 850,
+      "last_100_train_reward": 0.3555
+    }
+  ]
+}

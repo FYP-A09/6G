@@ -29,10 +29,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from unified.forecast import WINDOW  # noqa: E402
-from unified import forecast_city  # noqa: E402
+from unified import forecast_city_v2 as v2  # noqa: E402
 from unified.data import GRID, block_cells, grid_neighbours, load_block_activity  # noqa: E402
 from unified.env import SLICES, ModelConfig, UnifiedSlicingEnv, demand_scale, equal_split, headroom  # noqa: E402
 from unified.showcase import DAY_START, EVENTS as BLOCK_EVENTS, MILAN, PER_DAY, TRAIN_END, iod  # noqa: E402
@@ -117,22 +118,29 @@ def main(out_dir: str) -> None:
              "end_interval": WINDOW + iod(*e["t1"]), "cells_local": e["cells"], "params": e["params"]} for i, e in enumerate(events)]
     cap_f, coup_f, code, _, r_in, r_out = apply_events(demand, pd.DataFrame(rows), nbrs)
 
-    model, cell_scale = forecast_city.load()
+    ck = torch.load(v2.MODEL, weights_only=False)
+    model = v2.CityTGNN(); model.load_state_dict(ck["state"]); cell_scale = ck["cell_scale"]
     t0 = time.time()
-    fc = forecast_city.predict(model, demand, cell_scale, t0=lo)
+    t_hist = DAY_START - WINDOW - v2.DAY - WINDOW                 # v2 also looks one day back
+    Dv = v2.load_range(grid, scale, t_hist, DAY_START + PER_DAY)
+    Dv[lo - t_hist:] = demand                                      # the forecaster sees the incidents' effect on today's traffic, as a live one would
+    ts = np.arange(DAY_START - WINDOW, DAY_START + PER_DAY - 1)
+    fc = demand.astype(np.float64).copy()
+    fc[:len(ts)] = v2.predict(model, Dv, t_hist, ts, cell_scale)
     day = slice(WINDOW, WINDOW + PER_DAY)
     truth, persist = demand[WINDOW:WINDOW + PER_DAY].astype(np.float64), demand[WINDOW - 1:WINDOW + PER_DAY - 1].astype(np.float64)
     fmse = ((fc[WINDOW - 1:WINDOW + PER_DAY - 1] - truth) ** 2).mean(axis=(0, 1))
     pmse = ((persist - truth) ** 2).mean(axis=(0, 1))
     print(f"city TGNN on 10,000 cells: {time.time() - t0:.0f}s, mse {fmse.round(3)} vs persistence {pmse.round(3)}", flush=True)
-    fr = json.loads((ROOT / "reports" / "unified" / "forecast_city.json").read_text(encoding="utf-8"))
-    better = fr["city_forecaster"]["city_10000"]["better_than_persistence"]
-    naive = fr["block_forecaster_on_city"]["outer_9600"]["better_than_persistence"][0]
-    note = (f"Yes, once trained for it. The predictive controller uses a TGNN trained on random patches of the whole grid, "
-            f"with each cell's traffic scaled by its own level. On the two held-out days it beats 'repeat the last value' "
-            f"by {better[0]:.0%} (eMBB), {better[1]:.0%} (URLLC) and {better[2]:.0%} (mMTC) across all 10,000 cells. "
-            f"The first forecaster, trained only on the 100 block cells, did not transfer: on the quiet outer cells its error was "
-            f"{1 - naive:.0f}x that baseline's error, because it had learned the centre's traffic level.")
+    fr = json.loads((ROOT / "reports" / "unified" / "forecast_city_v2.json").read_text(encoding="utf-8"))
+    better = fr["regions"]["city_10000"]["tgnn_v2"]["better_than_persistence"]
+    old = json.loads((ROOT / "reports" / "unified" / "forecast_city.json").read_text(encoding="utf-8"))
+    naive = old["block_forecaster_on_city"]["outer_9600"]["better_than_persistence"][0]
+    note = (f"Yes, once trained properly. The predictive controller uses a TGNN trained on random patches of the whole grid, "
+            f"with each cell's traffic scaled by its own level, on 39 days of real traffic. On a held-out week (16-22 Dec) it beats "
+            f"'repeat the last value' by {better[0]:.0%} (eMBB), {better[1]:.0%} (URLLC) and {better[2]:.0%} (mMTC) across all 10,000 cells, "
+            f"and it never saw this demo day. A first forecaster trained only on the 100 block cells did not transfer: on the quiet "
+            f"outer cells its error was {1 - naive:.0f} times that baseline's error, because it had learned the centre's traffic level.")
 
     def make_env(forecast=None):
         return UnifiedSlicingEnv(demand, nbrs, cfg, episode_len=PER_DAY, forecast=forecast,

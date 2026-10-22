@@ -90,3 +90,23 @@ design up to the full data once it's validated. You get:
       That is a result to state plainly in the review, not hide: the project's SSL-helps
       claim is not supported by the Milan forecast. Worth trying: multi-step horizons,
       multiple days/seeds, and SSL inputs with more structure than five scalars.
+
+## Update 21 Oct 2026: forecaster retrained on 39 days, city-wide
+
+The one-day Milan result above is superseded by `src/unified/forecast_city_v2.py`. Same model family
+(GraphSAGE + GRU), trained properly: 39 real days (days 5-6 held out entirely), random 32 x 32 patches
+of the 100 x 100 grid, per-cell scaling, "same time yesterday" and time of day as extra inputs, a
+residual head with no sigmoid ceiling (the old head capped mMTC at the cell's training p95), and a
+validation block (days 41-44). It is tested on a held-out week (16-22 Dec) over all 10,000 cells
+(`reports/unified/forecast_city_v2.json`):
+
+- **Better than "repeat the last value": +18% eMBB, +33% URLLC, +31% mMTC** (MSE), +21 / +36 / +35% on
+  the 100 central cells. The 5-day version of the same model is below persistence on eMBB for this week
+  (-34%), so training length was the problem, as suspected.
+- Seasonal baselines are much *worse* than persistence at a 10-minute horizon ("same time yesterday"
+  has 7 to 8 times persistence's eMBB error in the model run, 4.7 times in an independent check on a
+  50th-cell subsample of the raw data), so
+  persistence is the right baseline to beat.
+- Value to a slicing controller (`reports/unified/forecast_value_v2.json`): the expert rules gain +0.03
+  reward from this forecast on every one of the 7 held-out days (95% CI about +/-0.005).
+- Figure: `docs/figures/unified_forecast_city.png`.

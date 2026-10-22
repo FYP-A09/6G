@@ -132,14 +132,21 @@ def main(out_path: str) -> None:
     nbrs = grid_neighbours(cells)
     cfg = ModelConfig()
     demand = (data["activity"] * demand_scale(data["activity"][:TRAIN_END], cfg)).astype(np.float64)
-    model, scale = forecaster(demand, nbrs)
+    # Predictive controller: the city forecaster v2 (forecast_value_v2.py caches its forecast for these
+    # cells; v2 never trained on this day). Falls back to the 100-cell block forecaster if the cache is missing.
+    cache_v2 = ROOT / "data" / "processed" / "unified" / "tgnn_forecast_v2.npz"
+    if cache_v2.exists():
+        fc_all = np.load(cache_v2)["forecast"]
+    else:
+        model, scale = forecaster(demand, nbrs)
+        fc_all = predict(model, demand, nbrs, scale)
 
     ev_rows = []
     for i, (etype, label, (h0, m0), (h1, m1), cl, params, desc) in enumerate(EVENTS):
         ev_rows.append({"event_id": i, "type": etype, "code": CODES[etype], "start_interval": DAY_START + iod(h0, m0),
                         "end_interval": DAY_START + iod(h1, m1), "cells_local": cl, "params": params})
     cap_f, coup_f, code, _, r_in, r_out = apply_events(demand, pd.DataFrame(ev_rows), nbrs)
-    fc = predict(model, demand, nbrs, scale)
+    fc = fc_all
 
     def make_env(forecast=None):
         return UnifiedSlicingEnv(demand, nbrs, cfg, episode_len=PER_DAY, forecast=forecast,

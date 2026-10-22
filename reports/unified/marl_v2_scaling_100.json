@@ -1,0 +1,57 @@
+{
+  "cells": 100,
+  "episodes": 1000,
+  "runs": [
+    {
+      "config": "marl",
+      "seed": 0,
+      "mean": 0.8565,
+      "per_day": [
+        0.8388,
+        0.8371,
+        0.833,
+        0.8295,
+        0.8316,
+        0.8962,
+        0.9295
+      ],
+      "actor_params": 19332,
+      "train_seconds": 990,
+      "last_100_train_reward": 0.8625
+    },
+    {
+      "config": "single_lr1e-4",
+      "seed": 0,
+      "mean": 0.284,
+      "per_day": [
+        0.2902,
+        0.2826,
+        0.278,
+        0.2785,
+        0.2775,
+        0.2851,
+        0.2964
+      ],
+      "actor_params": 604048,
+      "train_seconds": 1527,
+      "last_100_train_reward": 0.2825
+    },
+    {
+      "config": "single_lr3e-4",
+      "seed": 0,
+      "mean": 0.2672,
+      "per_day": [
+        0.2719,
+        0.2675,
+        0.2644,
+        0.2634,
+        0.2625,
+        0.2654,
+        0.2754
+      ],
+      "actor_params": 604048,
+      "train_seconds": 2125,
+      "last_100_train_reward": 0.2739
+    }
+  ]
+}

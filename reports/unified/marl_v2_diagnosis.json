@@ -1,0 +1,107 @@
+{
+  "marl_ddpg_fc_seed0": {
+    "sla_ok": {
+      "eMBB": 0.6805,
+      "URLLC": 0.9885,
+      "mMTC": 0.9954
+    },
+    "all_slices_ok": 0.6757,
+    "served_fraction": 0.9239,
+    "served_fraction_by_slice": {
+      "eMBB": 0.9092,
+      "URLLC": 1.0,
+      "mMTC": 0.9999
+    },
+    "mean_share": {
+      "eMBB": 0.6783,
+      "URLLC": 0.2345,
+      "mMTC": 0.0872,
+      "idle": 0.0
+    },
+    "mean_reward": 0.9042
+  },
+  "expert_forecast": {
+    "sla_ok": {
+      "eMBB": 0.7175,
+      "URLLC": 0.7999,
+      "mMTC": 0.609
+    },
+    "all_slices_ok": 0.3439,
+    "served_fraction": 0.9484,
+    "served_fraction_by_slice": {
+      "eMBB": 0.939,
+      "URLLC": 0.999,
+      "mMTC": 0.9936
+    },
+    "mean_share": {
+      "eMBB": 0.8486,
+      "URLLC": 0.1082,
+      "mMTC": 0.0432,
+      "idle": 0.0
+    },
+    "mean_reward": 0.8042
+  },
+  "expert_current": {
+    "sla_ok": {
+      "eMBB": 0.7157,
+      "URLLC": 0.7293,
+      "mMTC": 0.5795
+    },
+    "all_slices_ok": 0.2848,
+    "served_fraction": 0.9451,
+    "served_fraction_by_slice": {
+      "eMBB": 0.9358,
+      "URLLC": 0.9966,
+      "mMTC": 0.9869
+    },
+    "mean_share": {
+      "eMBB": 0.8457,
+      "URLLC": 0.1105,
+      "mMTC": 0.0439,
+      "idle": 0.0
+    },
+    "mean_reward": 0.7751
+  },
+  "expert_oracle": {
+    "sla_ok": {
+      "eMBB": 0.7161,
+      "URLLC": 1.0,
+      "mMTC": 1.0
+    },
+    "all_slices_ok": 0.7161,
+    "served_fraction": 0.9462,
+    "served_fraction_by_slice": {
+      "eMBB": 0.9358,
+      "URLLC": 1.0,
+      "mMTC": 1.0
+    },
+    "mean_share": {
+      "eMBB": 0.8457,
+      "URLLC": 0.1104,
+      "mMTC": 0.0439,
+      "idle": 0.0
+    },
+    "mean_reward": 0.9199
+  },
+  "equal_split": {
+    "sla_ok": {
+      "eMBB": 0.1752,
+      "URLLC": 0.9929,
+      "mMTC": 1.0
+    },
+    "all_slices_ok": 0.1752,
+    "served_fraction": 0.7692,
+    "served_fraction_by_slice": {
+      "eMBB": 0.7246,
+      "URLLC": 1.0,
+      "mMTC": 1.0
+    },
+    "mean_share": {
+      "eMBB": 0.3333,
+      "URLLC": 0.3333,
+      "mMTC": 0.3333,
+      "idle": 0.0
+    },
+    "mean_reward": 0.7503
+  }
+}
