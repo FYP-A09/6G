@@ -1,0 +1,55 @@
+\label{app:columns}
+\section{Columns of the Digital Twin Dataset}
+Each row of the dataset is one cell in one 10-minute interval and has 122 columns. 59 are general columns and 21 are repeated for each of the three slices with the prefix \texttt{eMBB\_}, \texttt{URLLC\_} or \texttt{mMTC\_}, giving 63. The general columns are:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{lll}
+\texttt{scenario} & \texttt{policy} & \texttt{modulation} \\
+\texttt{interval} & \texttt{idle\_share} & \texttt{spectral\_efficiency\_bps\_hz} \\
+\texttt{day\_index} & \texttt{event\_type\_code} & \texttt{power\_w} \\
+\texttt{date} & \texttt{event\_type} & \texttt{energy\_wh} \\
+\texttt{interval\_of\_day} & \texttt{event\_id} & \texttt{energy\_efficiency\_mbit\_per\_j} \\
+\texttt{hour} & \texttt{anomaly} & \texttt{rehomed\_in\_mbps} \\
+\texttt{minute} & \texttt{cell\_asleep} & \texttt{rehomed\_out\_mbps} \\
+\texttt{weekday} & \texttt{capacity\_factor} & \texttt{handover\_users\_est} \\
+\texttt{month} & \texttt{interference\_factor} & \texttt{reconfiguration\_churn} \\
+\texttt{day\_of\_year} & \texttt{capacity\_mbps} & \texttt{anomaly\_score} \\
+\texttt{iso\_week} & \texttt{spare\_capacity\_mbps} & \texttt{all\_slices\_sla\_ok} \\
+\texttt{season} & \texttt{total\_demand\_mbps} & \texttt{reward} \\
+\texttt{is\_weekend} & \texttt{total\_served\_mbps} & \texttt{team\_reward} \\
+\texttt{is\_holiday} & \texttt{prbs\_used} & \texttt{obs\_total\_demand\_mbps} \\
+\texttt{is\_business\_hours} & \texttt{load} & \texttt{obs\_embb\_latency\_p95\_ms} \\
+\texttt{is\_night} & \texttt{neighbour\_load} & \texttt{obs\_load} \\
+\texttt{source} & \texttt{neighbour\_mean\_demand\_mbps} & \texttt{obs\_sinr\_db} \\
+\texttt{source\_date} & \texttt{neighbour\_all\_sla\_ok} & \texttt{obs\_cqi} \\
+\texttt{cell\_id} & \texttt{sinr\_db} & \texttt{telemetry\_missing} \\
+\texttt{zone} & \texttt{cqi} &  \\
+\end{tabular}
+\end{center}
+
+The per-slice columns (to be prefixed with the slice name) are:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{lll}
+\texttt{demand\_mbps} & \texttt{share} & \texttt{queue\_kbit} \\
+\texttt{demand\_next\_10min\_mbps} & \texttt{prbs} & \texttt{latency\_p50\_ms} \\
+\texttt{demand\_next\_30min\_mbps} & \texttt{allocated\_mbps} & \texttt{latency\_p95\_ms} \\
+\texttt{demand\_next\_60min\_mbps} & \texttt{utilisation} & \texttt{jitter\_ms} \\
+\texttt{demand\_1h\_mean\_mbps} & \texttt{served\_mbps} & \texttt{loss} \\
+\texttt{demand\_delta\_mbps} & \texttt{throughput\_per\_user\_mbps} & \texttt{sla\_margin\_ms} \\
+\texttt{users\_est} & \texttt{packets} & \texttt{sla\_ok} \\
+\end{tabular}
+\end{center}
+
+\section{Experimental Settings}
+\label{app:status}
+\begin{itemize}
+	\item \textbf{Data split.} Training days 1 to 40; validation days 41 to 44; test days 45 to 51 (16--22 December 2013). Days 5 and 6 are excluded from forecaster training.
+	\item \textbf{Environment.} 10-minute intervals, 144 per day, capacity 100 Mbps per cell, interference coupling 0.3, reward $0.7\,S+0.3\,F-0.1\,H$, headroom targets $(0.65,0.5,0.65)$ by default.
+	\item \textbf{Forecaster.} Two GraphSAGE layers and a GRU cell with 64 hidden units, residual output head, window of six intervals, $32\times32$ patches, per-cell 95th-percentile scaling, trained on 39 days with the epoch chosen on days 41 to 44.
+	\item \textbf{MARL.} Shared actor of 19{,}332 parameters, neighbourhood critic, discount 0.9, $\tau=0.01$, learning rates $3\times10^{-4}$ and $10^{-3}$, replay 50{,}000; long protocol 4{,}000 episodes with validation every 250 episodes, seeds 0 to 2.
+	\item \textbf{PPO family.} 8{,}000 episodes, ten episodes per update, clip 0.2, four epochs, entropy bonus 0.003, GAE with $\lambda=0.95$.
+	\item \textbf{Code and results.} Everything is in the repository \texttt{FYP-A09/6G}: environment and learners in \texttt{src/unified}, result files in \texttt{reports/unified}, figures in \texttt{docs/figures}, tests in \texttt{tests/test\_unified.py}.
+\end{itemize}

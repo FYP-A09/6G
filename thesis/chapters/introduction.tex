@@ -1,0 +1,63 @@
+\label{chap.1}
+\section{Background and Motivation}
+In 6G networks, services with very different needs will share the same physical resources. Video streaming and extended reality need high throughput (enhanced mobile broadband, eMBB). Industrial control and the coordination of vehicles need latencies of a few milliseconds with very high reliability (ultra-reliable low-latency communication, URLLC). Sensor networks need to connect a very large number of low-rate devices (massive machine-type communication, mMTC).
+
+Network slicing meets these needs by splitting the radio and core resources into logical slices, each with its own service level agreement (SLA). The central operational question is how large each slice should be. This is hard because demand changes continuously and differs from cell to cell. A static split wastes capacity when a slice is idle and breaks the SLA when it is overloaded. Learning-based controllers can do better, but most published ones act on the current state of the network and therefore react after the demand has already moved.
+
+\section{Problem Statement}
+This thesis addresses two research questions.
+\begin{enumerate}
+	\item Can a slicing controller that is told the demand of the next interval allocate bandwidth better than one that sees only the current demand?
+	\item Is a decentralised multi-agent controller a better solution to this task than a single central agent?
+\end{enumerate}
+A further aim is to test such controllers in a Digital Twin (DT) before they would be used on a real network.
+
+\section{Proposed Approach}
+The pipeline has four stages (Table~\ref{tab:pipeline}). A self-supervised learning (SSL) encoder is trained on unlabelled telemetry to give compact representations. A temporal graph neural network (TGNN), which combines GraphSAGE aggregation \cite{hamilton2017} over the cell graph with a recurrent update over time, predicts the demand of every slice in the next interval. A multi-agent reinforcement learning (MARL) controller, with one agent per cell, divides each cell's capacity between eMBB, URLLC, mMTC and an idle share. The Digital Twin is a virtual copy of the network in which these allocations are trained, tested and, ideally, approved before they are applied.
+
+\begin{table}[h]
+	\centering
+	\caption{Stages of the proposed pipeline}
+	\label{tab:pipeline}
+	\begin{tabular}{|p{2.8cm}|p{6.5cm}|p{4.2cm}|}
+		\hline
+		\textbf{Stage} & \textbf{Role} & \textbf{Output} \\ \hline
+		Self-supervised learning & Learns representations of telemetry from unlabelled data by masking or corrupting features and recovering them & Embedding per node and time step \\ \hline
+		Temporal GNN & Forecasts next-interval demand per cell and slice from the cell graph and recent history & Predicted demand \\ \hline
+		Multi-agent RL & Each cell agent decides how to split its bandwidth between slices & Slice shares per cell \\ \hline
+		Digital Twin & Virtual network that trains, tests and checks allocations and supports what-if scenarios & Evaluation, approval, scenario data \\ \hline
+	\end{tabular}
+\end{table}
+
+\section{Objectives and Contributions}
+\subsection{Objectives}
+\begin{enumerate}
+	\item Survey the literature on Digital Twins, SSL, graph-based forecasting and MARL for network slicing and identify the research gap.
+	\item Collect and prepare public data for each stage of the pipeline.
+	\item Implement each module and evaluate it against strong, simple baselines on real data.
+	\item Provide one environment in which prediction and allocation are tested together on the same traffic.
+	\item Build a working prototype.
+\end{enumerate}
+
+\subsection{Contributions}
+Each contribution below is supported by experiments in the later chapters, and the limits of each are stated there.
+\begin{enumerate}
+	\item \textbf{A unified slicing environment.} No public dataset combines topology, per-slice traffic, quality of service (QoS) and allocation actions. We built an environment from real Telecom Italia Milan traffic, with latency calibrated on a public 6G radio access network (RAN) telemetry dataset, in which every component is marked real, calibrated or modelled.
+	\item \textbf{A fair evaluation of MARL.} A parameter-shared controller keeps a fixed-size actor from 9 to 100 cells while a central agent does not scale. Against expert rules tuned on the training days, it wins on all seven test days at every size (by 0.023 to 0.026 in reward), and an on-policy PPO-family learner also beats a rule tuned per time of day and cell class (by 0.009 at 25 cells, on every test day), whereas the off-policy learner only matches that rule.
+	\item \textbf{A measurement of what prediction is worth.} Giving the expert rule the TGNN forecast raises its reward by about 0.03 on every test day, about one fifth of the gap to perfect knowledge. The benefit to the learned controller is not established.
+	\item \textbf{A city-scale forecasting finding.} A forecaster trained only on the dense centre was 10.8 times worse than persistence in the outer city. Per-cell scaling, random spatial patches and more training days fixed this, and the retrained forecaster beats persistence in all 10{,}000 cells (18\%, 33\% and 31\% lower error for the three slices).
+	\item \textbf{A clean negative result for SSL.} After removing duplicate flows and leaked columns, pretraining gave no gain over strong raw-feature baselines at any label budget, on 5G-NIDD and on the Milan forecaster.
+	\item \textbf{A Digital Twin that checks decisions.} An approval gate in the environment protects the reward from poor proposals, and a Simu5G load sweep tests the QoS model against a packet-level simulator.
+	\item \textbf{A dataset and a prototype.} A 393.6-million-row, 122-column dataset with six what-if scenarios, and the Slice Twin monitor, which is published on the web.
+\end{enumerate}
+
+\subsection{Scope}
+The thesis does not cover the following.
+\begin{itemize}
+	\item A packet-level simulator inside the training loop. QoS comes from a calibrated surrogate, and the telemetry used for calibration is itself simulated. The project's own 19-gNodeB scenario is not connected to Simu5G; only a single-cell load sweep was run.
+	\item A statistically wide evaluation. Results use one held-out week (seven days), at most three seeds per learned controller (one at 100 cells), and one city.
+	\item Deployment on a live or emulated network. The prototype replays recorded days.
+\end{itemize}
+
+\subsection{Organisation}
+Chapter~\ref{chap.2} reviews the literature and the research gap. Chapter~\ref{chap.3} describes the datasets and their preparation. Chapter~\ref{chap.4} presents the system design, the problem formulation and the unified environment. Chapters~\ref{chap.5}, \ref{chap.6} and \ref{chap.7} cover self-supervised representation learning, temporal GNN forecasting and MARL for slice allocation. Chapter~\ref{chap.8} gives the integrated evaluation, the Digital Twin dataset, the approval gate and the Simu5G check. Chapter~\ref{chap.9} describes the Slice Twin prototype, and Chapter~\ref{chap.10} concludes with limitations and future work.

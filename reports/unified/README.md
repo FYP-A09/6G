@@ -12,6 +12,8 @@
 | Monitor app data | `showcase_summary.json`, `showcase_city_summary.json` (both use forecaster v2) |
 | Dataset and QoS calibration | `dataset_checks.json`, `unified_dataset_sample.csv` |
 
+| Final additions | `marl_v2_best_{9,100}.json`, `marl_v2_tuned_expert_rich.json`, `marl_v2_richobs.json`, `marl_v2_ppo.json`, `marl_v2_ppo_simu5g.json`, `marl_v2_robust.json`, `marl_v2_gate.json`, `marl_v2_simu5g.json`, `simu5g_sweep.json`, `ssl_milan_*.json` |
+
 **Superseded, kept for the record:**
 
 - `results.json`, `single_agent_sweep.json`, `forecast_city.json`: the first unified study (5 training days, 300 episodes, 2 test days) and the

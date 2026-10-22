@@ -47,6 +47,21 @@ Everything below was run on real data; numbers come from `reports/` and the
 | Digital Twin dataset | `src/unified/twin_dataset.py`: core year (400 cells x 364 days x 6 scenarios) + full city (10,000 cells x 62 days x 3 scenarios) | 393.6 million rows x 122 columns on the project drive; datasheet [`docs/Unified_Twin_Dataset.md`](docs/Unified_Twin_Dataset.md) |
 | Simulator | OMNeT++ 6.4.0 + INET 4.7.0 + Simu5G 1.7.0 built in WSL2; real NR VoIP run | 28,092 events, MOS 4.41/5, 0 loss — the project's own 19-gNodeB scenario is **not** wired in yet |
 
+### Final results (supersede the rows above where they differ)
+
+All on the held-out week 16-22 Dec 2013, checkpoints and rule targets chosen on validation days 41-44; every number is in `reports/unified/`.
+
+- **MARL (25 cells):** off-policy shared MARL, 4,000 episodes, ensemble 0.904, +0.026 over the grid-tuned expert (7/7 days) but only level with the richly tuned
+  rule (0.899). IPPO/MAPPO (12 runs, 8,000 episodes) all reach about 0.908, +0.009 +/- 0.002 over the rich rule on every day (`marl_v2_ppo.json`).
+  Oracle rule with the true next demand: 0.920.
+- **9 / 100 cells:** off-policy MARL +0.024 / +0.023 over the tuned expert (100 cells is one seed).
+- **Forecast value:** +0.03 reward for the rule-based controller; not shown to help the learned controller.
+- **Digital Twin gate:** protects against poor proposals (recovers the fallback reward, 0.877), no gain for a good controller (`marl_v2_gate.json`).
+- **Simu5G:** the surrogate agrees with the packet-level load sweep on ordering (rank correlation 0.93) but not on shape (knee at 68% vs 93% of capacity)
+  (`simu5g_sweep.json`). On a Simu5G-shaped curve the learned controllers still lead (`marl_v2_simu5g.json`).
+- **SSL:** no gain on 5G-NIDD or on the Milan forecaster (`ssl_milan_*.json`, two runs per variant): a negative result.
+- **Thesis:** `thesis/` holds the LaTeX source and PDFs (`A09_Thesis_FULL.pdf`, plus `A09_Thesis_COLOR_pages.pdf` and `A09_Thesis_BW_pages.pdf` for printing).
+
 ### Reproducing
 
 Run the SSL scripts directly rather than importing them (`src/ssl` shadows

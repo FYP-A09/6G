@@ -1,0 +1,137 @@
+{
+  "capacity_mbps": 56.1,
+  "ues": 10,
+  "message_bytes": 1000,
+  "sim_seconds": 6,
+  "repetitions": 3,
+  "rows": [
+    {
+      "offered_mbps": 6,
+      "utilisation": 0.107,
+      "p50_ms": 4.527,
+      "p95_ms": 4.95,
+      "p99_ms": 4.976,
+      "received_mbps": 6.0
+    },
+    {
+      "offered_mbps": 12,
+      "utilisation": 0.214,
+      "p50_ms": 4.524,
+      "p95_ms": 4.948,
+      "p99_ms": 4.974,
+      "received_mbps": 12.0
+    },
+    {
+      "offered_mbps": 20,
+      "utilisation": 0.357,
+      "p50_ms": 4.424,
+      "p95_ms": 4.963,
+      "p99_ms": 4.963,
+      "received_mbps": 20.0
+    },
+    {
+      "offered_mbps": 30,
+      "utilisation": 0.535,
+      "p50_ms": 4.545,
+      "p95_ms": 4.962,
+      "p99_ms": 5.002,
+      "received_mbps": 30.0
+    },
+    {
+      "offered_mbps": 38,
+      "utilisation": 0.677,
+      "p50_ms": 4.676,
+      "p95_ms": 6.918,
+      "p99_ms": 7.095,
+      "received_mbps": 37.99
+    },
+    {
+      "offered_mbps": 44,
+      "utilisation": 0.784,
+      "p50_ms": 4.633,
+      "p95_ms": 6.766,
+      "p99_ms": 6.796,
+      "received_mbps": 44.01
+    },
+    {
+      "offered_mbps": 48,
+      "utilisation": 0.856,
+      "p50_ms": 6.015,
+      "p95_ms": 6.835,
+      "p99_ms": 7.481,
+      "received_mbps": 48.01
+    },
+    {
+      "offered_mbps": 52,
+      "utilisation": 0.927,
+      "p50_ms": 6.079,
+      "p95_ms": 434.5,
+      "p99_ms": 850.062,
+      "received_mbps": 50.54
+    },
+    {
+      "offered_mbps": 56,
+      "utilisation": 0.998,
+      "p50_ms": 5.946,
+      "p95_ms": 1376.197,
+      "p99_ms": 1976.294,
+      "received_mbps": 50.07
+    },
+    {
+      "offered_mbps": 60,
+      "utilisation": 1.07,
+      "p50_ms": 5.85,
+      "p95_ms": 780.773,
+      "p99_ms": 2821.663,
+      "received_mbps": 50.66
+    },
+    {
+      "offered_mbps": 70,
+      "utilisation": 1.248,
+      "p50_ms": 11.126,
+      "p95_ms": 211.937,
+      "p99_ms": 1611.832,
+      "received_mbps": 55.56
+    }
+  ],
+  "knee_p95_doubles_at_utilisation": {
+    "simu5g": 0.927,
+    "surrogate": 0.677
+  },
+  "spearman_rank_correlation_p95_normalised": 0.929,
+  "normalised_p95": {
+    "utilisation": [
+      0.107,
+      0.214,
+      0.357,
+      0.535,
+      0.677,
+      0.784,
+      0.856,
+      0.927,
+      0.998
+    ],
+    "simu5g": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.4,
+      1.37,
+      1.38,
+      87.78,
+      278.02
+    ],
+    "surrogate": [
+      1.0,
+      1.0,
+      1.1,
+      1.78,
+      2.82,
+      3.44,
+      3.73,
+      4.07,
+      4.37
+    ]
+  }
+}

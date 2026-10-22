@@ -1,0 +1,78 @@
+{
+  "cells": 9,
+  "tuned_expert_forecast_per_day": [
+    0.9039,
+    0.8968,
+    0.8863,
+    0.8886,
+    0.898,
+    0.9332,
+    0.9537
+  ],
+  "seeds": {
+    "0": {
+      "episodes": 4000,
+      "validation": 0.9353,
+      "test_per_day": [
+        0.9268,
+        0.9193,
+        0.9125,
+        0.9171,
+        0.9238,
+        0.9623,
+        0.97
+      ],
+      "test_mean": 0.9331,
+      "gain_over_tuned": 0.0245,
+      "days_positive": 7
+    },
+    "1": {
+      "episodes": 4000,
+      "validation": 0.9362,
+      "test_per_day": [
+        0.9224,
+        0.918,
+        0.9115,
+        0.9197,
+        0.9182,
+        0.961,
+        0.971
+      ],
+      "test_mean": 0.9317,
+      "gain_over_tuned": 0.023,
+      "days_positive": 7
+    },
+    "2": {
+      "episodes": 4000,
+      "validation": 0.9308,
+      "test_per_day": [
+        0.9134,
+        0.9051,
+        0.9001,
+        0.9071,
+        0.903,
+        0.9559,
+        0.9719
+      ],
+      "test_mean": 0.9224,
+      "gain_over_tuned": 0.0137,
+      "days_positive": 7
+    }
+  },
+  "ensemble": {
+    "test_per_day": [
+      0.9217,
+      0.9193,
+      0.9121,
+      0.919,
+      0.9198,
+      0.9626,
+      0.9736
+    ],
+    "test_mean": 0.9326,
+    "gain_over_tuned": 0.0239,
+    "ci95": 0.0044,
+    "days_positive": 7,
+    "actors": 3
+  }
+}

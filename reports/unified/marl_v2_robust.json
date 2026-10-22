@@ -1,0 +1,158 @@
+{
+  "scenarios": {
+    "baseline": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "growth_6g": [
+      1.3,
+      2.0,
+      3.0
+    ],
+    "massive_iot": [
+      1.0,
+      1.0,
+      10.0
+    ]
+  },
+  "seeds": {
+    "0": {
+      "validation": 0.8088,
+      "baseline": {
+        "test_per_day": [
+          0.8879,
+          0.879,
+          0.8737,
+          0.8753,
+          0.8834,
+          0.934,
+          0.9619
+        ],
+        "test_mean": 0.8993,
+        "tuned_expert_on_ordinary": 0.8775,
+        "expert_retuned_on_this_mix": 0.8775
+      },
+      "growth_6g": {
+        "test_per_day": [
+          0.7603,
+          0.7535,
+          0.7522,
+          0.7523,
+          0.7595,
+          0.8278,
+          0.8734
+        ],
+        "test_mean": 0.7827,
+        "tuned_expert_on_ordinary": 0.7619,
+        "expert_retuned_on_this_mix": 0.7619
+      },
+      "massive_iot": {
+        "test_per_day": [
+          0.7037,
+          0.6949,
+          0.6985,
+          0.688,
+          0.6985,
+          0.7731,
+          0.8278
+        ],
+        "test_mean": 0.7263,
+        "tuned_expert_on_ordinary": 0.7253,
+        "expert_retuned_on_this_mix": 0.7349
+      }
+    },
+    "1": {
+      "validation": 0.807,
+      "baseline": {
+        "test_per_day": [
+          0.8799,
+          0.871,
+          0.8695,
+          0.8671,
+          0.8755,
+          0.9332,
+          0.964
+        ],
+        "test_mean": 0.8943,
+        "tuned_expert_on_ordinary": 0.8775,
+        "expert_retuned_on_this_mix": 0.8775
+      },
+      "growth_6g": {
+        "test_per_day": [
+          0.7477,
+          0.7397,
+          0.7421,
+          0.7423,
+          0.7438,
+          0.8092,
+          0.8539
+        ],
+        "test_mean": 0.7684,
+        "tuned_expert_on_ordinary": 0.7619,
+        "expert_retuned_on_this_mix": 0.7619
+      },
+      "massive_iot": {
+        "test_per_day": [
+          0.7258,
+          0.7197,
+          0.7204,
+          0.7137,
+          0.7215,
+          0.7924,
+          0.8393
+        ],
+        "test_mean": 0.7475,
+        "tuned_expert_on_ordinary": 0.7253,
+        "expert_retuned_on_this_mix": 0.7349
+      }
+    }
+  },
+  "ensemble": {
+    "baseline": {
+      "test_per_day": [
+        0.8919,
+        0.8838,
+        0.8785,
+        0.8793,
+        0.8876,
+        0.9381,
+        0.9657
+      ],
+      "test_mean": 0.9036,
+      "gain_over_retuned_expert": 0.0261,
+      "ci95": 0.0034,
+      "days_positive": 7
+    },
+    "growth_6g": {
+      "test_per_day": [
+        0.7583,
+        0.7512,
+        0.752,
+        0.7514,
+        0.7562,
+        0.8221,
+        0.871
+      ],
+      "test_mean": 0.7803,
+      "gain_over_retuned_expert": 0.0184,
+      "ci95": 0.0018,
+      "days_positive": 7
+    },
+    "massive_iot": {
+      "test_per_day": [
+        0.7124,
+        0.7046,
+        0.7071,
+        0.6994,
+        0.7103,
+        0.7867,
+        0.8427
+      ],
+      "test_mean": 0.7376,
+      "gain_over_retuned_expert": 0.0026,
+      "ci95": 0.0034,
+      "days_positive": 6
+    }
+  }
+}

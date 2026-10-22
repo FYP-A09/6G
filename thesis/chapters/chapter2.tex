@@ -1,0 +1,61 @@
+\label{chap.2}
+
+\section{Scope of the Review}
+This chapter summarizes the literature on Digital Twins, self-supervised learning (SSL), graph-based forecasting, and reinforcement learning (RL) for slicing that is relevant to the four proposed building blocks of the pipeline. The papers studied span the years 2020–2026 from IEEE venues and some were arXiv or TechRxiv preprints. We picked up the method, data or simulator, results and research gap for each. The papers are summarized pillar wise in Table~\ref{tab:lit}.
+
+\section{Digital Twins for Network Slicing}
+In \cite{nativendt2025} a three-layer native Network Digital Twin (NDT) architecture, with a four-stage lifecycle (preparation, creation, runtime, feedback) was proposed. In an operator-inspired signalling-storm scenario, it achieved approximately 3\% MAPE when considering the registration arrival rate and approximately 25\% for the successful registration count, but it only allows for simulation and verification and does not include any GNN, SSL or RL. Graph-based twins predict network KPIs: one predicts end-to-end slice latency with less than 5\% error on NSFNET, GEANT2 and a synthetic topology with 50 nodes \cite{gnndt2022}; a virtualisation-aware twin adds graph attention to improve performance over RouteNet-Fermi \cite{attentionvirt2025}; a decentralised GNN twin addresses end-to-end slicing \cite{dte2e2023}. These twins are based on the static graphs and supervised learning. Twins with control agents are still reactive: using a clean telemetry in the same way, a twin-synchronised DDPG agent reduced latency by approximately 25\% compared to static allocation \cite{ali2025}; an NDT agent on the Milan data (of about 10,000 cells) achieved 25.5\% less load and 30.4\% less energy savings with a rolling-average predictor \cite{selfopt2026}.
+
+\section{Self-Supervised Learning for Wireless Data}
+A survey on SSL for wireless networks is presented that investigates the generative and contrastive and predictive paradigm and the integration with Digital Twins, TGNNs and reinforcement learning is still not widely explored \cite{sslwireless2024}. Net2Net learns node embeddings from predicting the position and achieves better results than baselines on eight graph datasets, with only static and non-telecom graphs \cite{net2net2025}. For network traffic, two-stage SSL was able to achieve 97.64\% accuracy on network traffic classification for encrypted traffic in SDN, which is approximately 2\% higher than a supervised model \cite{sslsdn2022}; autoencoder with tabular contrastive learning and Confident Learning achieved improved label noise reduction on three traffic datasets \cite{sslcl2025}. The use of SSL is therefore one of classification or non-telecom graphs, and is uncommon for slicing telemetry.
+
+\section{Traffic Forecasting for Slicing}
+The Holt-Winters forecasting has been integrated with adaptive VNF scaling for slicing, however, only in simulated topology and traffic \cite{holtwinters2020} and DeepCog forecasts capacity for slice provisioning \cite{bega2020deepcog}. Compared to other graph-based methods, SSGNN achieves best improvements of up to 3.0\% in MAE, 5.2\% in RMSE and 3.8\% in MAPE across six road-traffic datasets \cite{ssgnn2023}. It forecasts road traffic and the forecast is not linked to any allocation decision.
+
+\section{Reinforcement Learning for Slicing}
+Other representative multi-agent approaches to slicing include SF-DTMC with an adaptive retention framework that reduced reconfiguration time and SLA violations in NS-3 but was limited to local cell clusters and reactive observations \cite{li2026}; MADDPG for vehicular slicing, achieving 96.5\% QoS satisfaction with coordination delays ranging from 120--180 ms which violate URLLC budgets \cite{vehicularmarl2023}; and an improved MADDPG with rank voting for multi-objective allocation, with no Pareto guarantee \cite{imaddpg2023}. Other work include: GAN-DDPG with a semantic-aware reward (22\% and 20\% higher URLLC and eMBB spectral efficiency, respectively, and 31\% lower packet loss) \cite{john2026} ; DRL for end-to-end slicing on a real testbed (where safety DRL cut SLA violations from up to 15\% to about 1\%, and learning on a real network is slow and potentially unsafe) \cite{drle2e2023} ; slice mobility by optimisation and game theory \cite{slicemobility2022} ; online learning for AI-service slicing \cite{slicingforai2025} ; an agentic LLM control plane with closed-loop SLA monitoring \cite{agentic2026} ; and a conceptual semantic ``Reasoning Plane'' \cite{chowdhury2025}. This thesis aims to place the semantic slicing framework as future work.
+
+
+{\footnotesize\setstretch{1}
+\begin{longtable}{|p{0.9cm}|>{\raggedright\arraybackslash}p{4.8cm}|>{\raggedright\arraybackslash}p{4.7cm}|>{\raggedright\arraybackslash}p{4.5cm}|}
+\caption{Summary of the reviewed papers by pillar}\label{tab:lit}\\
+\hline
+\textbf{Ref.} & \textbf{Method} & \textbf{Data used} & \textbf{Gap} \\ \hline
+\endfirsthead
+\hline
+\textbf{Ref.} & \textbf{Method} & \textbf{Data used} & \textbf{Gap} \\ \hline
+\endhead
+\multicolumn{4}{|l|}{\textit{Digital Twin}} \\ \hline
+\cite{nativendt2025} & Three-layer native NDT, gray-box modelling & Signalling-storm scenario (private) & Single use case; no GNN, SSL or RL \\ \hline
+\cite{gnndt2022} & GraphSAGE twin for end-to-end latency & NSFNET, GEANT2, synthetic & Static graph; supervised \\ \hline
+\cite{attentionvirt2025} & GraphSAGE + graph attention, virtualisation-aware & Docker UPF, extended OMNeT++ & Static graph; supervised \\ \hline
+\cite{dte2e2023} & Decentralised GNN twin & OMNeT++ (120,000 train, 3,120 validation) & Real-time data, diverse traffic, isolation, SLA unresolved \\ \hline
+\cite{ali2025} & Twin synchronisation + DDPG & Own Python 5G simulator & Clean telemetry assumed; reactive \\ \hline
+\cite{selfopt2026} & Rolling average, Isolation Forest, MLP & Milan (public) & Simple predictor; one dataset \\ \hline
+\multicolumn{4}{|l|}{\textit{Self-supervised learning}} \\ \hline
+\cite{sslwireless2024} & Survey of SSL paradigms & None (survey) & Integration with twins, TGNN, RL unexplored \\ \hline
+\cite{net2net2025} & Position-prediction SSL & Eight non-telecom graph datasets & Static graphs \\ \hline
+\cite{sslsdn2022} & Pre-training and fine-tuning & Mininet, D-ITG traffic & Classification only \\ \hline
+\cite{sslcl2025} & Autoencoder, contrastive learning, Confident Learning & ISCX VPN-nonVPN, UCDavis--QUIC, own flows & Limited datasets; generalisation unvalidated \\ \hline
+\multicolumn{4}{|l|}{\textit{Forecasting}} \\ \hline
+\cite{holtwinters2020} & Holt-Winters, VNF scaling, DPSO and annealing placement & Simulated 5G topology and traffic & No real-world validation; scalability \\ \hline
+\cite{ssgnn2023} & Masked SSL, spatio-temporal GNN, self-distillation & METR-LA, PEMS-BAY, PEMS03/04/07/08 & Road traffic; not used for allocation \\ \hline
+\multicolumn{4}{|l|}{\textit{Reinforcement learning and slicing management}} \\ \hline
+\cite{li2026} & SF-DTMC in RAN-POSG & NS-3 simulator & Local clusters; reactive \\ \hline
+\cite{vehicularmarl2023} & POMDP, MADDPG & Mininet, Ryu & Simulation only; delays exceed URLLC budget \\ \hline
+\cite{imaddpg2023} & MADDPG with rank voting & Simulated RAN, three slice types & Simulation; no Pareto guarantee \\ \hline
+\cite{john2026} & GAN-DDPG, semantic reward & Custom 6G simulator & Domain-specific semantic states \\ \hline
+\cite{drle2e2023} & Safety, distributed and imitation DRL & OpenAirInterface/FlexRAN testbed & Reactive; real-network learning unsafe \\ \hline
+\cite{slicemobility2022} & Optimisation, game theory & Discrete-time simulation & Optimisation-based; no SSL, TGNN or MARL \\ \hline
+\cite{slicingforai2025} & Online learning (EXP3) & Mobile-health dataset & No forecasting, no MARL \\ \hline
+\cite{agentic2026} & LLM agents, MCP, SLA monitoring & Slice-specification, manifest and intent data; Open5GS and Ericsson RAN testbed & Large-scale, multi-domain, adversarial robustness \\ \hline
+\cite{chowdhury2025} & Semantic Reasoning Plane & None (conceptual) & Added latency not quantified \\ \hline
+\end{longtable}
+}
+
+
+\section{Data Used in the Reviewed Work}
+The remaining twelve papers rely on data from a simulator, emulator or testbed, while only one paper relies on public cellular traffic, which is also used by us \cite{selfopt2026}. None use a public data set that includes topology, per-slice traffic, QoS and allocation decisions, so generating that data is the common practice, which is accommodated by the unified environment of Chapter~ef{chap.4}.
+
+\section{Research Gap}
+Individual components of our pipeline are discussed in the literature: reinforcement learning-based twins, slicing using MARL, and forecasting using GNN. Most controllers use the current state; forecasts are seldom related to allocations; graph models are based on static graphs or road traffic; and multi-agent work is tested on small clusters and own simulators. We did not identify a paper that integrates the combination of SSL, temporal graph forecasting, a Digital Twin and MARL for slicing, while other papers we reviewed included an overview of the different building blocks but not how the forecasts are used to allocate. This thesis is a test of forecasting and multi-agent allocation jointly on real city-scale traffic.

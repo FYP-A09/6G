@@ -1,0 +1,215 @@
+%AMRITA UNIVERSITY PH.D latex template...Created by Chungath, CYS-CBE%
+
+\documentclass[a4paper, 12pt]{report}
+%\renewcommand{\bibname}{References}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{float}
+
+\usepackage{bold-extra}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\definecolor{silver}{HTML}{C0C0C0}
+\usepackage [english]{babel}
+\usepackage [autostyle, english = american]{csquotes}
+\MakeOuterQuote{"}
+%\usepackage[a4paper,top=30mm,bottom=30mm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\graphicspath{{images/}}
+\usepackage{amsthm}
+%\usepackage{hyperref}
+%\hypersetup{colourlinks=true,linkcolour=blue}
+\usepackage{array}
+%\usepackage{parskip}
+\usepackage{cite}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{titletoc}
+\theoremstyle{definition}
+\newtheorem{Definition}{Definition}[section]
+
+%-------------------------------------------------------------
+% title page
+\begin{document}
+	\pagecolor{silver}
+	\pagenumbering{gobble}
+	\thispagestyle{empty}
+	\begin{large}
+		\begin{center}
+			{\Large\bfseries{DIGITAL TWIN ASSISTED DYNAMIC NETWORK SLICING USING SSL, TGNN AND MARL FOR AI-NATIVE 6G NETWORKS}}\\
+			\vspace{1.3cm}
+			A Thesis \\
+			\vspace{.1cm}
+			Submitted in partial fulfilment for the Degree of\\
+			\vspace{.1cm}
+			BACHELOR OF TECHNOLOGY\\
+			\vspace{.1cm}
+            in 
+            \vspace{.1cm}
+            \\ COMPUTER SCIENCE AND ENGINEERING (ARTIFICIAL INTELLIGENCE) \\
+			\vspace{1cm}
+			by\\ \vspace{0.2cm}
+			\vspace{.1cm}
+			{\Large\bfseries{Keerthivasan S V (CB.SC.U4AIE23037)}} \\ 
+            {\Large\bfseries{Krish S (CB.SC.U4AIE23040)}} \\
+            {\Large\bfseries{Sriranjana C (CB.SC.U4AIE23066)}} \\
+            {\Large\bfseries{Thrishala S N (CB.SC.U4AIE23072)}} \\
+            \vspace{3cm}
+			
+			\includegraphics[scale=0.8]{univA.png}\\
+			\vfill
+			DEPARTMENT OF ARTIFICIAL INTELLIGENCE\\
+			\Large{\textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+			{\large COIMBATORE CAMPUS (INDIA)}\\
+			\vspace*{.3cm}
+			October 2026
+		\end{center}
+	\end{large}
+	%------------------------------------------------------------------------------------
+	% bonafide certificate
+	\newpage
+	\nopagecolor
+	\begin{center}
+		{\normalsize DEPARTMENT OF ARTIFICIAL INTELLIGENCE}\\
+		{\large \textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+		{\normalsize COIMBATORE CAMPUS}\\
+		\vspace*{1.2cm}
+		\includegraphics[width=0.42\textwidth]{univa.png}\\
+		\vspace*{1.2cm}
+		{\Large \textbf{BONAFIDE CERTIFICATE}}
+	\end{center}
+	\vspace*{.9cm}
+	\noindent\begin{minipage}{\textwidth}
+	\normalsize\setstretch{1.25}
+	\noindent This is to certify that the thesis entitled \enquote{\textbf{Digital Twin Assisted Dynamic Network Slicing using SSL, TGNN and MARL for AI-Native 6G Networks}} submitted by \textbf{Keerthivasan S V (CB.SC.U4AIE23037)}, \textbf{Krish S (CB.SC.U4AIE23040)}, \textbf{Sriranjana C (CB.SC.U4AIE23066)}, and \textbf{Thrishala S N (CB.SC.U4AIE23072)} for the award of the \textbf{Degree of Bachelor of Technology} under the \textbf{Faculty of Engineering} is a bonafide record of the work carried out by them under my guidance and supervision in the Department of Artificial Intelligence, Amrita Vishwa Vidyapeetham, Coimbatore Campus.
+	\end{minipage}
+	\vspace*{3.5cm}
+
+	\noindent Submitted for the examination held on \underline{\hspace{3.6cm}}.
+
+	\vspace*{1cm}
+	\noindent\textbf{INTERNAL EXAMINER}\hfill\textbf{EXTERNAL EXAMINER}
+	\vspace*{3.2cm}
+
+	\begin{center}
+		\textbf{Dr. Sundaresan S}\\
+		Thesis Advisor\\
+		Department of Artificial Intelligence,\\
+		Amrita Vishwa Vidyapeetham, Coimbatore Campus, India.
+	\end{center}
+
+	%-------------------------------------------------------------------------------
+	% Declaration page
+	\newpage
+	\begin{center}
+		{\normalsize DEPARTMENT OF ARTIFICIAL INTELLIGENCE}\\
+		{\large \textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+		{\normalsize COIMBATORE CAMPUS}\\
+		\vspace*{1.2cm}
+		\includegraphics[width=0.42\textwidth]{univa.png}\\
+		\vspace*{1.2cm}
+		{\Large \textbf{DECLARATION}}
+	\end{center}
+	\vspace*{.9cm}
+	\noindent  We, \textbf{Keerthivasan S V., Roll. No: CB.SC.U4AIE23037}, \textbf{Krish S., Roll. No: CB.SC.U4AIE23040}, \textbf{Sriranjana C., Roll. No: CB.SC.U4AIE23066} and \textbf{Thrishala S N., Roll. No: CB.SC.U4AIE23072} hereby declare that this thesis entitled \enquote{\textbf{DIGITAL TWIN ASSISTED DYNAMIC NETWORK SLICING USING SSL, TGNN AND MARL FOR AI-NATIVE 6G NETWORKS}} is the record of the original work done by us under the guidance of \textbf{Dr. Sundaresan S}, Assistant Professor, Department of Artificial Intelligence, Amrita Vishwa Vidyapeetham, Coimbatore Campus. To the best of our knowledge, this work has not formed the basis for the award of any degree/diploma/associateship/fellowship or a similar award to any candidate in any University.\\\\
+	
+	\vspace*{1cm}
+	\noindent{\bf Place:\hfill Signature of the Students} \\
+	\noindent {\bf Date: }
+	\vfill
+	\begin{center}
+		\large{COUNTERSIGNED}\\
+	\end{center}
+	\vspace{0.6in}
+	
+\begin{center}
+		\textbf{Dr. K.P Soman}\\
+	Professor and Dean, \\ 
+	Department of Artificial Intelligence \\ Amrita Vishwa Vidyapeetham,\\
+	Coimbatore Campus,\\
+	India.
+\end{center}
+	
+	%-----------------------------------------------------------------------------
+	\clearpage
+	\pagenumbering{roman}
+	\tableofcontents
+	
+	\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+We express our sincere gratitude to our thesis advisor, Dr. Sundaresan S, for guidance and constructive feedback throughout this project. His questions about why a multi-agent controller is needed, and how a forecast should be shown to help, shaped the experiments in this thesis. We thank the faculty and review panel of the Department of Artificial Intelligence for helping us sharpen the problem statement and connect the implementation to a defensible evaluation.
+
+\hspace{1.5em}We thank Amrita Vishwa Vidyapeetham, Coimbatore Campus, for the academic environment in which this work was undertaken, and Dr. K.P. Soman, Professor and Dean of the Department of Artificial Intelligence, for the facilities provided. We also acknowledge the creators of the public datasets and the maintainers of the open-source software on which this work builds: the Telecom Italia Big Data Challenge, 5G-NIDD, NeversNet5G and the B5G slicing dataset, and OMNeT++, INET, Simu5G, PyTorch and PyTorch Geometric. Their openly available data and documentation made it possible to concentrate on the unified environment, fair evaluation and the Digital Twin.
+
+\hspace{1.5em}We thank our teammates, friends and families for their support. The responsibility for the implementation choices, the interpretation of results and the remaining limitations rests with the authors.
+
+\vspace{1cm}
+\begin{flushright}
+KEERTHIVASAN S V\\
+KRISH S\\
+SRIRANJANA C\\
+THRISHALA S N
+\end{flushright}
+\clearpage
+\listoffigures
+	\addcontentsline{toc}{chapter}{List of figures}
+	\listoftables
+	\addcontentsline{toc}{chapter}{List of tables}
+	\newpage
+%\chapter*{Abbreviations}
+
+\input{chapters/abbreviations_and_symbols}	
+
+\newpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\input{chapters/abstract}
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\chapter{Introduction}
+\input{chapters/introduction}
+\chapter{Literature Review and Research Gap}
+\input{chapters/chapter2}
+\chapter{Datasets and Data Preparation}
+\input{chapters/chapter3}
+\chapter{System Design and the Unified Slicing Environment}
+\input{chapters/chapter4} 
+\chapter{Self-Supervised Representation Learning}
+\input{chapters/chapter5}
+\chapter{Temporal GNN Traffic Forecasting}
+\input{chapters/chapter6}
+\chapter{MARL for Slice Allocation}
+\input{chapters/chapter7}
+\chapter{Integrated Evaluation and the Digital Twin}
+\input{chapters/chapter8}
+\chapter{Prototype: Slice Twin Monitor}
+\input{chapters/chapter9}
+\chapter{Conclusion and Scope for further Research}
+\input{chapters/conclusion}
+\appendix
+\chapter{Dataset Columns and Experimental Settings}
+\input{chapters/appendix}
+
+%\addcontentsline{toc}{chapter}{\textbf{References}}
+\newpage
+\renewcommand{\bibname}{References}
+\bibliographystyle{ieeetr}
+\addcontentsline{toc}{chapter}{References}
+\bibliography{mybib}
+
+\chapter*{List of Publications \\ \large(Based on the Research Work)}
+\addcontentsline{toc}{chapter}{List of Publications Based on the Research Work}
+\textbf{\Large Papers Published}\\
+None at the time of submission.\vspace{0.4cm}
+
+\noindent \textbf{\Large Papers Communicated}\\
+None at the time of submission.
+
+\end{document}
+	
+	

@@ -1,0 +1,126 @@
+\label{chap.6}
+\section{Forecasting Objective}
+\label{sec:forecasting_objective}
+The forecasting stage predicts the demand of every cell for the next ten minutes, separately for the three slices, from the recent history of the cell and its neighbours. In the unified environment (Chapter~\ref{chap.4}) the prediction is a three-number vector in Mbps per cell. The earlier B5G and NeversNet5G experiments used a similar network to predict throughput, latency and load, with the first two kept non-negative by a softplus output and the load kept in $[0,1]$ by a sigmoid.
+
+\section{Graph Construction Across Datasets}
+\label{sec:graph_construction}
+The implementation supports three graph sources.
+\paragraph{Milan grid.} The traffic is on a regular $100\times100$ grid. Each cell is a node connected to its four neighbours, so the adjacency is the real geographic neighbourhood. The first experiments used a central $20\times20$ block of 400 cells; the final forecaster covers all 10{,}000 cells.
+\paragraph{NeversNet5G.} Graph snapshots are built from event-driven UE telemetry, keeping UE and gNodeB identities and their time-varying relationship. The exported 64-dimensional SSL embeddings are aligned with the graph timestamps; where a gNodeB has no embedding of its own, the embeddings of its connected UEs are averaged.
+\paragraph{B5G topology.} The B5G pipeline uses the graph, routing matrix and slice configuration supplied with the dataset, with replay in place of an online simulator and the recorded delta value as the reward signal.
+
+\section{GraphSAGE--GRU Architecture}
+\label{sec:graphsage_gru}
+At every time step two GraphSAGE layers combine each node's features with the mean of its neighbours' features,
+\begin{equation}
+h_v^{(l+1)} = \sigma\!\left(W^{(l)}\left[h_v^{(l)} \,\Vert\, \operatorname{mean}_{u\in\mathcal{N}(v)} h_u^{(l)}\right]\right),
+\label{eq:graphsage_update}
+\end{equation}
+where $h_v^{(l)}$ is the representation of node $v$ at layer $l$, $\mathcal{N}(v)$ its neighbours, $W^{(l)}$ a weight matrix and $\sigma$ an activation \cite{hamilton2017}. The sequence of spatial representations over the observation window is fed to a GRU cell, and the final hidden state is used to predict the next interval. The temporal part is a plain \texttt{GRUCell} over the output of PyTorch Geometric's \texttt{SAGEConv}, not the graph-convolutional GRU of the original design, because \texttt{torch\_sparse} did not install on the Windows development machine.
+
+\section{First Experiments on the Milan Block}
+\label{sec:milan_tgnn_experiments}
+The first experiment used 400 cells over one day of 144 ten-minute steps with a five-step window (111 training and 28 validation windows) and 25 epochs of Adam at a learning rate of 0.0005. It was compared with persistence and with the training mean.
+\begin{table}[htbp]
+\centering
+\caption{First Milan block experiment (one day, 400 cells, one seed)}
+\label{tab:milan_forecasting}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Model} & \textbf{Validation MSE} \\ \hline
+GraphSAGE--GRU TGNN & 0.0006160 \\ \hline
+Persistence & 0.0007196 \\ \hline
+Training-mean predictor & 0.0063946 \\ \hline
+\end{tabular}
+\end{table}
+The TGNN was about 14\% better than persistence. This was a single day and a single seed, so it showed only that the model could learn the short-term pattern, not that it generalises. Feeding the five raw features instead of SSL embeddings gave 0.0006122, so the embedding added nothing (Chapter~\ref{chap.5}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.55\textwidth,keepaspectratio]{milan_traffic_heatmap.png}
+\caption{Real traffic on the Milan grid}
+\label{fig:milan_heatmap}
+\end{figure}\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth,keepaspectratio]{tgnn_milan_forecast_training.png}
+\caption{Training and validation error of the first Milan forecaster}
+\label{fig:tgnn_first_training}
+\end{figure}
+
+\section{City-Wide Generalisation Failure}
+\label{sec:city_generalisation_failure}
+The forecaster trained on the 100 central cells was applied to all 10{,}000 cells of the city. It failed on the quiet cells. Because it had been trained only on the dense centre, it learned that traffic is heavy and over-predicted the suburbs by about 6 Mbps on average. On the 9{,}600 outer cells its eMBB error was 10.8 times that of persistence.
+
+\begin{table}[htbp]
+\centering
+\caption{City-wide evaluation of the forecaster trained on the 100 central cells only (eMBB mean squared error, Mbps$^2$, two held-out days)}
+\label{tab:block_city_generalisation}
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Region} & \textbf{TGNN} & \textbf{Persistence} & \textbf{TGNN error relative to persistence} \\ \hline
+100-cell block & 54.00 & 61.23 & 0.9$\times$ \\ \hline
+300-cell core ring & 61.59 & 57.10 & 1.1$\times$ \\ \hline
+9{,}600 outer cells & 47.54 & 4.38 & 10.8$\times$ \\ \hline
+All 10{,}000 cells & 48.03 & 6.53 & 7.4$\times$ \\ \hline
+\end{tabular}
+\end{table}
+
+This is a level-bias and spatial-coverage problem: a model that has never seen a quiet cell cannot predict one.
+
+\section{The Corrected City Forecaster}
+\label{sec:corrected_city_forecaster}
+The architecture was kept and the training was changed in four ways.
+\begin{enumerate}
+\item \textbf{Per-cell scaling.} Each cell's demand is divided by its own typical level (the median over the training days of its daily 95th percentile, with a floor of 1\% of the citywide value), so the model learns the shape of change rather than the level.
+\item \textbf{Spatial sampling.} Every training step uses a randomly placed $32\times32$ patch of the grid, so central, suburban and intermediate traffic are all seen.
+\item \textbf{More data and better inputs.} The model is trained on 39 real days (days 5 and 6, used later for tests, are excluded), with a validation block of days 41 to 44 for choosing the epoch. Each step also sees the cell's demand at the same time on the previous day, which is known in advance, a time-of-day encoding and a weekend flag.
+\item \textbf{No output ceiling.} The earlier output layer passed the mMTC prediction through a sigmoid, which capped it at the cell's usual level. The new head predicts a correction to the last observed demand with no upper limit, so spikes can be forecast.
+\end{enumerate}
+The model is tested on a held-out week, 16 to 22 December 2013 (days 45 to 51), over every cell, against persistence. Table~\ref{tab:city_forecaster_improvement} reports the improvement in mean squared error.
+
+\begin{table}[htbp]
+\centering
+\caption{Improvement over persistence on the held-out week, 16--22 December 2013 (eMBB / URLLC / mMTC)}
+\label{tab:city_forecaster_improvement}
+\small
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Region} & \textbf{Trained on 5 days} & \textbf{Trained on 39 days} \\ \hline
+100-cell block & -12\% / +17\% / +21\% & +21\% / +36\% / +35\% \\ \hline
+300-cell core ring & -49\% / +8\% / +7\% & +15\% / +33\% / +32\% \\ \hline
+9{,}600 outer cells & -34\% / +9\% / +5\% & +18\% / +34\% / +31\% \\ \hline
+All 10{,}000 cells & -34\% / +9\% / +7\% & +18\% / +33\% / +31\% \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth,keepaspectratio]{unified_forecast_city.png}
+\caption{City-wide forecaster on the held-out week: five days of training against 39 days}
+\label{fig:city_forecaster}
+\end{figure}
+
+The retrained forecaster beats persistence in every region and for every slice, including on the 100 central cells where the earlier model was trained. The five-day version of the same model is worse than persistence on eMBB in this week, so the amount of training data, not the architecture, was the main limitation.
+
+Table~\ref{tab:forecast_baselines} compares the model with two seasonal baselines. At a horizon of ten minutes, persistence is very hard to beat: using the value at the same time on the previous day gives 8.1 times persistence's eMBB error, and the average for that time of day gives 13.6 times. Persistence is therefore the right baseline to beat.
+
+\begin{table}[htbp]
+\centering
+\caption{Mean squared error of simple baselines and the TGNN on all 10{,}000 cells (Mbps$^2$), held-out week}
+\label{tab:forecast_baselines}
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Forecaster} & \textbf{eMBB} & \textbf{URLLC} & \textbf{mMTC} \\ \hline
+Repeat the last value (persistence) & 1.449 & 0.127 & 0.061 \\ \hline
+Same time on the previous day & 11.799 & 0.666 & 0.193 \\ \hline
+Average for that time of day & 19.736 & 0.522 & 0.152 \\ \hline
+TGNN, trained on 39 days & 1.190 & 0.084 & 0.042 \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Limitations of the Forecasting Study}
+\label{sec:pending_forecasting_experiments}
+Each forecaster was trained once, so there is no estimate of seed-to-seed variation. The study also does not separate the contributions of per-cell scaling, patch sampling, the extra inputs and the graph aggregation, and it has no graph-free baseline (a GRU on each cell alone) or published spatio-temporal baselines such as STGCN. These ablations would show which part of the model does the work, and are listed as future work in Chapter~\ref{chap.10}. The value of the forecast to the controllers is measured in Chapter~\ref{chap.8}.

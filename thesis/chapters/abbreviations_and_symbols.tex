@@ -1,0 +1,89 @@
+% Abbreviations and List of Symbols for the thesis
+% Paste these sections where the corresponding sections appear in the main file.
+% Required packages already present in the thesis preamble: longtable, array, amsmath.
+
+% -------------------- Abbreviations --------------------
+\section*{{\huge Abbreviations}\hfill}
+\addcontentsline{toc}{chapter}{\textbf{Abbreviations}}
+\vspace{0.5cm}
+
+\begin{longtable}{p{3.2cm} p{11cm}}
+6G & Sixth-generation mobile communication network \\
+AI & Artificial intelligence \\
+DDPG & Deep deterministic policy gradient \\
+DL & Downlink \\
+DT & Digital Twin \\
+eMBB & Enhanced mobile broadband \\
+GNN & Graph neural network \\
+gNB & Next-generation Node B; a 5G/6G base station \\
+GAE & Generalised advantage estimation \\
+GRU & Gated recurrent unit \\
+IPPO & Independent proximal policy optimisation \\
+LLM & Large language model \\
+MAE & Mean absolute error \\
+MADDPG & Multi-agent deep deterministic policy gradient \\
+MAPE & Mean absolute percentage error \\
+MAPPO & Multi-agent proximal policy optimisation \\
+MARL & Multi-agent reinforcement learning \\
+MCP & Model Context Protocol \\
+MLP & Multilayer perceptron \\
+mMTC & Massive machine-type communication \\
+MSE & Mean squared error \\
+NDT & Network Digital Twin \\
+NR & New Radio \\
+O-RAN & Open Radio Access Network \\
+PPO & Proximal policy optimisation \\
+POMDP & Partially observable Markov decision process \\
+PRB & Physical resource block \\
+QoS & Quality of service \\
+RAN & Radio access network \\
+RL & Reinforcement learning \\
+RMSE & Root mean squared error \\
+SCARF & Self-supervised contrastive learning using random feature corruption \\
+SLA & Service level agreement \\
+SINR & Signal-to-interference-plus-noise ratio \\
+SSL & Self-supervised learning \\
+TGNN & Temporal graph neural network \\
+UE & User equipment \\
+URLLC & Ultra-reliable low-latency communication \\
+VNF & Virtual network function \\
+\end{longtable}
+
+\newpage
+
+% -------------------- List of Symbols --------------------
+\section*{{\huge List of Symbols}\hfill}
+\addcontentsline{toc}{chapter}{\textbf{List of Symbols}}
+\vspace{0.5cm}
+
+\begin{longtable}{p{3.2cm} p{11cm}}
+$i$ & Index of a network cell or cell-level agent \\
+$t$ & Time-step or traffic interval index \\
+$\mathcal{V}$ & Set of cells (nodes) in the network graph \\
+$\mathcal{E}$ & Set of edges representing connections or neighbourhood relations between cells \\
+$\mathcal{G}=(\mathcal{V},\mathcal{E})$ & Network graph, consisting of cells and their relationships \\
+$s_t^i$ & State or observation available to the agent controlling cell $i$ at time $t$ \\
+$a_t^i$ & Allocation action selected by the agent for cell $i$ at time $t$ \\
+$R_t^i$ & Reward received by the agent controlling cell $i$ at time $t$ \\
+$S_t^i$ & Weighted service-level-agreement (SLA) score for cell $i$ at time $t$ \\
+$F_t^i$ & Fraction of demand served by cell $i$ at time $t$ \\
+$H_t^i$ & Reconfiguration churn for cell $i$ at time $t$ \\
+$D_{t,k}^i$ & Demand for slice $k$ in cell $i$ at time $t$ \\
+$\widehat{D}_{t+1,k}^i$ & Forecast demand for slice $k$ in cell $i$ for the next interval \\
+$C_t^i$ & Usable capacity of cell $i$ at time $t$ \\
+$x_{t,k}^i$ & Fraction of cell $i$'s capacity allocated to slice $k$ at time $t$ \\
+$x_{t,\mathrm{idle}}^i$ & Fraction of cell $i$'s capacity left idle at time $t$ \\
+$k$ & Index identifying a network slice, such as eMBB, URLLC or mMTC \\
+$L$ & Network latency or packet/frame delay, depending on the reported experiment \\
+$J$ & Jitter, representing variation in packet/frame delay \\
+$\rho$ & Reliability or probability of successful service, when used in the SLA definition \\
+$\mathbf{z}_t^i$ & Learned feature representation (embedding) for cell $i$ at time $t$ \\
+$\widehat{\mathbf{y}}_t$ & Model-predicted value or traffic demand; the exact target depends on the experiment \\
+\end{longtable}
+
+% Notes:
+% 1. The reward equation in Chapter 4 defines
+%    R_t^i = 0.7 S_t^i + 0.3 F_t^i - 0.1 H_t^i.
+% 2. Keep only symbols that are used in the final thesis text/equations.
+% 3. If the thesis uses a different notation for any quantity, update the entry here
+%    to match the notation used in the relevant chapter.

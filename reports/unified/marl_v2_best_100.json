@@ -1,0 +1,46 @@
+{
+  "cells": 100,
+  "tuned_expert_forecast_per_day": [
+    0.8557,
+    0.8463,
+    0.8418,
+    0.8431,
+    0.8468,
+    0.8956,
+    0.9276
+  ],
+  "seeds": {
+    "0": {
+      "episodes": 4000,
+      "validation": 0.8883,
+      "test_per_day": [
+        0.8726,
+        0.8666,
+        0.8631,
+        0.8623,
+        0.8672,
+        0.9273,
+        0.9596
+      ],
+      "test_mean": 0.8884,
+      "gain_over_tuned": 0.0231,
+      "days_positive": 7
+    }
+  },
+  "ensemble": {
+    "test_per_day": [
+      0.8726,
+      0.8666,
+      0.8631,
+      0.8623,
+      0.8672,
+      0.9273,
+      0.9596
+    ],
+    "test_mean": 0.8884,
+    "gain_over_tuned": 0.0231,
+    "ci95": 0.0057,
+    "days_positive": 7,
+    "actors": 1
+  }
+}
