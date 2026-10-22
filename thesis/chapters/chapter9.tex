@@ -62,12 +62,12 @@ The files are produced by \texttt{showcase.py} for the block view and \texttt{sh
 From the root of the repository, \texttt{python -m http.server 8765 --directory app/slice\_twin} starts the monitor at \texttt{http://localhost:8765}. To regenerate the data, run \texttt{showcase.py}, then \texttt{forecast\_\allowbreak city\_\allowbreak v2.py} once to train the city forecaster, and then \texttt{showcase\_\allowbreak city.py}; the Milan files must be on the project drive. A GitHub Actions workflow publishes the monitor, the results dashboard and the project brief to GitHub Pages whenever the site or monitor folders change.
 
 \paragraph{Demonstration.}
-Figure~\ref{fig:slice-city} shows the city view at 17:30 on the demonstration day. On the left the cells are coloured by real traffic, with the storm-damage incident in the south marked, and on the right by SLA misses under the Reactive controller.
+Figure~\ref{fig:slice-city} shows the city view at 17:30 on the demonstration day. In the top image the cells are coloured by real traffic, with the storm-damage incident in the south marked, and in the bottom image by SLA misses under the Reactive controller.
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.48\textwidth]{slice_twin_city_dark.jpg}\hfill
-    \includegraphics[width=0.48\textwidth]{slice_twin_city_light.jpg}
-    \caption{City view at 17:30: cells coloured by real traffic (left, dark theme) and by SLA misses under the Reactive controller (right, light theme).}
+    \includegraphics[width=0.92\textwidth]{slice_twin_city_dark.jpg}\\[1.2em]
+    \includegraphics[width=0.92\textwidth]{slice_twin_city_light.jpg}
+    \caption{City view at 17:30: cells coloured by real traffic (top, dark theme) and by SLA misses under the Reactive controller (bottom, light theme).}
     \label{fig:slice-city}
 \end{figure}
 
