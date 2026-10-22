@@ -1,19 +1,19 @@
 \label{chap.1}
 \section{Background and Motivation}
-In 6G networks, services with very different needs will share the same physical resources. Video streaming and extended reality need high throughput (enhanced mobile broadband, eMBB). Industrial control and the coordination of vehicles need latencies of a few milliseconds with very high reliability (ultra-reliable low-latency communication, URLLC). Sensor networks need to connect a very large number of low-rate devices (massive machine-type communication, mMTC).
+Sixth-generation networks will have to carry very different services over the same radios. Streaming video and extended reality want high throughput (enhanced mobile broadband, eMBB). Factory control and connected vehicles want a delay of a few milliseconds and almost no loss (ultra-reliable low-latency communication, URLLC). Sensor networks want to connect huge numbers of cheap devices that each send very little (massive machine-type communication, mMTC).
 
-Network slicing meets these needs by splitting the radio and core resources into logical slices, each with its own service level agreement (SLA). The central operational question is how large each slice should be. This is hard because demand changes continuously and differs from cell to cell. A static split wastes capacity when a slice is idle and breaks the SLA when it is overloaded. Learning-based controllers can do better, but most published ones act on the current state of the network and therefore react after the demand has already moved.
+Network slicing is the usual answer. The operator cuts the radio and core resources into logical slices and promises each slice a service level agreement (SLA). The difficult part is deciding how big each slice should be, because demand keeps moving and is different in every cell. A fixed split wastes capacity when a slice is quiet and breaks the SLA when it is busy. Learning-based controllers do better, but most of the ones we found in the literature only look at what the network is doing right now, so they react after the demand has already moved.
 
 \section{Problem Statement}
-This thesis addresses two research questions.
+We ask two questions in this thesis.
 \begin{enumerate}
 	\item Can a slicing controller that is told the demand of the next interval allocate bandwidth better than one that sees only the current demand?
 	\item Is a decentralised multi-agent controller a better solution to this task than a single central agent?
 \end{enumerate}
-A further aim is to test such controllers in a Digital Twin (DT) before they would be used on a real network.
+We also want to try such controllers in a Digital Twin (DT) before anyone would use them on a real network.
 
 \section{Proposed Approach}
-The pipeline has four stages (Table~\ref{tab:pipeline}). A self-supervised learning (SSL) encoder is trained on unlabelled telemetry to give compact representations. A temporal graph neural network (TGNN), which combines GraphSAGE aggregation \cite{hamilton2017} over the cell graph with a recurrent update over time, predicts the demand of every slice in the next interval. A multi-agent reinforcement learning (MARL) controller, with one agent per cell, divides each cell's capacity between eMBB, URLLC, mMTC and an idle share. The Digital Twin is a virtual copy of the network in which these allocations are trained, tested and, ideally, approved before they are applied.
+Our pipeline has four stages (Table~\ref{tab:pipeline}). A self-supervised learning (SSL) encoder is trained on unlabelled telemetry and gives a compact description of each observation. A temporal graph neural network (TGNN) predicts the demand of every slice in the next interval; it mixes information from neighbouring cells with GraphSAGE \cite{hamilton2017} and follows each cell through time with a recurrent update. A multi-agent reinforcement learning (MARL) controller, with one agent per cell, then splits the capacity of its cell between eMBB, URLLC, mMTC and an idle share. The Digital Twin is a virtual copy of the network where these allocations are trained, tested and, if possible, approved before they are applied.
 
 \begin{table}[h]
 	\centering
