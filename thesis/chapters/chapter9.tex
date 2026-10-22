@@ -29,8 +29,8 @@ These are the controllers of Section~\ref{sec:city-controllers}, so the monitor 
 \centering
 \caption{Controllers on the 100 central cells, Wednesday 6 November 2013}
 \label{tab:block-controllers}
-\small
-\begin{tabular}{|l|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Controller} & \textbf{SLA met (eMBB / URLLC / mMTC)} & \textbf{Reward} \\ \hline
 Static & 0.13 / 0.98 / 1.00 & 0.709 \\ \hline
@@ -59,7 +59,7 @@ Slice Twin is a static web application with no server-side code. All calculation
 The files are produced by \texttt{showcase.py} for the block view and \texttt{showcase\_city.py} for the city view, both in \texttt{src/unified}. The city data is stored compactly. For every interval and cell, one byte holds the log-scaled demand, and for each controller one byte holds the load (scaled by 250) and one byte holds flags: bits 0 to 2 for each slice meeting its SLA, bit 3 for an event and bit 4 for an outage. The compressed binary file is a few megabytes, which lets the browser handle 10{,}000 cells over 144 intervals and three controllers.
 
 \paragraph{How to run it.}
-From the repository root, \texttt{python -m http.server 8765 --directory app/slice\_twin} serves the monitor at \texttt{http://localhost:8765}. To regenerate the data, run \texttt{showcase.py}, then \texttt{forecast\_city\_v2.py} once to train the city forecaster, then \texttt{showcase\_city.py}; the Milan files must be on the project drive. A GitHub Actions workflow publishes the monitor, the results dashboard and the project brief to GitHub Pages whenever the site or monitor folders change.
+From the repository root, \texttt{python -m http.server 8765 --directory app/slice\_twin} serves the monitor at \texttt{http://localhost:8765}. To regenerate the data, run \texttt{showcase.py}, then \texttt{forecast\_\allowbreak city\_\allowbreak v2.py} once to train the city forecaster, then \texttt{showcase\_\allowbreak city.py}; the Milan files must be on the project drive. A GitHub Actions workflow publishes the monitor, the results dashboard and the project brief to GitHub Pages whenever the site or monitor folders change.
 
 \paragraph{Demonstration.}
 Figure~\ref{fig:slice-city} shows the city view at 17:30 on the demonstration day. On the left the cells are coloured by real traffic, with the storm-damage incident in the south marked, and on the right by SLA misses under the Reactive controller.

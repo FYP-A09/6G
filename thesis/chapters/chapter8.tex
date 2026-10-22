@@ -38,8 +38,8 @@ The forecast was also given to the MARL controller as an extra input. Table~\ref
 \centering
 \caption{MARL with and without forecast input (25 cells, three seeds, mean $\pm$ sample standard deviation)}
 \label{tab:forecast-marl}
-\small
-\begin{tabular}{|l|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Input to the MARL controller} & \textbf{Held-out reward} \\ \hline
 No forecast & $0.778\pm0.048$ \\ \hline
@@ -80,7 +80,7 @@ In the dense block the Predictive controller scores highest (0.773 against 0.735
 
 \section{The Digital Twin Dataset}
 \label{sec:dt-dataset}
-No public dataset contains topology, per-slice traffic, QoS metrics, SLA outcomes and allocation decisions together. We therefore generated one from the unified environment (\texttt{src/unified/twin\_dataset.py}). Each row is one cell in one 10-minute interval. The data is stored in Parquet files on the project drive, with summaries and samples in the repository. Two builds were made (Table~\ref{tab:dt-size}), with 393.6 million rows in total.
+No public dataset contains topology, per-slice traffic, QoS metrics, SLA outcomes and allocation decisions together. We therefore generated one from the unified environment (\texttt{src/\allowbreak unified/\allowbreak twin\_\allowbreak dataset.py}). Each row is one cell in one 10-minute interval. The data is stored in Parquet files on the project drive, with summaries and samples in the repository. Two builds were made (Table~\ref{tab:dt-size}), with 393.6 million rows in total.
 
 \begin{table}[htbp]
 	\centering
@@ -117,19 +117,23 @@ All scenarios share the same days, behaviour policy and random noise, so any dif
 	\caption{Scenarios of the core year}
 	\label{tab:scenarios}
 	\footnotesize
-	\resizebox{\textwidth}{!}{%
-	\begin{tabular}{|l|p{5.6cm}|c|c|c|}
+	\begin{tabular}{|p{2.3cm}|p{4.6cm}|p{3.4cm}|p{1.3cm}|p{1.8cm}|}
 		\hline
 		\textbf{Scenario} & \textbf{What changes} & \textbf{SLA met (eMBB / URLLC / mMTC)} & \textbf{Reward} & \textbf{Energy (MWh)} \\
 		\hline
 		baseline & Recorded traffic, no incidents & 0.704 / 0.731 / 0.651 & 0.763 & 3{,}473 \\
+		\hline
 		events & Adds flash crowds, outages, interference, URLLC bursts, mMTC storms, capacity degradation & 0.703 / 0.730 / 0.651 & 0.763 & 3{,}473 \\
+		\hline
 		growth\_6g & eMBB $\times$1.3, URLLC $\times$2, mMTC $\times$3 & 0.553 / 0.696 / 0.610 & 0.688 & 3{,}648 \\
+		\hline
 		energy\_saving & Quiet cells sleep 01:00--05:00 and hand traffic to neighbours & 0.703 / 0.737 / 0.659 & 0.766 & 3{,}435 \\
+		\hline
 		industrial\_urllc & Industrial cells: URLLC $\times$4 in weekday shifts & 0.693 / 0.723 / 0.646 & 0.756 & 3{,}481 \\
+		\hline
 		massive\_iot & mMTC $\times$10, a further $\times$3 at the start of each hour & 0.554 / 0.710 / 0.524 & 0.660 & 3{,}628 \\
 		\hline
-	\end{tabular}}
+	\end{tabular}
 \end{table}
 
 The scaled-traffic scenarios behave as intended: growth\_6g lowers eMBB compliance from 0.704 to 0.553, and massive\_iot lowers mMTC compliance from 0.651 to 0.524 and uses the most energy. The events scenario is almost the same as the baseline because over 99.8\% of its rows have no event. The effect shows when rows are grouped by event type (Table~\ref{tab:events}).
@@ -183,8 +187,8 @@ The gate was measured on the held-out week with controllers whose proposals are 
 \centering
 \caption{Effect of the approval gate on the held-out week (25 cells, mean over the three MARL seeds)}
 \label{tab:gate}
-\small
-\begin{tabular}{|l|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Controller} & \textbf{Reward without gate} & \textbf{Reward with gate} & \textbf{Proposals approved} \\ \hline
 MARL, logit noise $\sigma= 0$ & 0.900 & 0.898 & 72\% \\ \hline
@@ -205,8 +209,8 @@ The QoS model of the environment is a calibrated surrogate. To test it against a
 \centering
 \caption{Simu5G load sweep (10 UEs, one gNodeB, downlink capacity 56.1 Mbps, 1000-byte messages, 6 s, mean of three repetitions)}
 \label{tab:simu5g_sweep}
-\small
-\begin{tabular}{|c|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Utilisation} & \textbf{Median delay (ms)} & \textbf{95th-percentile delay (ms)} & \textbf{Received (Mbps)} \\ \hline
 0.11 & 4.5 & 5.0 & 6.0 \\ \hline
@@ -238,8 +242,8 @@ Because the controllers were developed on the surrogate, we repeated the evaluat
 \centering
 \caption{Controllers on the Simu5G-shaped latency curve (25 cells, held-out week)}
 \label{tab:simu5g_eval}
-\small
-\begin{tabular}{|l|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Controller} & \textbf{Runs} & \textbf{Reward} \\ \hline
 Equal split & 1 & 0.814 \\ \hline

@@ -56,8 +56,8 @@ The forecaster trained on the 100 central cells was applied to all 10{,}000 cell
 \centering
 \caption{City-wide evaluation of the forecaster trained on the 100 central cells only (eMBB mean squared error, Mbps$^2$, two held-out days)}
 \label{tab:block_city_generalisation}
-\small
-\begin{tabular}{|l|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Region} & \textbf{TGNN} & \textbf{Persistence} & \textbf{TGNN error relative to persistence} \\ \hline
 100-cell block & 54.00 & 61.23 & 0.9$\times$ \\ \hline
@@ -84,8 +84,8 @@ The model is tested on a held-out week, 16 to 22 December 2013 (days 45 to 51), 
 \centering
 \caption{Improvement over persistence on the held-out week, 16--22 December 2013 (eMBB / URLLC / mMTC)}
 \label{tab:city_forecaster_improvement}
-\small
-\begin{tabular}{|l|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Region} & \textbf{Trained on 5 days} & \textbf{Trained on 39 days} \\ \hline
 100-cell block & -12\% / +17\% / +21\% & +21\% / +36\% / +35\% \\ \hline
@@ -110,8 +110,8 @@ Table~\ref{tab:forecast_baselines} compares the model with two seasonal baseline
 \centering
 \caption{Mean squared error of simple baselines and the TGNN on all 10{,}000 cells (Mbps$^2$), held-out week}
 \label{tab:forecast_baselines}
-\small
-\begin{tabular}{|l|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Forecaster} & \textbf{eMBB} & \textbf{URLLC} & \textbf{mMTC} \\ \hline
 Repeat the last value (persistence) & 1.449 & 0.127 & 0.061 \\ \hline

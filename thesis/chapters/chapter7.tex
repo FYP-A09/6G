@@ -44,8 +44,8 @@ The shared actor keeps both its size and its reward as the network grows, wherea
 \centering
 \caption{Policy size as the network grows}
 \label{tab:marl_parameter_growth}
-\small
-\begin{tabular}{|r|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Cells} & \textbf{Shared actor parameters} & \textbf{Single-agent actor parameters} & \textbf{Central input / output size} \\ \hline
 9 & 19{,}332 & 114{,}468 & 153 / 36 \\ \hline
@@ -112,8 +112,8 @@ Several ways of improving the learner were tried at 25 cells (Table~\ref{tab:mar
 \centering
 \caption{Training variants at 25 cells, held-out week reward}
 \label{tab:marl_variants}
-\small
-\begin{tabular}{|l|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Variant} & \textbf{Seeds} & \textbf{Reward} \\ \hline
 Shared DDPG, 2{,}000 episodes, with forecast & 3 & $0.881\pm0.021$ \\ \hline
@@ -134,8 +134,8 @@ Independent PPO (IPPO) and a MAPPO-style variant \cite{schulman2017ppo, yu2022ma
 \centering
 \caption{On-policy baselines at 25 cells (8{,}000 episodes, checkpoint chosen on validation days), held-out week}
 \label{tab:marl_ppo}
-\small
-\begin{tabular}{|l|c|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.194\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.194\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.194\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.194\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.194\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Method} & \textbf{Seeds} & \textbf{Reward} & \textbf{Minus simple tuned expert} & \textbf{Minus rich tuned expert} \\ \hline
 IPPO & 3 & $0.908\pm0.000$ & +0.030 & +0.009 \\ \hline
@@ -168,8 +168,8 @@ Under shifted traffic the learned controllers lose a lot of reward, and a tuned 
 \centering
 \caption{MARL trained on a mixture of traffic scenarios (two seeds, actors averaged), against an expert rule re-tuned on each scenario's own training days}
 \label{tab:marl_robust}
-\small
-\begin{tabular}{|l|c|c|c|}
+\footnotesize
+\begin{tabular}{|>{\centering\arraybackslash}p{\dimexpr 0.300\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|>{\centering\arraybackslash}p{\dimexpr 0.170\textwidth-2\tabcolsep\relax}|}
 \hline
 \textbf{Test traffic} & \textbf{MARL reward} & \textbf{Difference (95\% CI)} & \textbf{Days better} \\ \hline
 Ordinary traffic & 0.904 & +0.026 $\pm$ 0.003 & 7/7 \\ \hline
